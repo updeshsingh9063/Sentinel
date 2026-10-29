@@ -54,6 +54,25 @@ export interface WorklistRow {
   alertId: number | null;
 }
 
+/**
+ * A call that came down the phone line today and ran the whole script.
+ *
+ * WHY THIS IS SEPARATE FROM THE RANKED LIST. The ranking is computed once a
+ * day under a hard alert budget, and that budget is the product. A check-in
+ * that arrives afterwards has not been scored and must not quietly jump the
+ * queue -- but it is also the senior's own voice, arriving after the model
+ * had its say, and burying it until tomorrow's run would be the one thing a
+ * coordinator would never forgive. So it is shown, beside the list rather
+ * than inside it, and the coordinator decides.
+ */
+export interface TodayCheckin {
+  seniorId: string;
+  name: string;
+  initials: string;
+  /** Answers worth a coordinator's attention, already worded. */
+  concerns: string[];
+}
+
 export interface Worklist {
   state: "ok" | "empty";
   day: string;
@@ -62,6 +81,8 @@ export interface Worklist {
   held: WorklistRow[];
   /** Everyone scored that day, whether shown or not. */
   totalScored: number;
+  /** Calls that came in today, after the ranking was computed. */
+  answeredToday: TodayCheckin[];
 }
 
 function levelFor(score: number): Level {
@@ -136,6 +157,7 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
     surfaced: [],
     held: [],
     totalScored: 0,
+    answeredToday: [],
   };
 
   // In parallel, because neither needs the other. The latest scored day is
@@ -191,6 +213,19 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
       .gte("called_on", contactFloor)
       .order("called_on", { ascending: false }),
   ]);
+
+  // Calls that ran the CURRENT six-question script. `fall_code` is only
+  // written by a call that asked all six, so its presence distinguishes a
+  // real call today from the cohort's historical rows, which carry the three
+  // the table used to have room for. A missed call has none of them, which is
+  // right: it carries no answers to report.
+  const todayCalls = await supabase
+    .from("checkins")
+    .select("senior_id, feeling_code, pain_code, meds_taken, sleep_code, appetite_code, fall_code")
+    .in("senior_id", ids)
+    .eq("checked_on", day)
+    .eq("answered", true)
+    .not("fall_code", "is", null);
 
   const seniorById = new Map((seniors.data ?? []).map((s) => [s.id, s]));
   const scoreById = new Map((scores.data ?? []).map((s) => [s.senior_id, s]));
@@ -282,6 +317,35 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
     )
     .filter((r): r is WorklistRow => r !== null);
 
+  // Only the answers a coordinator would act on. A senior who says they
+  // slept well and took their medicine has still been heard -- that is on
+  // their record -- but it is not something to put in front of someone
+  // triaging a caseload, and padding this with good news is how a signal
+  // becomes a thing people stop reading.
+  const answeredToday: TodayCheckin[] = (todayCalls.data ?? [])
+    .map((c) => {
+      const s = seniorById.get(c.senior_id);
+      if (!s) return null;
+      const concerns: string[] = [];
+      if (c.feeling_code === 3) concerns.push(t.worklist.saidWorse);
+      if (c.pain_code === 3) concerns.push(t.worklist.saidPain);
+      if (c.meds_taken === false) concerns.push(t.worklist.saidMissedMeds);
+      if (c.sleep_code === 3) concerns.push(t.worklist.saidSlept);
+      if (c.appetite_code === 3) concerns.push(t.worklist.saidAte);
+      // A near-fall counts. It is the only warning that arrives before
+      // somebody is actually on the floor.
+      if (c.fall_code === 3) concerns.push(t.worklist.saidFell);
+      else if (c.fall_code === 2) concerns.push(t.worklist.saidNearlyFell);
+      if (!concerns.length) return null;
+      return {
+        seniorId: c.senior_id,
+        name: s.display_name,
+        initials: initialsFor(s.display_name),
+        concerns,
+      };
+    })
+    .filter((x): x is TodayCheckin => x !== null);
+
   if (!surfaced.length && !held.length) return empty;
 
   const dayLabel = new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", {
@@ -298,6 +362,7 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
     dayLabel: fmt(t.worklist.dateOn, { date: dayLabel }),
     surfaced,
     held,
+    answeredToday,
     totalScored: (scores.data ?? []).length,
   };
 }

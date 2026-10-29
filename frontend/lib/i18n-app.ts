@@ -117,6 +117,15 @@ export interface AppCopy {
   worklist: {
     levels: { high: string; med: string; low: string };
     dateOn: string;
+    cameIn: string;
+    cameInNote: string;
+    saidWorse: string;
+    saidPain: string;
+    saidMissedMeds: string;
+    saidSlept: string;
+    saidAte: string;
+    saidFell: string;
+    saidNearlyFell: string;
     emptyTitle: string;
     emptyBody: string;
     date: string;
@@ -335,13 +344,13 @@ const en: AppCopy = {
   },
   signin: {
     title: "Sign in",
-    sub: "Create an account, or open a demo role to see exactly what that role can reach. The surfaces differ on purpose — the family view has no readings and no score because there is no policy granting them, not because they are hidden.",
+    sub: "Coordinators sign in with their own account. The family and operations views can be opened in one click below, so you can see exactly what each of them can reach — the surfaces differ on purpose, and the family view has no readings and no score because there is no policy granting them, not because they are hidden.",
     redirect: "Sign in to open",
     loading: "Loading…",
     noAccount: "no account",
     noteTitle: "Real accounts, demo shortcuts, synthetic data",
     note1:
-      "You can create a real account above: Supabase Auth with a password, and a database trigger creates your profile. The role you pick is a request, not a grant — the trigger clamps it to coordinator, family or operations, and admin cannot be obtained by registering. The demo cards below are shared logins whose password is published in the source, kept so a reviewer can see each role in one click without registering. Every senior, reading and alert in this database is generated; no real person is in it.",
+      "You can create a real account above: Supabase Auth with a password, and a database trigger creates your profile. The role you pick is a request, not a grant — the trigger clamps it to coordinator, family or operations, and admin cannot be obtained by registering. The coordinator view has no shortcut card, because that is the role this product is run from and it is signed into with a real password that is published nowhere. The two cards below are shared logins for the roles whose whole point is what they CANNOT reach. Every senior, reading and alert in this database is generated; no real person is in it.",
     note2:
       "What protects the data is the schema, not this page. Row-level security grants the family and operations roles no policy on vitals, call_notes, note_cues or risk_scores. Signed in as the family member, those tables return zero rows — checked against the live database, not assumed.",
     note3:
@@ -358,10 +367,11 @@ const en: AppCopy = {
     submitSignIn: "Sign in",
     submitSignUp: "Create account",
     working: "Working…",
-    demoDivider: "or try a demo account",
-    demoHint: "One click, no email needed. Shared accounts on synthetic data.",
+    demoDivider: "or look through another role",
+    demoHint:
+      "One click, no email needed. These are the two roles that must NOT see individual health data \u2014 open them and check that they cannot.",
     checkEmail:
-      "Account created. Check your email for a confirmation link, then sign in. If it does not arrive, use a demo account below.",
+      "Account created. Check your email for a confirmation link, then sign in.",
     confirmedNote: "Account created and signed in.",
     emptyAccountNote:
       "A new account starts with nothing linked to it, so your pages will be empty until an operator assigns you a caseload or links you to a senior. That is row-level security working, not an error.",
@@ -451,6 +461,16 @@ const en: AppCopy = {
     date: "Monday 12 April 2025",
     levels: { high: "High Risk", med: "Medium Risk", low: "Low Risk" },
     dateOn: "Today — {date}",
+    cameIn: "Came in on the phone line today",
+    cameInNote:
+      "Answered after today's ranking was computed, so the list below has not seen it. Shown here rather than folded into the ranking, because the alert budget is the point and a late call must not quietly jump the queue \u2014 you decide.",
+    saidWorse: "feeling worse",
+    saidPain: "a lot of pain",
+    saidMissedMeds: "missed their medicine",
+    saidSlept: "slept badly",
+    saidAte: "has not eaten",
+    saidFell: "had a fall",
+    saidNearlyFell: "nearly fell",
     emptyTitle: "No seniors are assigned to you",
     emptyBody:
       "The database returned no care assignments for this account, so there is no queue to build. That is row-level security working, not an error — an account with no seniors sees none.",
@@ -770,8 +790,9 @@ const hi: AppCopy = {
     submitSignIn: "साइन इन करें",
     submitSignUp: "खाता बनाएँ",
     working: "हो रहा है…",
-    demoDivider: "या डेमो खाते से देखें",
-    demoHint: "एक क्लिक, ईमेल की ज़रूरत नहीं। साझा खाते, सिंथेटिक डेटा पर।",
+    demoDivider: "या कोई दूसरी भूमिका देखिए",
+    demoHint:
+      "एक क्लिक, ईमेल की ज़रूरत नहीं। ये वही दो भूमिकाएँ हैं जिन्हें किसी एक बुज़ुर्ग का स्वास्थ्य डेटा नहीं दिखना चाहिए — खोलकर देखिए कि सचमुच नहीं दिखता।",
     checkEmail:
       "खाता बन गया। पुष्टि के लिए अपना ईमेल देखें, फिर साइन इन करें। अगर न आए तो नीचे डेमो खाते का उपयोग करें।",
     confirmedNote: "खाता बन गया और आप साइन इन हैं।",
@@ -863,6 +884,16 @@ const hi: AppCopy = {
     date: "सोमवार 12 अप्रैल 2025",
     levels: { high: "उच्च जोखिम", med: "मध्यम जोखिम", low: "कम जोखिम" },
     dateOn: "आज — {date}",
+    cameIn: "आज फ़ोन पर आई बात",
+    cameInNote:
+      "आज की सूची बनने के बाद जवाब आया है, इसलिए नीचे की सूची ने इसे देखा नहीं है। इसे सूची में मिलाया नहीं गया — अलर्ट की सीमा ही इस सिस्टम की बात है, और देर से आई कॉल चुपचाप कतार नहीं तोड़ सकती। फ़ैसला आपका।",
+    saidWorse: "तबीयत और खराब",
+    saidPain: "बहुत दर्द",
+    saidMissedMeds: "दवाई नहीं ली",
+    saidSlept: "नींद ठीक नहीं आई",
+    saidAte: "खाना नहीं खाया",
+    saidFell: "गिर गए",
+    saidNearlyFell: "गिरते-गिरते बचे",
     emptyTitle: "आपके नाम कोई बुज़ुर्ग नहीं हैं",
     emptyBody:
       "इस खाते के लिए कोई देखभाल सौंपनी नहीं मिली, इसलिए कोई सूची नहीं बनी। यह त्रुटि नहीं, पंक्ति-स्तरीय सुरक्षा का काम करना है।",

@@ -5,11 +5,21 @@ you should see, so a wrong answer is obvious rather than a matter of judgement.
 
 Roughly 20 minutes end to end. If you only have five, do **§1** and **§3**.
 
-**Demo accounts** — password `SamarthDemo!2026` for all three:
+**The coordinator is a real account**, created by
+`npm run owner:account` from `OWNER_EMAIL` / `OWNER_NAME` / `OWNER_PASSWORD`
+in `.env.local`. It carries the same caseload the seeded demo coordinator
+does. There is no shortcut card for it and the password is in no committed
+file — that role is the product, and a shared login whose password ships in
+the client bundle is not how it should be shown.
+
+`coordinator@samarth.demo` still exists in the database, because the access
+verification scripts sign in as it. It simply has no card.
+
+**Demo cards** — password `SamarthDemo!2026`, kept because these two roles
+exist to demonstrate what they cannot reach:
 
 | Account | Lands on | Sees |
 |---|---|---|
-| `coordinator@samarth.demo` | `/worklist` | 34 seniors, full health data |
 | `family@samarth.demo` | `/summary` | one senior, plain language only |
 | `ops@samarth.demo` | `/dashboard` | aggregates, no individuals |
 
@@ -143,7 +153,7 @@ is the one that drifted during development.
 
 ## 3 · Coordinator — the main path
 
-Sign in as `coordinator@samarth.demo`.
+Sign in with the coordinator account.
 
 ### 3.1 Worklist (`/worklist`)
 
@@ -244,6 +254,12 @@ transcript. If it ever returns words from silence, that is a serious bug.
 The last question answered files the call. Finish all six, then:
 
 - [ ] The screen names whose record it went to and when
+- [ ] The coordinator's **Today** tab carries a band at the top, *Came in on
+      the phone line today*, naming that senior and the answers worth acting
+      on. It sits **beside** the ranked list, not inside it: the alert budget
+      is the product, and a call that arrives after the day's ranking must not
+      quietly jump the queue — but burying the senior's own voice until
+      tomorrow's run would be worse. A human decides.
 - [ ] Sign in as the coordinator, open that senior, and **Their own answers**
       shows all six, worst answers in red
 - [ ] Answer again and the same day is corrected, not duplicated — that is a

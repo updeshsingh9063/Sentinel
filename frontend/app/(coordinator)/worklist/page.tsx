@@ -56,6 +56,30 @@ export default async function WorklistPage() {
         <p className="page__sub">{fmt(t.worklist.sub, { cap })}</p>
       </header>
 
+      {/* ABOVE THE RANKED LIST, AND NOT PART OF IT. These are seniors who
+          picked up the phone after today's ranking was computed, so the model
+          has not seen a word of it. Folding them into the ranking would break
+          the alert budget that is the whole product; hiding them until
+          tomorrow's run would bury the senior's own voice. So they sit here,
+          and a human decides. */}
+      {list.answeredToday.length > 0 && (
+        <section className="card wl__came">
+          <h2 className="wl__camehead">{t.worklist.cameIn}</h2>
+          <ul className="wl__camelist">
+            {list.answeredToday.map((c) => (
+              <li key={c.seniorId}>
+                <i className="wl__avatar" aria-hidden="true">{c.initials}</i>
+                <span>
+                  <Link href={`/senior/${c.seniorId}`} className="wl__name">{c.name}</Link>
+                  <em>{c.concerns.join(" · ")}</em>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="wl__camenote">{t.worklist.cameInNote}</p>
+        </section>
+      )}
+
       <ol className="wl">
         {surfaced.map((s, i) => (
           <li key={s.id} className={`card wl__row wl__row--${s.level}`}>
@@ -161,6 +185,29 @@ export default async function WorklistPage() {
           font-size: var(--fs-sm); color: var(--ink-3);
           font-variant-numeric: tabular-nums;
         }
+        /* Marked out from the ranked cards below rather than dressed like
+           them, because it is a different kind of thing: unscored, and
+           waiting on a judgement rather than carrying one. */
+        .wl__came {
+          padding: var(--s-5) var(--s-6); margin-bottom: var(--s-6);
+          border-left: 3px solid var(--forest);
+        }
+        .wl__camehead {
+          font-family: var(--sans); font-size: var(--fs-xs); font-weight: 600;
+          letter-spacing: .07em; text-transform: uppercase; color: var(--forest);
+          margin: 0 0 var(--s-4);
+        }
+        .wl__camelist { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
+        .wl__camelist li { display: flex; align-items: center; gap: var(--s-3); }
+        .wl__camelist li > span { display: grid; gap: 1px; min-width: 0; }
+        .wl__camelist em {
+          font-style: normal; font-size: var(--fs-sm); color: var(--risk-high);
+        }
+        .wl__camenote {
+          margin: var(--s-4) 0 0; font-size: var(--fs-xs);
+          line-height: 1.6; color: var(--ink-3);
+        }
+
         .wl__avatar {
           width: 34px; height: 34px; border-radius: 50%;
           background: var(--sage); color: var(--forest);

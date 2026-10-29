@@ -8,6 +8,7 @@ import { fmt } from "@/lib/i18n";
 import type { AppCopy } from "@/lib/i18n-app";
 import { createClient } from "@/lib/supabase/client";
 import {
+  DEMO_CARD_ROLES,
   DEMO_PASSWORD,
   DEMO_USERS,
   ROLE_ORDER,
@@ -525,7 +526,7 @@ export function SignInForm({ t }: { t: AppCopy }) {
       <p className="si__hint si__hint--centre">{t.signin.demoHint}</p>
 
       <ul className="si__roles">
-        {ROLE_ORDER.map((r) => {
+        {DEMO_CARD_ROLES.map((r) => {
           const u = DEMO_USERS[r];
           const who = t.roles[r];
           return (

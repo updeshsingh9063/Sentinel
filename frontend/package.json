@@ -18,6 +18,7 @@
     "verify:reset": "node scripts/verify-reset.mjs",
     "verify:checkin": "node scripts/verify-checkin-loop.mjs",
     "verify:signup": "node scripts/verify-signup.mjs",
+    "owner:account": "node scripts/make-owner-account.mjs",
     "check:auth": "node scripts/check-auth-config.mjs"
   },
   "dependencies": {

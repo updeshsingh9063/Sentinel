@@ -4,13 +4,21 @@ No code. Just open the website and click. About 10 minutes.
 
 **Website:** https://samarth-sentinel.vercel.app
 
-**Three logins.** The password is the same for all three:
+**The coordinator signs in with a real account.** That is the role the
+product is actually run from, so there is no shortcut card for it and its
+password is not printed anywhere — ask the owner, or use your own account.
+
+**The other two have one-click cards on the sign-in page**, password
+`SamarthDemo!2026` if you would rather type it:
 
 | Email | Password |
 |---|---|
-| `coordinator@samarth.demo` | `SamarthDemo!2026` |
 | `family@samarth.demo` | `SamarthDemo!2026` |
 | `ops@samarth.demo` | `SamarthDemo!2026` |
+
+Those two are kept deliberately: the quickest way to check that a family
+member cannot reach readings or scores is to become one in a single click and
+watch the pages come back empty.
 
 Use a different browser tab for each, or sign out between them.
 
@@ -43,7 +51,7 @@ Open the website. You do not need to log in.
 
 ## Part 2 — The care coordinator (4 minutes)
 
-This is the main part. Log in as **coordinator@samarth.demo**.
+This is the main part. Log in with the coordinator account (email and password, no card — see above).
 
 You land on a page called **Today**.
 
@@ -258,7 +266,7 @@ On the sign in page, next to the word **Password**, there is now a link:
 
 1. The form changes to ask only for your email address.
 
-2. **First, type a demo address** — `coordinator@samarth.demo` — and press the
+2. **First, type a demo address** — `family@samarth.demo` — and press the
    button.
 
    It should tell you the password is printed on this page and **not** send any

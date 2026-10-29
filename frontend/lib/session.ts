@@ -67,6 +67,24 @@ export const DEMO_USERS: Record<DemoRole, DemoUser> = {
 export const ROLE_ORDER: DemoRole[] = ["coordinator", "family", "ops", "senior"];
 
 /**
+ * The shortcut cards offered on the sign-in page.
+ *
+ * COORDINATOR IS ABSENT ON PURPOSE. That is the role the product is actually
+ * demonstrated from, and it is now signed into with a real account and a real
+ * password that is not published anywhere. Leaving a one-click shared login
+ * beside it would mean the main surface is shown as a person who does not
+ * exist — and it was the card that made everyone's app bar read "Priya
+ * Sharma".
+ *
+ * Family and operations stay, and they earn their place: the fastest way to
+ * show that a family member cannot reach readings or scores is to become one
+ * in a single click and watch the tables come back empty. That demonstration
+ * needs those accounts to exist. The senior card is not an account at all —
+ * it opens the phone check-in, which is the whole point of having it here.
+ */
+export const DEMO_CARD_ROLES: DemoRole[] = ["family", "ops", "senior"];
+
+/**
  * Shared password for the three seeded demo accounts.
  *
  * Safe to ship in the client only because these accounts hold nothing but
