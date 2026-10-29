@@ -1,0 +1,44 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- Node / Next.js ---
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# --- secrets ---
+.env
+.env.*
+!.env.example
+!frontend/.env.local.example
+
+# --- data ---
+# Raw downloads are reproducible via scripts/fetch_datasets.py.
+# datasets/processed/ IS committed: small, and judges need it to reproduce
+# results without re-downloading 300 MB.
+datasets/raw/
+datasets/synthetic/
+*.parquet
+
+# --- models ---
+model/artifacts/
+*.pkl
+*.joblib
+*.onnx
+
+# --- audio ---
+audio/
+*.wav
+*.mp3
+*.m4a
+
+# --- misc ---
+.DS_Store

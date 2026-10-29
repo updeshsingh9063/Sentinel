@@ -1,0 +1,16 @@
+pandas==2.2.3
+numpy==2.2.1
+scikit-learn==1.6.0
+lightgbm==4.5.0
+shap==0.46.0
+scipy==1.15.0
+pyyaml==6.0.2
+
+# NLP
+regex==2024.11.6
+
+# ASR (optional, P2). Self-hosted so no audio leaves the VM.
+# faster-whisper==1.1.0
+
+pytest==8.3.4
+ruff==0.8.6

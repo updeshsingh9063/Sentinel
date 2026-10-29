@@ -1,0 +1,5 @@
+/* Entry stylesheet. The token layer lives in design-system.css, adapted from
+   elloreseniorliving.com -- see the header comment there for what was copied
+   verbatim and the three places we deliberately diverge. */
+
+@import "./design-system.css";

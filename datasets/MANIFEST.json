@@ -1,0 +1,261 @@
+{
+  "generated": "2026-10-29",
+  "project": "Samarth Sentinel (DEV-104)",
+  "note": "No real patient data. External sets calibrate and validate components; the senior cohort itself is synthetic. Landing-page photography is AI-GENERATED - the people shown are synthetic and are not Samarth members, staff or beneficiaries. See 'assets' below.",
+  "datasets": [
+    {
+      "name": "Derived: Hinglish token frequencies",
+      "description": "Token counts over the Hinglish sentence pool. Supplies observed romanisation variants for the FR-2 script normaliser and negation handler (e.g. nahi / nahin / nhi all appear).",
+      "url": "(derived locally from the Hinglish corpora above)",
+      "path": "datasets/processed/hinglish_token_frequencies.csv",
+      "license": "Derived from apache-2.0 and cc-by-sa-3.0 sources; treat the derived file as cc-by-sa-3.0 (share-alike).",
+      "citation": "Derived from findnitai/english-to-hinglish and festvox/cmu_hinglish_dog.",
+      "sha256": "1d633e9c0d3592bd7cd4f289cb66b3fcb78589bd4877e041842db1a227d5f335",
+      "bytes": 43353,
+      "rows": 4322,
+      "caveats": [
+        "Movie-domain dialogue. A word-boundary scan for health cues (dard, bukhar, neend, chakkar, dawai, ...) matched 1 of 6,707 sentences, and that one was a false positive.",
+        "Use for surface realism and normalisation only. Health cue examples must come from the synthetic note generator plus a hand-built lexicon reviewed by a Hindi speaker."
+      ]
+    },
+    {
+      "name": "Derived: vitals reference, 60+",
+      "description": "Age-band x sex summary stats and a row-level joint sample for SBP, DBP, weight, BMI, HbA1c and fasting glucose. Calibrates the synthetic cohort generator.",
+      "url": "(derived locally from the NHANES files above)",
+      "path": "datasets/processed/vitals_reference_60plus.csv",
+      "license": "Public domain (derived from NHANES)",
+      "citation": "Derived from CDC/NCHS NHANES 2017-2018.",
+      "sha256": "1050196c5baaeb9fabe575082157e016531916c49baee94c4544543166d22b13",
+      "bytes": 2547,
+      "rows": 36,
+      "caveats": [
+        "NHANES age is top-coded at 80, so the 80+ band is all exactly 80 and understates spread in the oldest seniors.",
+        "US survey population, not Indian. Use for plausible ranges and covariance structure, not for claims about Indian seniors.",
+        "No SpO2 in these files. SpO2 must be synthesised from published ranges and flagged as such.",
+        "Cross-sectional: gives between-person spread, not the within-person day-to-day variance Layer B needs. Within-person drift is a generator parameter, documented separately."
+      ]
+    },
+    {
+      "name": "NHANES 2017-2018 BMX_J",
+      "description": "Body measures: weight, height, BMI",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/BMX_J.xpt",
+      "path": "datasets/raw/nhanes/BMX_J.xpt",
+      "license": "Public domain (US Government work, 17 U.S.C. 105)",
+      "citation": "Centers for Disease Control and Prevention (CDC), National Center for Health Statistics. National Health and Nutrition Examination Survey 2017-2018, file BMX_J. Hyattsville, MD.",
+      "sha256": "8d675e42d8826ac98714b2c3dd4c5138a5e353fb4424f7eff5e6db4a01ce838a",
+      "bytes": 1466000,
+      "rows": 8704
+    },
+    {
+      "name": "NHANES 2017-2018 BPX_J",
+      "description": "Blood pressure, up to 4 readings",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/BPX_J.xpt",
+      "path": "datasets/raw/nhanes/BPX_J.xpt",
+      "license": "Public domain (US Government work, 17 U.S.C. 105)",
+      "citation": "Centers for Disease Control and Prevention (CDC), National Center for Health Statistics. National Health and Nutrition Examination Survey 2017-2018, file BPX_J. Hyattsville, MD.",
+      "sha256": "f98f1d9a4c18173e715c749b4294f6f1525140d5ad5751316bb17cc038fb3423",
+      "bytes": 1466000,
+      "rows": 8704
+    },
+    {
+      "name": "NHANES 2017-2018 DEMO_J",
+      "description": "Demographics: age, sex",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/DEMO_J.xpt",
+      "path": "datasets/raw/nhanes/DEMO_J.xpt",
+      "license": "Public domain (US Government work, 17 U.S.C. 105)",
+      "citation": "Centers for Disease Control and Prevention (CDC), National Center for Health Statistics. National Health and Nutrition Examination Survey 2017-2018, file DEMO_J. Hyattsville, MD.",
+      "sha256": "c0b46e0345ea19404928656277c8b0d10b0cca348a9b2fe4fc3c67e8b7ee73ec",
+      "bytes": 3412720,
+      "rows": 9254
+    },
+    {
+      "name": "NHANES 2017-2018 GHB_J",
+      "description": "Glycohemoglobin (HbA1c)",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/GHB_J.xpt",
+      "path": "datasets/raw/nhanes/GHB_J.xpt",
+      "license": "Public domain (US Government work, 17 U.S.C. 105)",
+      "citation": "Centers for Disease Control and Prevention (CDC), National Center for Health Statistics. National Health and Nutrition Examination Survey 2017-2018, file GHB_J. Hyattsville, MD.",
+      "sha256": "35f07094573a0061a03ed609a5a363b34eb1b1c7065d1623b43d72e132a8a654",
+      "bytes": 103520,
+      "rows": 6401
+    },
+    {
+      "name": "NHANES 2017-2018 GLU_J",
+      "description": "Fasting plasma glucose",
+      "url": "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2017/DataFiles/GLU_J.xpt",
+      "path": "datasets/raw/nhanes/GLU_J.xpt",
+      "license": "Public domain (US Government work, 17 U.S.C. 105)",
+      "citation": "Centers for Disease Control and Prevention (CDC), National Center for Health Statistics. National Health and Nutrition Examination Survey 2017-2018, file GLU_J. Hyattsville, MD.",
+      "sha256": "5b38897d0d7bfbc69dd9ca74ffdaf2f6a9bed5a91d4a7bf46e07f1332cc3379e",
+      "bytes": 98480,
+      "rows": 3036
+    },
+    {
+      "name": "SisFall",
+      "description": "Accelerometer and gyroscope traces for falls and activities of daily living. 4505 trials across 38 subjects; 973 trials come from participants aged 60-75.",
+      "url": "https://doi.org/10.5281/zenodo.22212281",
+      "path": "datasets/raw/activity/SisFall.zip",
+      "license": "cc-by-4.0",
+      "citation": "Sucerquia, A., Lopez, J.D., Vargas-Bonilla, J.F. SisFall: A Fall and Movement Dataset. Sensors 2017, 17(1), 198. Zenodo DOI 10.5281/zenodo.22212281.",
+      "sha256": "dd0f9cf14134e95be79d9962855ba3bded13a4dedb3fa96fc265277d459aa6b3",
+      "bytes": 238324928,
+      "rows": 4505,
+      "caveats": [
+        "Falls are simulated by volunteers onto mattresses. No dataset of real unplanned falls in seniors exists; a model trained here will not transfer cleanly to real falls, and the write-up must say so.",
+        "Only 1 of the 15 elderly participants (SE06) performed falls, 75 trials; the other 14 did ADLs only, for safety. So 1,723 of the 1,798 fall trials come from adults aged 19-30, and the age group most at risk is nearly absent from the positive class. Split by subject and report elderly performance separately.",
+        "Sensors are waist-mounted at 200 Hz, not a phone in a pocket. Expect a domain gap against any real deployment."
+      ]
+    },
+    {
+      "name": "UCI HAR (Human Activity Recognition Using Smartphones)",
+      "description": "Smartphone accelerometer/gyroscope windows labelled with six activities. Derived file marks each window sedentary or active for the inactivity signal.",
+      "url": "https://doi.org/10.24432/C54S4K",
+      "path": "datasets/processed/har_activity_labels.csv",
+      "license": "cc-by-4.0",
+      "citation": "Anguita, D., Ghio, A., Oneto, L., Parra, X., Reyes-Ortiz, J.L. A Public Domain Dataset for Human Activity Recognition Using Smartphones. ESANN 2013. UCI Machine Learning Repository.",
+      "sha256": "c00b803081a5c797cd5e4b83700a9810b38d53d9d84e01917e090e1fdbc81031",
+      "bytes": 61005872,
+      "rows": 10299,
+      "caveats": [
+        "Volunteers aged 19-48, not seniors. Gait and posture transitions differ materially in older adults.",
+        "Waist-mounted phone in a lab protocol; real seniors may not carry a phone at all, which is why inactivity is inferred from call and check-in silence as the primary signal."
+      ]
+    },
+    {
+      "name": "festvox/cmu_hinglish_dog",
+      "description": "Code-mixed Hindi-English sentence pairs; supplies realistic Hinglish phrasing for synthetic call notes.",
+      "url": "https://huggingface.co/datasets/festvox/cmu_hinglish_dog",
+      "path": "datasets/processed/hinglish_sentences.jsonl",
+      "license": "cc-by-sa-3.0 AND gfdl",
+      "citation": "HuggingFace dataset festvox/cmu_hinglish_dog, accessed 2026-10-27.",
+      "rows": 1191
+    },
+    {
+      "name": "findnitai/english-to-hinglish",
+      "description": "Code-mixed Hindi-English sentence pairs; supplies realistic Hinglish phrasing for synthetic call notes.",
+      "url": "https://huggingface.co/datasets/findnitai/english-to-hinglish",
+      "path": "datasets/processed/hinglish_sentences.jsonl",
+      "license": "apache-2.0",
+      "citation": "HuggingFace dataset findnitai/english-to-hinglish, accessed 2026-10-27.",
+      "rows": 5516
+    },
+    {
+      "name": "openFDA drug labels (geriatric subset)",
+      "description": "Drug-interaction, warning and geriatric-use text for 18 drugs common in geriatric prescribing.",
+      "url": "https://api.fda.gov/drug/label.json",
+      "path": "datasets/processed/drug_interactions_geriatric.csv",
+      "license": "Public domain (US Government work); openFDA terms apply",
+      "citation": "U.S. Food and Drug Administration. openFDA Drug Label API, accessed 2026-10-27.",
+      "sha256": "9028866cddad32f750ddfcfccfb88e64a7add2361ebeb5eff07a8e26efa36669",
+      "bytes": 78678,
+      "rows": 18,
+      "caveats": [
+        "openFDA carries FDA's own disclaimer: not for making decisions about medical care. Use it to flag a pair for human review only.",
+        "US labelling. Indian formulations, brand names and dosing differ.",
+        "Free text, not a structured interaction graph. Any interaction check built on it is keyword matching and must route to a human.",
+        "Never surfaces to a senior or family member -- a drug-interaction string is diagnostic-adjacent and belongs to the coordinator view."
+      ]
+    },
+    {
+      "name": "Image: hero",
+      "description": "Hero background on the landing page. PLACEHOLDER — CC0 stock, to be replaced by a commissioned or generated photograph. See docs/PROMPTS.md.",
+      "url": "https://openverse.org/",
+      "path": "frontend/public/img/hero.jpg",
+      "license": "CC0 1.0 (public domain dedication, no attribution required)",
+      "citation": "Senior Woman by Senior Living via StockSnap/Openverse, accessed 2026-10-28.",
+      "sha256": "02665c842b28164b753dcc6907ec9d8d3b5aa47c4031c973f2ce20ef0ec7d23f",
+      "bytes": 832103,
+      "rows": null,
+      "caveats": "Stock photography standing in for final art. The people shown are not Samarth members, staff or clients."
+    },
+    {
+      "name": "Image: impact",
+      "description": "Impact band on the landing page. PLACEHOLDER — CC0 stock, to be replaced by a commissioned or generated photograph. See docs/PROMPTS.md.",
+      "url": "https://openverse.org/",
+      "path": "frontend/public/img/impact.jpg",
+      "license": "CC0 1.0 (public domain dedication, no attribution required)",
+      "citation": "Senior Man by Direct Media via StockSnap/Openverse, accessed 2026-10-28.",
+      "sha256": "2d2c9892b5d4b689cfc4c426d52850923494630e3e7aa01de62718b8dbbfaf26",
+      "bytes": 383224,
+      "rows": null,
+      "caveats": "Stock photography standing in for final art. The people shown are not Samarth members, staff or clients."
+    },
+    {
+      "name": "Image: closing",
+      "description": "Closing call-to-action band on the landing page. PLACEHOLDER — CC0 stock, to be replaced by a commissioned or generated photograph. See docs/PROMPTS.md.",
+      "url": "https://openverse.org/",
+      "path": "frontend/public/img/closing.jpg",
+      "license": "CC0 1.0 (public domain dedication, no attribution required)",
+      "citation": "Caregiver Nurse by Direct Media via StockSnap/Openverse, accessed 2026-10-28.",
+      "sha256": "137d018154ca5bb04a557a48975ab32efb4870aebd06eaf70d191f40dab57eba",
+      "bytes": 460262,
+      "rows": null,
+      "caveats": "Stock photography standing in for final art. The people shown are not Samarth members, staff or clients."
+    },
+    {
+      "name": "Video: closing",
+      "description": "Silent background clip on the right half of the closing band. SYNTHETIC - AI-generated, not a recording of real people. The hands shown belong to no one; they are not Samarth members, staff or clients.",
+      "url": "(generated by the team; no external source)",
+      "path": "frontend/public/video/closing.mp4",
+      "license": "Generated asset. No third-party rights; not licensed stock footage.",
+      "citation": "AI-generated video, created by the DEV-104 team on 2026-10-29. 1280x720, 8.00s, H.264. Prompt and acceptance checks in docs/PROMPTS.md section 4.",
+      "sha256": "2a4796fc80844ecaacbb95863df9448027a377e3359148b1a50dc91d48bc8418",
+      "bytes": 1148486,
+      "rows": null,
+      "caveats": "Must be described as synthetic wherever it is shown or presented. Plays muted, looped and aria-hidden; it carries no information and is paused under prefers-reduced-motion. The file still contains an unused audio track. Prompt: A near-static close-up of a younger hand resting over an older fair-skinned hand, both at rest on the arm of a chair. Soft diffused daylight from a window to the right, high-key and gentle, shallow focus. The only movement is one slow gentle squeeze and a faint shift of light. Camera locked off. No faces in frame."
+    },
+    {
+      "name": "Video: dashboard walkthrough",
+      "description": "Silent looping walkthrough of the Care Coordinator worklist, in the 'From data to decisions, faster' section. SYNTHETIC - AI-generated, not a screen recording of a running system.",
+      "url": "(generated by the team; no external source)",
+      "path": "frontend/public/video/dashboard.mp4",
+      "license": "Generated asset. No third-party rights; not licensed stock footage.",
+      "citation": "AI-generated video, created by the DEV-104 team on 2026-10-29. 1280x720, 8.00s, H.264. See docs/PROMPTS.md.",
+      "sha256": "55c73558d8566f42dc960481b49df23798bdfef3d8eacf81bebc151a9ec9d1d9",
+      "bytes": 957143,
+      "rows": null,
+      "caveats": "Must be described as a generated impression of the interface, NOT as a recording of working software - claiming otherwise in a demo would misrepresent the prototype. The HTML mock beneath it is the real markup. Plays muted, looped and aria-hidden; the worklist content is repeated as visually-hidden text so screen readers still get it. File contains an unused audio track."
+    }
+  ],
+  "assets": [
+    {
+      "name": "Landing photograph: hero",
+      "kind": "image",
+      "path": "frontend/public/img/hero.jpg",
+      "where": "Landing hero, full bleed behind the headline",
+      "source_file": "docs/photography/hero-tea-caregiver.png",
+      "provenance": "AI-generated still, supplied by the project owner on 2026-10-29. Generator and model not recorded by the supplier; record them here if known before submission.",
+      "people": "SYNTHETIC. The individuals depicted do not exist and are not Samarth members, staff or beneficiaries. This must be stated wherever the image is shown to judges.",
+      "processing": "frontend/scripts/prep-image.mjs: bottom 92px cropped to remove the generator's corner watermark, saturation 0.90 / brightness 1.015, warm soft-light wash, lanczos resample, mozjpeg q84.",
+      "alt_text": "An older man sitting with a cup of tea in his living room while a care worker rests a hand on his shoulder",
+      "sha256": "e12770d39ecadbfcca4fdb6478381d9ef84efffc36e4d92c65a2ec1c46b81269",
+      "bytes": 316361
+    },
+    {
+      "name": "Landing photograph: closing",
+      "kind": "image",
+      "path": "frontend/public/img/closing.jpg",
+      "where": "Closing call-to-action band, right half",
+      "source_file": "docs/photography/closing-hand-in-hand.png",
+      "provenance": "AI-generated still, supplied by the project owner on 2026-10-29. Generator and model not recorded by the supplier; record them here if known before submission.",
+      "people": "SYNTHETIC. The individuals depicted do not exist and are not Samarth members, staff or beneficiaries. This must be stated wherever the image is shown to judges.",
+      "processing": "frontend/scripts/prep-image.mjs: bottom 92px cropped to remove the generator's corner watermark, saturation 0.90 / brightness 1.015, warm soft-light wash, lanczos resample, mozjpeg q84.",
+      "alt_text": "A care worker holding an older person's hand and looking at them while they talk",
+      "sha256": "967322be126ad8ff399c82084ba505225fb5f6aa977740ce8f4829eaabc368e4",
+      "bytes": 233205
+    },
+    {
+      "name": "Landing photograph: signin",
+      "kind": "image",
+      "path": "frontend/public/img/signin.jpg",
+      "where": "Sign-in page, left half of the split layout",
+      "source_file": "docs/photography/signin-father-son.png",
+      "provenance": "AI-generated still, supplied by the project owner on 2026-10-29. Generator and model not recorded by the supplier; record them here if known before submission.",
+      "people": "SYNTHETIC. The individuals depicted do not exist and are not Samarth members, staff or beneficiaries. This must be stated wherever the image is shown to judges.",
+      "processing": "frontend/scripts/prep-image.mjs: no watermark on this source so no trim; saturation 0.90 / brightness 1.015, warm soft-light wash, lanczos resample to 1500px, mozjpeg q84.",
+      "alt_text": "An older man with a cup of tea at home, a younger family member leaning in beside him",
+      "sha256": "2f080b9c43f162e45dceabc202ab7a12fccff91c89765eae88f0e87f11e5f59c",
+      "bytes": 272628
+    }
+  ]
+}

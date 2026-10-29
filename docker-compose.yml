@@ -1,0 +1,63 @@
+# One-command setup, as the PRD requires for judge review.
+#
+#   cp .env.example .env
+#   docker compose up --build
+#
+# Postgres runs locally rather than against a hosted Supabase project on
+# purpose: the free tier pauses after a week of inactivity, which is a bad
+# five minutes to discover during judging. Point SUPABASE_URL at a hosted
+# project when you want the real Auth and Storage services.
+
+services:
+  db:
+    image: supabase/postgres:15.8.1.020
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-samarth}
+    ports:
+      - "54322:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/supabase/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      SUPABASE_URL: ${SUPABASE_URL:-http://localhost:54321}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      ALERTS_PER_COORDINATOR_PER_DAY: ${ALERTS_PER_COORDINATOR_PER_DAY:-10}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./model:/app/model:ro
+      - ./datasets/processed:/app/datasets/processed:ro
+
+  web:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL:-http://localhost:54321}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      BACKEND_URL: http://api:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:
