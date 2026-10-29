@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 
 import { BaselineChart } from "@/components/app/BaselineChart";
 import { Verdict } from "@/components/app/Verdict";
-import { COHORT } from "@/lib/demo";
-import { localizedDetail, localizedSenior, outcomeLabel } from "@/lib/demo-i18n";
+import { outcomeLabel } from "@/lib/demo-i18n";
 import { fmt } from "@/lib/i18n";
 import { getAppCopy } from "@/lib/i18n-server";
+import { loadSeniorRecord } from "@/lib/senior-detail";
 
 /**
  * Per-senior detail.
@@ -20,11 +20,13 @@ import { getAppCopy } from "@/lib/i18n-server";
  * in, and never translates it into a finding. A negated phrase is shown too,
  * with the note that no cue was raised — that is the cheapest way to show a
  * coordinator that the extractor understands "no pain today".
+ *
+ * READS THE REAL COHORT since 2026-10-29. There is no generateStaticParams
+ * any more: ids are database uuids and the rows are per-coordinator, so
+ * prerendering them would mean baking one coordinator's caseload into the
+ * build output. The page is rendered on demand, under that coordinator's own
+ * RLS session.
  */
-
-export function generateStaticParams() {
-  return COHORT.map((s) => ({ id: s.id }));
-}
 
 export default async function SeniorDetailPage({
   params,
@@ -33,10 +35,18 @@ export default async function SeniorDetailPage({
 }) {
   const { id } = await params;
   const { lang, t } = await getAppCopy();
-  const senior = localizedSenior(lang, id);
-  if (!senior) notFound();
+  const senior = await loadSeniorRecord(id, t, lang);
 
-  const detail = localizedDetail(lang, id);
+  if (senior.state !== "ok") {
+    return (
+      <main className="page page--narrow">
+        <h1 className="page__title">{t.senior.notFoundTitle}</h1>
+        <p className="page__sub">{t.senior.notFoundBody}</p>
+      </main>
+    );
+  }
+
+  const detail = senior;
 
   return (
     <main className="page">
@@ -99,7 +109,9 @@ export default async function SeniorDetailPage({
                         <q>{c.quote}</q>
                         <span lang="hi" className="sd__script">{c.script}</span>
                       </blockquote>
-                      <p className="sd__note">{c.note}</p>
+                      <p className="sd__note">
+                        {c.negated ? t.senior.cueNegated : t.senior.cueRaised}
+                      </p>
                     </div>
                   </li>
                 ))}
@@ -122,26 +134,42 @@ export default async function SeniorDetailPage({
             <>
               <section className="card sd__card">
                 <h2 className="sd__h2">{t.senior.meds}</h2>
+                {/* Per drug, not per slot. The logs record which MEDICINE was
+                    taken, and a drug that is never taken is a different
+                    conversation from a day that was patchy across the board. */}
                 <table className="sd__meds">
                   <thead>
                     <tr>
-                      <th scope="col">{t.senior.medsDay}</th>
-                      <th scope="col">{t.senior.medsAm}</th>
-                      <th scope="col">{t.senior.medsPm}</th>
+                      <th scope="col">{t.senior.medsDrug}</th>
+                      <th scope="col">{t.senior.medsStatus}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {detail.adherence.map((d) => (
-                      <tr key={d.day}>
-                        <th scope="row">{d.day}</th>
-                        <td>
-                          {d.morning ? <Tick label={t.senior.taken} /> : <Miss label={t.senior.missed} />}
-                        </td>
-                        <td>
-                          {d.evening ? <Tick label={t.senior.taken} /> : <Miss label={t.senior.missed} />}
-                        </td>
-                      </tr>
-                    ))}
+                    {Object.entries(
+                      detail.adherence.reduce<Record<string, { taken: number; due: number }>>(
+                        (acc, row) => {
+                          const cur = acc[row.drug] ?? { taken: 0, due: 0 };
+                          cur.due += 1;
+                          if (row.taken) cur.taken += 1;
+                          acc[row.drug] = cur;
+                          return acc;
+                        },
+                        {},
+                      ),
+                    )
+                      .sort((a, b) => a[1].taken / a[1].due - b[1].taken / b[1].due)
+                      .map(([drug, v]) => (
+                        <tr key={drug}>
+                          <th scope="row">{drug}</th>
+                          <td>
+                            {v.taken === 0 ? (
+                              <Miss label={`${v.taken}/${v.due}`} />
+                            ) : (
+                              <Tick label={`${v.taken}/${v.due}`} />
+                            )}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
                 <p className="sd__note">{t.senior.medsNote}</p>

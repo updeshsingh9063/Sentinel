@@ -2,10 +2,9 @@ import Link from "next/link";
 
 import { Verdict } from "@/components/app/Verdict";
 import { IconArrow } from "@/components/ui/Icons";
-import { ALERT_BUDGET } from "@/lib/demo";
-import { localizedCohort } from "@/lib/demo-i18n";
 import { fmt } from "@/lib/i18n";
 import { getAppCopy } from "@/lib/i18n-server";
+import { loadWorklist } from "@/lib/worklist";
 
 /**
  * FR-4: the urgency-sorted daily queue. The only surface that shows individual
@@ -19,6 +18,13 @@ import { getAppCopy } from "@/lib/i18n-server";
  * Rows past the cap are shown, dimmed, rather than hidden. They are the
  * evidence that the cap is doing something, and a coordinator who cannot see
  * what was left out has no reason to trust the list.
+ *
+ * READS THE REAL COHORT. This page rendered three hard-coded people until
+ * 2026-10-29, while the model's eighteen thousand scored senior-days sat
+ * unused in the database. The surfaced rows are the model's own `alerts` —
+ * it applied the cap and the cooldown when it wrote them, so the budget is
+ * not re-derived here — and the held rows are the rest of that day's scores.
+ * See lib/worklist.ts.
  */
 
 export async function generateMetadata() {
@@ -28,16 +34,26 @@ export async function generateMetadata() {
 
 export default async function WorklistPage() {
   const { lang, t } = await getAppCopy();
-  const cohort = localizedCohort(lang);
-  const surfaced = cohort.slice(0, ALERT_BUDGET);
-  const held = cohort.slice(ALERT_BUDGET);
+  const list = await loadWorklist(t, lang);
+
+  if (list.state === "empty") {
+    return (
+      <main className="page page--narrow">
+        <h1 className="page__title">{t.worklist.emptyTitle}</h1>
+        <p className="page__sub">{t.worklist.emptyBody}</p>
+      </main>
+    );
+  }
+
+  const { surfaced, held } = list;
+  const cap = surfaced.length;
 
   return (
     <main className="page">
       <header className="page__head">
-        <span className="eyebrow">{t.worklist.date}</span>
+        <span className="eyebrow">{list.dayLabel}</span>
         <h1 className="display page__title">{t.worklist.title}</h1>
-        <p className="page__sub">{fmt(t.worklist.sub, { cap: ALERT_BUDGET })}</p>
+        <p className="page__sub">{fmt(t.worklist.sub, { cap })}</p>
       </header>
 
       <ol className="wl">
@@ -96,15 +112,15 @@ export default async function WorklistPage() {
 
       <div className="wl__cap">
         <hr />
-        <span>{fmt(t.worklist.cap, { cap: ALERT_BUDGET, total: cohort.length })}</span>
+        <span>{fmt(t.worklist.cap, { cap, total: list.totalScored })}</span>
         <hr />
       </div>
 
-      <ol className="wl wl--held" start={ALERT_BUDGET + 1}>
+      <ol className="wl wl--held" start={cap + 1}>
         {held.map((s, i) => (
           <li key={s.id} className="card wl__row wl__row--held">
             <div className="wl__top">
-              <span className="wl__rank">{String(ALERT_BUDGET + i + 1).padStart(2, "0")}</span>
+              <span className="wl__rank">{String(cap + i + 1).padStart(2, "0")}</span>
               <i className="wl__avatar" aria-hidden="true">{s.initials}</i>
               <span className="wl__who">
                 <Link href={`/senior/${s.id}`} className="wl__name">{s.name}</Link>
@@ -112,7 +128,7 @@ export default async function WorklistPage() {
                   {fmt(t.worklist.metaShort, {
                     age: s.age,
                     city: s.city,
-                    reason: s.reasons[0].text,
+                    reason: s.reasons[0]?.text ?? "",
                   })}
                 </small>
               </span>

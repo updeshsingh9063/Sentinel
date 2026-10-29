@@ -11,6 +11,19 @@ this is a **ranking problem under a hard alert budget**, not disease
 prediction. Everything below follows from that — including why the headline
 metric is precision@K rather than AUC.
 
+**Live:** <https://frontend-omega-dusky-18.vercel.app> — sign in as
+`coordinator@samarth.demo` / `SamarthDemo!2026` (also `family@`, `ops@`).
+
+**Read first:** [`docs/WRITEUP.md`](docs/WRITEUP.md) — architecture, how the
+synthetic cohort was built, and the results including the one stretch goal that
+measurably did not work.
+
+Headline numbers, K = 10, 200 seniors over 90 days: **precision@10 = 0.169
+against an arithmetic ceiling of 0.192** (88% of achievable), **24/24 planted
+declines caught**, every one before the obvious day, median **22 days early**.
+The ceiling matters — with 24 episodes across 90 days most days genuinely have
+fewer than ten declining seniors.
+
 ## Layout
 
 ```
@@ -34,22 +47,50 @@ samarth-sentinel/
 | `model/samarth_model/scoring/` | Layer A rules, Layer B own-baseline, Layer C ML |
 | `model/evaluation/` | precision@K, episode recall, lead time |
 
-## Quick start
+## Running it
+
+### The fast path — look at the deployed app
+
+<https://frontend-omega-dusky-18.vercel.app>, credentials above. Nothing to
+install. The coordinator account is the one to use: the worklist, a senior
+record, and the weekly report are the three screens that carry the work.
+
+### Run the frontend against a Supabase project
 
 ```bash
-cp .env.example .env
-make setup          # backend + model + frontend deps
-make data           # fetch external reference datasets (~7 MB)
-make test           # 30 tests, no services needed
+cd frontend
+cp .env.local.example .env.local      # fill in the values it lists
+npm install
+npm run db:migrate                    # schema + RLS, migrations 0001-0007
+npm run db:seed                       # demo accounts
+npm run db:load-cohort                # 200 seniors x 90 days into Postgres
+npm run db:summaries                  # LLM family summaries (needs GROQ_API_KEY)
+npm run dev                           # http://localhost:3000
 ```
 
-Then either `make api` + `make web`, or `docker compose up --build` for the
-one-command path judges can run.
+`db:load-cohort` truncates `family_summaries`, so **re-run `db:summaries` after
+every reload** or the family view will be empty.
 
-Local Postgres is the default rather than a hosted Supabase project, because
-free projects pause after a week of inactivity — a bad thing to discover during
-judging. Point `SUPABASE_URL` at a hosted project when you need real Auth and
-Storage.
+`.env.local.example` is the authoritative list of variables and says which are
+needed by the app and which only by the admin scripts. The service-role key is
+only ever needed locally — a deployment needs four variables, no more.
+
+### Rebuild the cohort and retrain
+
+```bash
+python scripts/generate_cohort.py --seniors 200 --days 90
+python model/training/train.py            # --k 10 by default
+```
+
+Training prints the ablation, the feedback-loop sweep and the validation run,
+and writes `model/artifacts/` — of which `metrics.json` is committed, because
+the brief grades model metrics as a deliverable.
+
+### Tests
+
+```bash
+make test
+```
 
 ## Hard constraints
 
@@ -72,16 +113,32 @@ those roles hold no policy granting access to the tables in question.
 
 ## State of the work
 
-**Done** — project structure; Supabase schema with RLS; FastAPI app skeleton;
-both privacy gates implemented and tested; evaluation harness implemented and
-tested; external datasets fetched with licences and checksums recorded.
+All four core capabilities and all five stretch goals are implemented. One
+stretch goal is reported as **built and measurably ineffective**; see the
+write-up.
 
-**Next, and gating everything else** — the synthetic cohort generator
-(≥200 seniors × 90 days, planted declines, hard negatives). It blocks Layer C,
-the cue extractor, and every metric in the brief's deliverable 4.
+| Core requirement | Where |
+|---|---|
+| Signal ingestion, 4 types | `vitals`, `medication_logs`, `call_notes`, `checkins` |
+| Hindi/English cue extraction + STT | `model/samarth_model/nlp/`, `frontend/app/api/transcribe/` |
+| Rules + personal baseline + ML + anomaly | `model/samarth_model/scoring/` |
+| Reasons and next step, ranked dashboard | all 18,000 scored days carry reasons; `/worklist` |
 
-**Not started** — Layer A/B/C implementations, cue extraction, the four
-frontend views beyond their shells, auth wiring.
+| Stretch goal | Status |
+|---|---|
+| Hindi voice check-in bot | Done — `/checkin`, TTS + Whisper, keypad primary |
+| LLM family summary | Done — `npm run db:summaries`; 40 written, 1 rejected by the safety gate |
+| Fall / inactivity from sensors | **Inactivity only** — steps are scored; falls are detected as spoken mentions, not from accelerometers |
+| Coordinator feedback loop | Built; moves precision by ±0.001 and is reported as measured |
+| Medication interaction / missed-dose | Done — per-drug missed-dose patterns + 7 rules from the 2023 AGS Beers Criteria |
+
+Every coordinator, family and ops surface reads the live cohort. Nothing in the
+signed-in app renders fixtures.
+
+**Known gaps**, stated rather than buried: fall detection from sensor data is
+absent; the medication rules match generic names only; model unit tests cover
+the metrics module and the intent matcher, with the scoring layers verified by
+the ablation instead.
 
 ## External data
 

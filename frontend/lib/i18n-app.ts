@@ -96,6 +96,10 @@ export interface AppCopy {
     undo: string;
   };
   worklist: {
+    levels: { high: string; med: string; low: string };
+    dateOn: string;
+    emptyTitle: string;
+    emptyBody: string;
     date: string;
     title: string;
     /** Templates, not functions: copy crosses to client components. */
@@ -132,6 +136,16 @@ export interface AppCopy {
     missed: string;
     contacts: string;
     contactsNote: string;
+    seriesSystolic: string;
+    channelCall: string;
+    channelCheckin: string;
+    noAnswerDetail: string;
+    medsDrug: string;
+    medsStatus: string;
+    cueNegated: string;
+    cueRaised: string;
+    notFoundTitle: string;
+    notFoundBody: string;
   };
   family: {
     title: string;
@@ -342,7 +356,7 @@ const en: AppCopy = {
   },
   notice: {
     fixtures:
-      "Demo data on a synthetic cohort of 200 seniors over 90 days — no real patient data. Reports and operations read that cohort live; the worklist and senior detail are still fixtures. The system flags risk and routes it to a human; it never diagnoses.",
+      "Demo data on a synthetic cohort of 200 seniors over 90 days — no real patient data, and every figure on these pages is read live from it. The system flags risk and routes it to a human; it never diagnoses.",
     ops: "Live aggregates, read from the database. The cohort behind them is generated, not real people. Operations holds no table policy anywhere in the schema — there is no individual record this surface could show.",
     family:
       "Demo data. A family member never sees readings, scores or call notes — there is no policy granting them.",
@@ -357,6 +371,11 @@ const en: AppCopy = {
   },
   worklist: {
     date: "Monday 12 April 2025",
+    levels: { high: "High Risk", med: "Medium Risk", low: "Low Risk" },
+    dateOn: "Today — {date}",
+    emptyTitle: "No seniors are assigned to you",
+    emptyBody:
+      "The database returned no care assignments for this account, so there is no queue to build. That is row-level security working, not an error — an account with no seniors sees none.",
     title: "Today",
     sub: "Highest concern first, capped at {cap} so the list stays worth reading. Ordering reflects change from each senior’s own baseline, not population thresholds.",
     why: "Why this fired",
@@ -395,6 +414,17 @@ const en: AppCopy = {
     contacts: "Contact history",
     contactsNote:
       "Silence counts. An unanswered call costs nothing to compute and needs no sensor, which matters on a basic handset.",
+    seriesSystolic: "Systolic",
+    channelCall: "Call",
+    channelCheckin: "Check-in",
+    noAnswerDetail: "No answer recorded",
+    medsDrug: "Medicine",
+    medsStatus: "Taken",
+    cueNegated: "Said it did NOT happen \u2014 no cue raised",
+    cueRaised: "Cue raised from this sentence",
+    notFoundTitle: "This senior is not on your list",
+    notFoundBody:
+      "No record came back for this id. Either it does not exist, or it belongs to another coordinator \u2014 the database returns nothing in both cases, which is row-level security working rather than an error.",
   },
   family: {
     title: "How {name} is doing",
@@ -657,7 +687,7 @@ const hi: AppCopy = {
   },
   notice: {
     fixtures:
-      "200 बुज़ुर्गों के 90 दिन के सिंथेटिक डेटा पर डेमो — कोई वास्तविक मरीज़ डेटा नहीं। रिपोर्ट और ऑपरेशंस उसी डेटा से पढ़ते हैं; वर्कलिस्ट और बुज़ुर्ग विवरण अभी नमूना आँकड़े हैं। यह सिस्टम जोखिम को चिह्नित करके किसी व्यक्ति तक पहुँचाता है; निदान कभी नहीं करता।",
+      "200 बुज़ुर्गों के 90 दिन के सिंथेटिक डेटा पर डेमो — कोई वास्तविक मरीज़ डेटा नहीं, और इन पेजों का हर आँकड़ा उसी से पढ़ा जाता है। यह सिस्टम जोखिम को चिह्नित करके किसी व्यक्ति तक पहुँचाता है; निदान कभी नहीं करता।",
     ops: "लाइव आँकड़े, सीधे डेटाबेस से। इनके पीछे का समूह बनाया हुआ है, वास्तविक लोग नहीं। संचालन भूमिका के पास स्कीमा में कहीं कोई तालिका-अनुमति नहीं है — इस सतह पर कोई व्यक्तिगत रिकॉर्ड दिख ही नहीं सकता।",
     family:
       "डेमो डेटा। परिवार के सदस्य को कभी कोई रीडिंग, स्कोर या कॉल नोट नहीं दिखते — उन्हें देखने की अनुमति ही नहीं है।",
@@ -672,6 +702,11 @@ const hi: AppCopy = {
   },
   worklist: {
     date: "सोमवार 12 अप्रैल 2025",
+    levels: { high: "उच्च जोखिम", med: "मध्यम जोखिम", low: "कम जोखिम" },
+    dateOn: "आज — {date}",
+    emptyTitle: "आपके नाम कोई बुज़ुर्ग नहीं हैं",
+    emptyBody:
+      "इस खाते के लिए कोई देखभाल सौंपनी नहीं मिली, इसलिए कोई सूची नहीं बनी। यह त्रुटि नहीं, पंक्ति-स्तरीय सुरक्षा का काम करना है।",
     title: "आज",
     sub: "सबसे अधिक चिंता पहले, {cap} तक सीमित ताकि सूची पढ़ने लायक़ रहे। क्रम हर बुज़ुर्ग की अपनी सामान्य सीमा से बदलाव पर आधारित है, आबादी के औसत पर नहीं।",
     why: "यह क्यों उठा",
@@ -710,6 +745,17 @@ const hi: AppCopy = {
     contacts: "संपर्क का इतिहास",
     contactsNote:
       "चुप्पी भी मायने रखती है। बिना उठी कॉल की गणना में कुछ ख़र्च नहीं होता और कोई सेंसर नहीं चाहिए — साधारण फ़ोन पर यही काम आता है।",
+    seriesSystolic: "\u0938\u093f\u0938\u094d\u091f\u094b\u0932\u093f\u0915",
+    channelCall: "\u0915\u0949\u0932",
+    channelCheckin: "\u091c\u093e\u0901\u091a",
+    noAnswerDetail: "\u0915\u094b\u0908 \u091c\u0935\u093e\u092c \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902",
+    medsDrug: "\u0926\u0935\u093e",
+    medsStatus: "\u0932\u0940",
+    cueNegated: "\u0915\u0939\u093e \u0915\u093f \u0910\u0938\u093e \u0928\u0939\u0940\u0902 \u0939\u0941\u0906 \u2014 \u0915\u094b\u0908 \u0938\u0902\u0915\u0947\u0924 \u0928\u0939\u0940\u0902",
+    cueRaised: "\u0907\u0938 \u0935\u093e\u0915\u094d\u092f \u0938\u0947 \u0938\u0902\u0915\u0947\u0924 \u0909\u0920\u093e",
+    notFoundTitle: "\u092f\u0939 \u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u0906\u092a\u0915\u0940 \u0938\u0942\u091a\u0940 \u092e\u0947\u0902 \u0928\u0939\u0940\u0902 \u0939\u0948\u0902",
+    notFoundBody:
+      "\u0907\u0938 \u092a\u0939\u091a\u093e\u0928-\u0938\u0902\u0916\u094d\u092f\u093e \u092a\u0930 \u0915\u094b\u0908 \u0930\u093f\u0915\u0949\u0930\u094d\u0921 \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e\u0964 \u092f\u0939 \u0924\u094d\u0930\u0941\u091f\u093f \u0928\u0939\u0940\u0902, \u092a\u0902\u0915\u094d\u0924\u093f-\u0938\u094d\u0924\u0930\u0940\u092f \u0938\u0941\u0930\u0915\u094d\u0937\u093e \u0915\u093e \u0915\u093e\u092e \u0915\u0930\u0928\u093e \u0939\u0948\u0964",
   },
   family: {
     title: "{name} कैसी हैं",
