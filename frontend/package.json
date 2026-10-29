@@ -11,7 +11,7 @@
     "db:migrate": "node scripts/apply-migrations.cjs ../backend/supabase/migrations/0001_init.sql ../backend/supabase/migrations/0002_rls.sql ../backend/supabase/migrations/0003_ops_view_grants.sql ../backend/supabase/migrations/0004_ops_view_metrics.sql ../backend/supabase/migrations/0005_signup.sql",
     "db:seed": "node scripts/seed-demo.mjs",
     "db:load-cohort": "node scripts/load-cohort.mjs",
-        "img:prep": "node scripts/prep-image.mjs",
+    "img:prep": "node scripts/prep-image.mjs",
     "check:auth": "node scripts/check-auth-config.mjs"
   },
   "dependencies": {
@@ -20,9 +20,9 @@
     "clsx": "2.1.1",
     "lenis": "^1.3.27",
     "motion": "^14.7.1",
-    "next": "15.1.4",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "next": "^15.5.7",
+    "react": "^19.1.2",
+    "react-dom": "^19.1.2",
     "recharts": "2.15.0"
   },
   "devDependencies": {
@@ -30,8 +30,9 @@
     "@types/react": "19.0.4",
     "@types/react-dom": "19.0.2",
     "eslint": "9.17.0",
-    "eslint-config-next": "15.1.4",
+    "eslint-config-next": "^15.5.7",
     "pg": "^8.23.1",
+    "sharp": "^0.35.5",
     "typescript": "5.7.2"
   }
 }
