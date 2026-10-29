@@ -136,6 +136,11 @@ export default async function SeniorDetailPage({
           {detail && (
             <section className="card sd__card">
               <h2 className="sd__h2">{t.senior.said}</h2>
+              {/* An empty card under a heading reads as something that failed
+                  to load. Nothing being quoted is a real and common state --
+                  a fortnight where no call note or check-in carried a phrase
+                  the cue reader recognised -- so it is said out loud. */}
+              {!detail.cues.length && <p className="sd__note">{t.senior.saidQuiet}</p>}
               <ol className="sd__cues">
                 {detail.cues.map((c) => (
                   <li key={c.day + c.kind}>

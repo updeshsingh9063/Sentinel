@@ -52,7 +52,8 @@ Run these first. They take under a minute and catch anything structural.
 # from frontend/
 npm run typecheck        # expect: no output
 npm run lint             # expect: ✔ No ESLint warnings or errors
-node scripts/verify-access.mjs    # expect: all access rules hold
+node scripts/verify-access.mjs        # expect: all access rules hold
+node scripts/verify-missed-call.mjs   # expect: the missed-call channel holds
 
 # from the repo root
 .venv/Scripts/python.exe -m pytest model -q    # expect: 40 passed
@@ -234,6 +235,32 @@ Say each of these and confirm it is understood:
 That last row is the important one. Whisper produces confident Devanagari from
 a pure tone, so a silent recording must come back as *no speech* rather than a
 transcript. If it ever returns words from silence, that is a serious bug.
+
+### 6.1 The missed-call channel
+
+The third way in, and the only one that costs the senior nothing. There is no
+screen for it — a senior dials a number and hangs up, and a telephony provider
+posts the call to the app. To exercise it the way a provider would, from
+`frontend/` (the secret is in `.env.local`):
+
+```bash
+node scripts/verify-missed-call.mjs
+# add --url https://<your-deployment> to also hit the live webhook
+```
+
+- [ ] All checks pass, ending `the missed-call channel holds`
+- [ ] Sign in as the coordinator, open the senior named in the script output,
+      and the **Contact history** shows today as **Missed call — answered**
+      with *"Dialled in and hung up… no questions were answered."*
+- [ ] It is **not** shown as a normal answered check-in. That distinction is
+      the feature: a missed call is a pulse, not a report.
+
+The script also proves the parts that are easy to claim and hard to believe:
+a wrong secret is refused, the secret store is unreadable by every role
+including a signed-in coordinator, the reply carries no name or id, a retry
+does not create a second check-in, and a caller without the secret gets the
+same answer for an enrolled number as for an unenrolled one — so the endpoint
+cannot be used to test whether a given phone belongs to a senior on the books.
 
 ---
 

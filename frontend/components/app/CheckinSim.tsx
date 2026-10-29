@@ -168,7 +168,17 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
     if (transcript) setSpoken({ ...spoken, [key]: transcript });
     setUnclear(null);
     setStep(step + 1);
-    // TODO: POST /api/checkin/response/{senior_id}
+    // NOT PERSISTED, AND THAT IS THE DECISION RATHER THAN AN OMISSION.
+    // This page is public, because a senior has no account and the brief
+    // forbids giving them one. A public page that could write a named
+    // person's health record would let anyone on the internet forge a
+    // check-in for a senior they picked off a list, and that record feeds
+    // the risk model. So the two channels that DO write are the two that
+    // can be authenticated: the telephony webhook at
+    // /api/checkin/missed-call, which proves itself with a shared secret,
+    // and a signed-in coordinator logging a call they took themselves.
+    // What runs here is the script, the speech matching and the fallback
+    // logic -- the parts worth seeing -- against no one in particular.
   }
 
   /**

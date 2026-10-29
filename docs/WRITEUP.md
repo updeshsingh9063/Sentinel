@@ -168,6 +168,27 @@ have had a fall — answered on keypad 1/2/3, in Hindi or English. The keypad is
 the primary interface, not a fallback. The questions map onto cue types the
 model already scores, so the call and the notes describe the same things.
 
+**Three ways in, and the cheapest one is the point.** The brief offers a
+senior "a voice note, a missed-call check-in or a one-tap reply", and all
+three exist. The third is the one that matters most for the people this is
+actually for: a missed call needs no smartphone, no data, no literacy and no
+app. The senior dials and hangs up. A telephony provider posts to
+`/api/checkin/missed-call`, and the day is recorded.
+
+What that record does *not* say is the design decision. A dial-and-hang-up
+confirms somebody was up and able to dial — nothing about pain, mood or
+medication. So `checkins.source` names the channel, the detail columns stay
+null, and the coordinator's contact history reads "Missed call — no questions
+were answered" rather than letting a week of silence-with-a-pulse look like a
+week of reassurance.
+
+The webhook holds no credential. Authorization is a security-definer function
+that checks a shared secret against a stored digest, so the deployment never
+needs a service-role key to write one boolean; compromising the web host buys
+an attacker the ability to mark people as having phoned in, and nothing else.
+`npm run verify:missed-call` asserts all of it, including that a caller
+without the secret cannot tell an enrolled number from an unenrolled one.
+
 Yes and no do not point the same way across those questions, and the polarity
 is declared per question rather than inferred: "did you take your medicine" and
 "have you eaten" are good when yes, "have you had a fall" is bad when yes.

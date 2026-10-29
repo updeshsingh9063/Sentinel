@@ -125,6 +125,7 @@ export interface AppCopy {
     why: string;
     whyNote: string;
     said: string;
+    saidQuiet: string;
     nextStep: string;
     nextStepNote: string;
     meds: string;
@@ -139,6 +140,8 @@ export interface AppCopy {
     seriesSystolic: string;
     channelCall: string;
     channelCheckin: string;
+    channelMissedCall: string;
+    missedCallDetail: string;
     noAnswerDetail: string;
     medsDrug: string;
     medsStatus: string;
@@ -422,6 +425,7 @@ const en: AppCopy = {
     whyNote:
       "Contributions are stored with the score, so the reasons survive into the alert instead of being recomputed from a model that may have moved on.",
     said: "What was said",
+    saidQuiet: "Nothing was quoted in this fortnight \u2014 no call note or check-in carried a phrase the cue reader recognised.",
     nextStep: "Next step",
     nextStepNote:
       "Every path ends at a person. The system never adjusts a medication and never contacts a senior on its own.",
@@ -439,6 +443,8 @@ const en: AppCopy = {
     seriesSystolic: "Systolic",
     channelCall: "Call",
     channelCheckin: "Check-in",
+    channelMissedCall: "Missed call",
+    missedCallDetail: "Dialled in and hung up. Confirms they are up and able to call \u2014 no questions were answered.",
     noAnswerDetail: "No answer recorded",
     medsDrug: "Medicine",
     medsStatus: "Taken",
@@ -779,6 +785,7 @@ const hi: AppCopy = {
     whyNote:
       "योगदान स्कोर के साथ ही सहेजे जाते हैं, इसलिए कारण अलर्ट के साथ बने रहते हैं — उन्हें ऐसे मॉडल से दोबारा नहीं निकाला जाता जो तब तक बदल चुका हो।",
     said: "क्या कहा गया",
+    saidQuiet: "इन दो हफ़्तों में किसी कॉल या जाँच में ऐसी कोई बात नहीं आई जिसे संकेत पढ़ने वाला पहचान सके।",
     nextStep: "अगला कदम",
     nextStepNote:
       "हर रास्ता किसी व्यक्ति पर ख़त्म होता है। यह प्रणाली न कभी दवा बदलती है, न अपने आप किसी बुज़ुर्ग से संपर्क करती है।",
@@ -796,6 +803,8 @@ const hi: AppCopy = {
     seriesSystolic: "\u0938\u093f\u0938\u094d\u091f\u094b\u0932\u093f\u0915",
     channelCall: "\u0915\u0949\u0932",
     channelCheckin: "\u091c\u093e\u0901\u091a",
+    channelMissedCall: "\u091b\u0942\u091f\u0940 \u0915\u0949\u0932",
+    missedCallDetail: "\u0915\u0949\u0932 \u0915\u0930\u0915\u0947 \u0915\u093e\u091f \u0926\u0940\u0964 \u0907\u0924\u0928\u093e \u092a\u0924\u093e \u091a\u0932\u0924\u093e \u0939\u0948 \u0915\u093f \u0935\u0939 \u0909\u0920\u0947 \u0939\u0948\u0902 \u0914\u0930 \u092b\u093c\u094b\u0928 \u0915\u0930 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902 \u2014 \u0915\u093f\u0938\u0940 \u0938\u0935\u093e\u0932 \u0915\u093e \u091c\u0935\u093e\u092c \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e\u0964",
     noAnswerDetail: "\u0915\u094b\u0908 \u091c\u0935\u093e\u092c \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902",
     medsDrug: "\u0926\u0935\u093e",
     medsStatus: "\u0932\u0940",

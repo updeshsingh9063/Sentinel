@@ -4,8 +4,13 @@ const fs = require("fs");
 const path = require("path");
 const { Client } = require("pg");
 
-// Credentials come from the environment; nothing is stored in the repo.
+// Credentials come from the environment, or from .env.local, which is
+// gitignored. Nothing is stored in the repo.
 //   SUPABASE_DB_HOST, SUPABASE_DB_PASSWORD
+//
+// Reading .env.local matters for more than convenience: the alternative is
+// typing a database password on a command line, where it lands in shell
+// history and in the process list for every other user on the machine.
 //
 // Lives under frontend/ because that is the repo's only Node package and `pg`
 // is a devDependency there.
@@ -13,6 +18,18 @@ const { Client } = require("pg");
 // Usage:
 //   cd frontend && npm run db:migrate
 //   cd frontend && node scripts/apply-migrations.cjs ../backend/supabase/migrations/0003_*.sql
+// Same loader the verify scripts use. A real environment variable always
+// wins, so CI can override the file without editing it.
+for (const line of (fs.existsSync(path.join(__dirname, "..", ".env.local"))
+  ? fs.readFileSync(path.join(__dirname, "..", ".env.local"), "utf8").split(/\r?\n/)
+  : [])) {
+  const t = line.trim();
+  if (!t || t.startsWith("#") || !t.includes("=")) continue;
+  const i = t.indexOf("=");
+  const k = t.slice(0, i).trim();
+  if (!(k in process.env)) process.env[k] = t.slice(i + 1).trim().replace(/^["']|["']$/g, "");
+}
+
 const need = (name) => {
   const v = process.env[name];
   if (!v) {

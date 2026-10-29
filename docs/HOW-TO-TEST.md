@@ -195,6 +195,45 @@ This is what a senior hears on a phone call.
 
 ---
 
+## Part 6 — The missed call (1 minute)
+
+There is nothing to click for this one, and that is the point. A senior who
+has no smartphone, no internet and cannot read just **dials a number and hangs
+up**. The phone company tells our system the call happened. That counts as
+checking in.
+
+To test it you have to pretend to be the phone company. Open a terminal in the
+`frontend` folder and run:
+
+```
+npm run verify:missed-call
+```
+
+Every line should say **PASS**, and the last line should say
+*the missed-call channel holds*.
+
+Then go and look at what it did:
+
+1. Log in as the **care coordinator**.
+2. Open the senior whose name the script printed.
+3. Scroll to **Contact history** on the right.
+4. Today should be there, saying **"Missed call — answered"** and underneath:
+   *"Dialled in and hung up. Confirms they are up and able to call — no
+   questions were answered."*
+
+**Why that wording matters.** A missed call tells us one thing only: somebody
+found the phone and could dial. It tells us nothing about pain, mood or
+medicines. If the screen showed it as a normal answered check-in, a
+coordinator would read a whole week of reassurance that nobody ever gave. So
+it is labelled as exactly what it is.
+
+The script also checks the things you would want to be sure of but cannot see:
+someone who does not know the secret password cannot record a fake call, and
+cannot even use it to find out whether a phone number belongs to one of our
+seniors.
+
+---
+
 ## Things that look wrong but are correct
 
 Before reporting a problem, check this list.

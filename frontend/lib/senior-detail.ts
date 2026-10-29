@@ -216,7 +216,7 @@ export async function loadSeniorRecord(
       .order("called_on", { ascending: false }),
     supabase
       .from("checkins")
-      .select("checked_on, answered")
+      .select("checked_on, answered, source")
       .eq("senior_id", seniorId)
       .gte("checked_on", windowStart)
       .order("checked_on", { ascending: false }),
@@ -281,6 +281,9 @@ export async function loadSeniorRecord(
     : 99;
 
   const answeredByDay = new Map((checkins.data ?? []).map((c) => [c.checked_on, c.answered]));
+  // Which channel each day arrived on. A missed call is a real check-in and a
+  // thin one at the same time, and the two facts have to travel together.
+  const channelByDay = new Map((checkins.data ?? []).map((c) => [c.checked_on, c.source]));
 
   const contacts: DetailContact[] = (notes.data ?? []).slice(0, 8).map((n) => ({
     day: n.called_on,
@@ -291,7 +294,22 @@ export async function loadSeniorRecord(
   // Check-in days with no call note are still contact attempts, and a run of
   // unanswered ones is exactly the pattern worth seeing.
   for (const [d, answered] of answeredByDay) {
-    if (!answered && !contacts.some((c) => c.day === d)) {
+    if (contacts.some((c) => c.day === d)) continue;
+    // A MISSED CALL IS NOT AN ANSWERED CALL, and showing it as one would be
+    // the single most misleading thing on this page. It says somebody found
+    // the phone and could dial — nothing about pain, mood or medication. The
+    // coordinator reading a week of these should see a week of silence with a
+    // pulse in it, not a week of reassurance.
+    if (answered && channelByDay.get(d) === "missed_call") {
+      contacts.push({
+        day: d,
+        channel: t.senior.channelMissedCall,
+        outcome: "answered",
+        detail: t.senior.missedCallDetail,
+      });
+      continue;
+    }
+    if (!answered) {
       contacts.push({
         day: d,
         channel: t.senior.channelCheckin,
