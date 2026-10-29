@@ -108,9 +108,14 @@ if (!service) {
   console.log(`\n  site URL: ${siteUrl}`);
   console.log("  redirect URLs the project will honour:");
   for (const want of WANT) {
+    // `redirect_to` goes at the TOP LEVEL. The `options: { redirectTo }`
+    // nesting belongs to supabase-js, which flattens it before it ever
+    // reaches GoTrue -- send it nested here and the field is silently
+    // dropped, every answer comes back as the Site URL, and a correctly
+    // configured project looks broken.
     const r = await admin("/admin/generate_link", {
       method: "POST",
-      body: JSON.stringify({ type: "recovery", email: probeEmail, options: { redirect_to: want } }),
+      body: JSON.stringify({ type: "recovery", email: probeEmail, redirect_to: want }),
     }).then((x) => x.json()).catch(() => ({}));
     const link = r.action_link ?? r.properties?.action_link ?? "";
     let got = "";

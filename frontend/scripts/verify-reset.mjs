@@ -118,7 +118,7 @@ try {
       body: JSON.stringify({
         type: "recovery",
         email: EMAIL,
-        options: { redirect_to: `${DEPLOY ?? "http://localhost:3000"}/auth/callback?flow=recovery` },
+        redirect_to: `${DEPLOY ?? "http://localhost:3000"}/auth/callback?flow=recovery`,
       }),
     });
     const body = await r.json();
@@ -171,11 +171,20 @@ try {
       body: JSON.stringify({
         type: "recovery",
         email: EMAIL,
-        options: { redirect_to: `${DEPLOY}/auth/callback?flow=recovery` },
+        redirect_to: `${DEPLOY}/auth/callback?flow=recovery`,
       }),
     });
     const b2 = await r2.json();
     const th = b2.hashed_token ?? b2.properties?.hashed_token;
+
+    // The link that would be emailed must point at the deployment, not at
+    // whatever the Site URL happens to be. This is the check that would have
+    // caught a reset email sending everyone to their own localhost.
+    const emailed = b2.action_link ?? b2.properties?.action_link ?? "";
+    let pointsAt = "";
+    try { pointsAt = new URL(emailed).searchParams.get("redirect_to") ?? ""; } catch { /* none */ }
+    check("the emailed link points at the deployment",
+          pointsAt.startsWith(DEPLOY), `redirect_to=${pointsAt || "(none)"}`);
     const hit = await fetch(
       `${DEPLOY}/auth/callback?flow=recovery&type=recovery&token_hash=${encodeURIComponent(th)}`,
       { redirect: "manual" },
