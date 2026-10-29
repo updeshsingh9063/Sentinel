@@ -70,9 +70,12 @@ averages, so the baseline carries the largest blend weight (0.40) and the band
 is always that senior's own.
 
 **4 · Explainable action.** Every one of the 18,000 scored days carries its top
-reasons and a concrete next step, generated in the same layer that produced the
-contributions so the text cannot drift from the number. Reasons pass a
-never-diagnose gate before storage.
+reasons and a concrete next step, **in both English and Hindi**, generated in
+the same layer that produced the contributions so the text cannot drift from
+the number. Both languages are produced from the same `RuleHit` values rather
+than by translating the English sentence, so they state the same figures by
+construction, and both pass the never-diagnose gate before storage — a string
+translated at render time would be the one sentence on the page nobody checked.
 
 ## 4. How the synthetic data was built
 
@@ -188,11 +191,10 @@ weekly summaries — roughly 250 tokens per summary.
   layers are verified by the ablation rather than by unit tests.
 - Brand-name drugs are not resolved to generics, so the medication rules match
   only generic names.
-- **Reason text and next steps are English only.** The interface is fully
-  bilingual and the senior-facing check-in is Hindi-first, but the explain
-  layer writes English, so a coordinator reading the Hindi UI still sees
-  English reasons. Translating them belongs in the explain layer, beside the
-  safety gate, not at render time.
+- Hindi reason text is template-based, not model-translated. Each rule has a
+  hand-written Hindi sentence with the same numeric slots as its English
+  counterpart; a rule added without one falls back to English rather than
+  rendering a blank.
 
 ---
 

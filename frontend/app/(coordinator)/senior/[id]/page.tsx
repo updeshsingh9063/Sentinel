@@ -28,6 +28,20 @@ import { loadSeniorRecord } from "@/lib/senior-detail";
  * RLS session.
  */
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const { lang, t } = await getAppCopy();
+  const senior = await loadSeniorRecord(id, t, lang);
+  // Falls back to the section name rather than leaking "not found" into a
+  // browser tab or a shared link preview.
+  const who = senior.name || t.titles.senior;
+  return { title: `${who} · Samarth Sentinel` };
+}
+
 export default async function SeniorDetailPage({
   params,
 }: {

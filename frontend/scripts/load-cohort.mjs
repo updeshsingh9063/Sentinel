@@ -405,6 +405,9 @@ const dayToDate = (day, lastDay) => {
       Math.min(0.9999, Math.max(0, a.score)),
       a.reason_text,
       a.next_step,
+      // Written by the explain layer in the same pass as the English, so the
+      // two state the same numbers and both passed the never-diagnose gate.
+      a.next_step_hi ?? null,
       a.day === lastDay ? "open" : "actioned",
       !!a.escalated,
       raisedAt(a.day),
@@ -419,7 +422,7 @@ const dayToDate = (day, lastDay) => {
       );
       const res = await c.query(
         `insert into alerts (senior_id, coordinator_id, raised_on, rank_in_day,
-           score, reason_text, next_step, status, escalated, created_at)
+           score, reason_text, next_step, next_step_hi, status, escalated, created_at)
          values ${tuples.join(",")} on conflict do nothing
          returning id, status, created_at`,
         params,

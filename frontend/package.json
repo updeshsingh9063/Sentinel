@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "node scripts/apply-migrations.cjs ../backend/supabase/migrations/0001_init.sql ../backend/supabase/migrations/0002_rls.sql ../backend/supabase/migrations/0003_ops_view_grants.sql ../backend/supabase/migrations/0004_ops_view_metrics.sql ../backend/supabase/migrations/0005_signup.sql ../backend/supabase/migrations/0006_family_checkin_view.sql ../backend/supabase/migrations/0007_activity_steps.sql",
+    "db:migrate": "node scripts/apply-migrations.cjs ../backend/supabase/migrations/0001_init.sql ../backend/supabase/migrations/0002_rls.sql ../backend/supabase/migrations/0003_ops_view_grants.sql ../backend/supabase/migrations/0004_ops_view_metrics.sql ../backend/supabase/migrations/0005_signup.sql ../backend/supabase/migrations/0006_family_checkin_view.sql ../backend/supabase/migrations/0007_activity_steps.sql ../backend/supabase/migrations/0008_alert_next_step_hi.sql",
     "db:seed": "node scripts/seed-demo.mjs",
     "db:load-cohort": "node scripts/load-cohort.mjs",
     "img:prep": "node scripts/prep-image.mjs",

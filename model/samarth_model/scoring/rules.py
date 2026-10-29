@@ -15,7 +15,7 @@ member; a condition name here would travel all the way out.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pandas as pd
 
@@ -25,6 +25,11 @@ class RuleHit:
     code: str
     text: str
     contribution: float
+    #: The numbers substituted into `text`, kept separately so the explain
+    #: layer can render the same fact in another language without parsing the
+    #: English sentence back apart. A regex over prose is not a translation
+    #: strategy.
+    values: dict = field(default_factory=dict)
 
 
 def _num(record: dict, key: str) -> float | None:
@@ -51,32 +56,33 @@ def evaluate(day_record: dict) -> list[RuleHit]:
         if sys_bp >= 180:
             hits.append(RuleHit("bp_very_high",
                                 "Systolic reading of %d, well above the usual range" % sys_bp,
-                                0.42))
+                                0.42, {"n": int(sys_bp)}))
         elif sys_bp >= 160:
             hits.append(RuleHit("bp_high",
                                 "Systolic reading of %d, above the usual range" % sys_bp,
-                                0.26))
+                                0.26, {"n": int(sys_bp)}))
         elif sys_bp <= 90:
             hits.append(RuleHit("bp_low",
                                 "Systolic reading of %d, below the usual range" % sys_bp,
-                                0.24))
+                                0.24, {"n": int(sys_bp)}))
 
     spo2 = _num(day_record, "spo2_pct")
     if spo2 is not None and spo2 < 93:
         hits.append(RuleHit("spo2_low",
                             "Oxygen saturation at %.0f%%, lower than usual" % spo2,
-                            0.30))
+                            0.30, {"n": round(spo2)}))
 
     pulse = _num(day_record, "pulse_bpm")
     if pulse is not None and (pulse >= 110 or pulse <= 48):
         hits.append(RuleHit("pulse_outside",
                             "Pulse of %.0f, outside the usual range" % pulse,
-                            0.18))
+                            0.18, {"n": round(pulse)}))
 
     temp = _num(day_record, "temperature_c")
     if temp is not None and temp >= 38.0:
         hits.append(RuleHit("temp_high",
-                            "Temperature of %.1f degrees" % temp, 0.22))
+                            "Temperature of %.1f degrees" % temp, 0.22,
+                            {"n": round(temp, 1)}))
 
     # Adherence. Unlogged is not the same as not taken, which is exactly why
     # the reason says "not logged" and the action is to ask.
@@ -84,7 +90,7 @@ def evaluate(day_record: dict) -> list[RuleHit]:
     if adh7 is not None and adh7 < 0.6:
         hits.append(RuleHit("dose_missed",
                             "Under %d%% of doses logged over the past week" % round(adh7 * 100),
-                            0.28))
+                            0.28, {"n": round(adh7 * 100)}))
     elif adh7 is not None and adh7 < 0.8:
         hits.append(RuleHit("dose_patchy",
                             "Doses logged patchily this week", 0.14))
@@ -94,10 +100,12 @@ def evaluate(day_record: dict) -> list[RuleHit]:
     if quiet is not None:
         if quiet >= 7:
             hits.append(RuleHit("no_contact",
-                                "No answered call in %d days" % int(quiet), 0.34))
+                                "No answered call in %d days" % int(quiet), 0.34,
+                                {"n": int(quiet)}))
         elif quiet >= 4:
             hits.append(RuleHit("contact_thin",
-                                "No answered call in %d days" % int(quiet), 0.16))
+                                "No answered call in %d days" % int(quiet), 0.16,
+                                {"n": int(quiet)}))
 
     # Keypad check-in: 3 means "worse".
     feeling = _num(day_record, "feeling_code")

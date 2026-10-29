@@ -71,7 +71,7 @@ function levelFor(score: number): Level {
   return score >= 0.6 ? "high" : score >= 0.35 ? "med" : "low";
 }
 
-function parseReasons(raw: unknown): WorklistReason[] {
+function parseReasons(raw: unknown, lang: string): WorklistReason[] {
   let v = raw;
   if (typeof v === "string") {
     try {
@@ -85,7 +85,7 @@ function parseReasons(raw: unknown): WorklistReason[] {
     .filter((r): r is Record<string, unknown> => !!r && typeof r === "object")
     .map((r) => ({
       code: String(r.code ?? ""),
-      text: String(r.text ?? ""),
+      text: String((lang === "hi" && r.text_hi) || r.text || ""),
       contribution: Number(r.contribution ?? 0),
     }))
     .filter((r) => r.text);
@@ -188,7 +188,7 @@ export async function loadSeniorRecord(
       .order("checked_on", { ascending: false }),
     supabase
       .from("alerts")
-      .select("reason_text, next_step, raised_on")
+      .select("reason_text, next_step, next_step_hi, raised_on")
       .eq("senior_id", seniorId)
       .order("raised_on", { ascending: false })
       .limit(1)
@@ -274,8 +274,9 @@ export async function loadSeniorRecord(
     level,
     levelLabel: t.worklist.levels[level],
     daysSinceContact,
-    reasons: parseReasons(lastScore?.reasons),
-    nextStep: alert.data?.next_step ?? "",
+    reasons: parseReasons(lastScore?.reasons, lang),
+    nextStep:
+      (lang === "hi" && alert.data?.next_step_hi) || alert.data?.next_step || "",
     series: {
       label: t.senior.seriesSystolic,
       unit: "mmHg",

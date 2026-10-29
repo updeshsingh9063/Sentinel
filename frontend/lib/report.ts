@@ -287,7 +287,7 @@ export async function loadWeeklyReport(
         .order("called_on", { ascending: false }),
       supabase
         .from("alerts")
-        .select("raised_on, reason_text, next_step, status")
+        .select("raised_on, reason_text, next_step, next_step_hi, status")
         .eq("senior_id", seniorId)
         .gte("raised_on", week.start)
         .lte("raised_on", week.end)
@@ -410,7 +410,10 @@ export async function loadWeeklyReport(
       ? {
           raisedOn: alerts.data[0].raised_on,
           reason: alerts.data[0].reason_text ?? "",
-          nextStep: alerts.data[0].next_step ?? "",
+          nextStep:
+            (lang === "hi" && alerts.data[0].next_step_hi) ||
+            alerts.data[0].next_step ||
+            "",
           status: alerts.data[0].status ?? "open",
         }
       : null,

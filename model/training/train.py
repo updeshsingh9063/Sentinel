@@ -40,7 +40,11 @@ sys.path.insert(0, str(REPO / "model"))
 from evaluation.metrics import Alert, Episode, episode_recall, precision_at_k  # noqa: E402
 from samarth_model.alerts.budget import apply_budget  # noqa: E402
 from samarth_model.alerts.rank import blend, rank_all  # noqa: E402
-from samarth_model.explain.reasons import summarise  # noqa: E402
+from samarth_model.explain.reasons import (  # noqa: E402
+    next_step_hi_for,
+    summarise,
+    text_hi_for,
+)
 from samarth_model.features.windows import build, feature_columns  # noqa: E402
 from samarth_model.scoring import baseline as layer_b  # noqa: E402
 from samarth_model.scoring import feedback as layer_f  # noqa: E402
@@ -309,7 +313,7 @@ def main() -> int:
             record = feat_idx.loc[key].to_dict()
         except KeyError:
             continue
-        top, _ = summarise(layer_a.evaluate(record))
+        top, _, _ = summarise(layer_a.evaluate(record))
         if not top:
             continue
         actually_declining = bool(truth.get(key, False))
@@ -341,7 +345,7 @@ def main() -> int:
         except KeyError:
             later_reasons.append([])
             continue
-        top, _ = summarise(layer_a.evaluate(record))
+        top, _, _ = summarise(layer_a.evaluate(record))
         later_reasons.append(top)
 
     # Episodes key on real dates; the frame keys on a day index, so the
@@ -449,28 +453,33 @@ def main() -> int:
             record = feat_by_key.loc[key].to_dict()
         except KeyError:
             continue
-        top, step = summarise(layer_a.evaluate(record))
+        top, step, step_hi = summarise(layer_a.evaluate(record))
         if not top:
             # No rule fired. The score is then carried by the baseline, ML and
             # anomaly layers, which is a real finding and gets said plainly
             # rather than left blank.
             top = [{"code": "baseline_shift",
                     "text": "Readings drifting from their own recent range",
+                    "text_hi": text_hi_for("baseline_shift", {}),
                     "contribution": round(float(r.score), 3)}]
             step = "Call today and ask how the last few days have been."
-        explanations[key] = (top, step)
+            step_hi = next_step_hi_for(["baseline_shift"])
+        explanations[key] = (top, step, step_hi)
 
     scored_out = ranked.copy()
     scored_out["reasons"] = [
-        json.dumps(explanations.get((r.senior_id, r.day), ([], ""))[0], ensure_ascii=False)
+        json.dumps(explanations.get((r.senior_id, r.day), ([], "", ""))[0], ensure_ascii=False)
         for r in ranked.itertuples()
     ]
     scored_out["reason_text"] = [
-        (explanations.get((r.senior_id, r.day), ([{}], ""))[0] or [{}])[0].get("text", "")
+        (explanations.get((r.senior_id, r.day), ([{}], "", ""))[0] or [{}])[0].get("text", "")
         for r in ranked.itertuples()
     ]
     scored_out["next_step"] = [
-        explanations.get((r.senior_id, r.day), ([], ""))[1] for r in ranked.itertuples()
+        explanations.get((r.senior_id, r.day), ([], "", ""))[1] for r in ranked.itertuples()
+    ]
+    scored_out["next_step_hi"] = [
+        explanations.get((r.senior_id, r.day), ([], "", ""))[2] for r in ranked.itertuples()
     ]
     scored_out.to_parquet(out / "scored.parquet", index=False)
     print(f"  {len(explanations)} of {len(ranked)} scored days explained")
@@ -486,6 +495,7 @@ def main() -> int:
             "reasons": r.reasons,
             "reason_text": r.reason_text,
             "next_step": r.next_step,
+            "next_step_hi": r.next_step_hi,
         })
     alerts_df = pd.DataFrame(alert_rows)
     alerts_df.to_parquet(out / "alerts.parquet", index=False)
