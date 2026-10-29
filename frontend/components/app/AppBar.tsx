@@ -3,8 +3,9 @@ import Link from "next/link";
 import { SignOut } from "@/components/app/SignOut";
 import { LangSwitch } from "@/components/landing/LangSwitch";
 import { Logo } from "@/components/ui/Icons";
+import { getCurrentUser } from "@/lib/current-user";
 import { getAppCopy } from "@/lib/i18n-server";
-import { DEMO_USERS, type DemoRole } from "@/lib/session";
+import { type DemoRole } from "@/lib/session";
 
 /**
  * The bar across every signed-in surface.
@@ -14,6 +15,13 @@ import { DEMO_USERS, type DemoRole } from "@/lib/session";
  * they are looking at. "Switch role" is right next to the name for the same
  * reason: the fastest way to show that a family member cannot reach the
  * readings is to switch to them and watch the readings not be there.
+ *
+ * THE NAME IS THE SIGNED-IN USER'S, not the role's. It used to read
+ * DEMO_USERS[role], so anyone who registered their own account was greeted as
+ * "Priya Sharma" — which looks like the session is wrong, and on a product
+ * whose entire claim is that each account sees only its own data, that is the
+ * worst possible thing to get wrong cosmetically. It falls back to the role
+ * label rather than to someone else's name.
  */
 export async function AppBar({
   role,
@@ -23,8 +31,11 @@ export async function AppBar({
   links: { href: string; label: string }[];
 }) {
   const { lang, t } = await getAppCopy();
-  const user = DEMO_USERS[role];
   const who = t.roles[role];
+  // Memoised for the request, so the layout asking for the same thing costs
+  // nothing. See lib/current-user.ts for why this does not call getUser().
+  const { name, initials } = await getCurrentUser();
+  const shown = name || who.label;
 
   return (
     <header className="appbar">
@@ -45,8 +56,8 @@ export async function AppBar({
         </nav>
 
         <span className="appbar__user">
-          <i aria-hidden="true">{user.initials}</i>
-          <span>{who.name}</span>
+          <i aria-hidden="true">{initials}</i>
+          <span>{shown}</span>
         </span>
 
         {/* Repeated on every signed-in surface: someone who switches to Hindi

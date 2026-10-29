@@ -138,21 +138,28 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
     totalScored: 0,
   };
 
-  const { data: assignments } = await supabase
-    .from("care_assignments")
-    .select("senior_id");
-  const ids = (assignments ?? []).map((a) => a.senior_id);
+  // In parallel, because neither needs the other. The latest scored day is
+  // the same across the cohort, so it does not have to wait for the caseload
+  // to come back first — and this page is three round trips deep already.
+  const [assignmentRes, lastDayRes] = await Promise.all([
+    supabase.from("care_assignments").select("senior_id"),
+    supabase
+      .from("risk_scores")
+      .select("scored_on")
+      .order("scored_on", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const ids = (assignmentRes.data ?? []).map((a) => a.senior_id);
   if (!ids.length) return empty;
 
-  const { data: lastDay } = await supabase
-    .from("risk_scores")
-    .select("scored_on")
-    .in("senior_id", ids)
-    .order("scored_on", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const day = lastDay?.scored_on;
+  const day = lastDayRes.data?.scored_on;
   if (!day) return empty;
+
+  const contactFloor = new Date(new Date(`${day}T00:00:00Z`).getTime() - 14 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
 
   const [seniors, scores, alerts, contacts] = await Promise.all([
     supabase.from("seniors").select("id, display_name, age, city").in("id", ids),
@@ -170,11 +177,18 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
     // Last time anyone actually reached this senior, for the tie-break the
     // ranking already uses: if two people look equally concerning, call the
     // one nobody has spoken to.
+    //
+    // Bounded to a fortnight. Unbounded, this pulled every answered call for
+    // every senior on the caseload — around a thousand rows to compute one
+    // integer each. Anyone not reached inside two weeks is already past every
+    // threshold that uses this number, so the extra history changes nothing
+    // and the cap is the difference between a page and a wait.
     supabase
       .from("call_notes")
       .select("senior_id, called_on, reached")
       .in("senior_id", ids)
       .eq("reached", true)
+      .gte("called_on", contactFloor)
       .order("called_on", { ascending: false }),
   ]);
 
@@ -189,6 +203,8 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
   const dayMs = new Date(`${day}T00:00:00Z`).getTime();
   const sinceContact = (seniorId: string) => {
     const last = lastReached.get(seniorId);
+    // Nothing inside the window means "longer ago than we looked", which is
+    // what 99 has always meant here.
     if (!last) return 99;
     return Math.max(
       0,

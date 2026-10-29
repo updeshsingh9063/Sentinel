@@ -3,7 +3,7 @@
 An early-warning system that tells a Care Coordinator **who needs attention
 today, why, and what to do next**, for seniors living at home.
 
-Live: `https://frontend-omega-dusky-18.vercel.app` · Source: `github.com/updeshsingh9063/Sentinel`
+Live: `https://samarth-sentinel.vercel.app` · Source: `github.com/updeshsingh9063/Sentinel`
 Sign in as `coordinator@samarth.demo` / `SamarthDemo!2026` (also `family@`, `ops@`).
 
 ---

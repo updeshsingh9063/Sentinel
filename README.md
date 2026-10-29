@@ -11,7 +11,7 @@ this is a **ranking problem under a hard alert budget**, not disease
 prediction. Everything below follows from that — including why the headline
 metric is precision@K rather than AUC.
 
-**Live:** <https://frontend-omega-dusky-18.vercel.app> — sign in as
+**Live:** <https://samarth-sentinel.vercel.app> — sign in as
 `coordinator@samarth.demo` / `SamarthDemo!2026` (also `family@`, `ops@`).
 
 **Just want to try it?** [`docs/HOW-TO-TEST.md`](docs/HOW-TO-TEST.md) — click
@@ -60,7 +60,7 @@ samarth-sentinel/
 
 ### The fast path — look at the deployed app
 
-<https://frontend-omega-dusky-18.vercel.app>, credentials above. Nothing to
+<https://samarth-sentinel.vercel.app>, credentials above. Nothing to
 install. The coordinator account is the one to use: the worklist, a senior
 record, and the weekly report are the three screens that carry the work.
 

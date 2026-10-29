@@ -2,7 +2,7 @@
 
 No code. Just open the website and click. About 10 minutes.
 
-**Website:** https://frontend-omega-dusky-18.vercel.app
+**Website:** https://samarth-sentinel.vercel.app
 
 **Three logins.** The password is the same for all three:
 
@@ -129,7 +129,7 @@ This is the important comparison. The same system, a completely different view.
 In the address bar, type:
 
 ```
-https://frontend-omega-dusky-18.vercel.app/worklist
+https://samarth-sentinel.vercel.app/worklist
 ```
 
 You should be **sent back to the family page**. A family login cannot open the
@@ -155,7 +155,7 @@ Sign out. Log in as **ops@samarth.demo**.
 Open this. **No login needed** — a senior never gets an account.
 
 ```
-https://frontend-omega-dusky-18.vercel.app/checkin
+https://samarth-sentinel.vercel.app/checkin
 ```
 
 This is what a senior hears on a phone call.

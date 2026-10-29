@@ -44,6 +44,20 @@ export default async function ReportsIndexPage() {
 
   const ids = (assignments ?? []).map((a) => a.senior_id);
 
+  // Three days back covers a senior whose last score is not today's, without
+  // dragging in the whole window.
+  const { data: newest } = await supabase
+    .from("risk_scores")
+    .select("scored_on")
+    .order("scored_on", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const scoreFloor = newest?.scored_on
+    ? new Date(new Date(`${newest.scored_on}T00:00:00Z`).getTime() - 3 * 86_400_000)
+        .toISOString()
+        .slice(0, 10)
+    : "1970-01-01";
+
   let rows: Row[] = [];
   if (ids.length) {
     const [seniors, scores] = await Promise.all([
@@ -52,10 +66,14 @@ export default async function ReportsIndexPage() {
         .select("id, display_name, age, city")
         .in("id", ids)
         .order("display_name"),
+      // Only the most recent few days. This used to fetch every score for
+      // every senior on the caseload — about a thousand rows — and then throw
+      // all but the newest one per senior away.
       supabase
         .from("risk_scores")
         .select("senior_id, score, scored_on")
         .in("senior_id", ids)
+        .gte("scored_on", scoreFloor)
         .order("scored_on", { ascending: false }),
     ]);
 
