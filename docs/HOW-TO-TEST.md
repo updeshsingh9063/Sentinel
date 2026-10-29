@@ -160,8 +160,9 @@ https://samarth-sentinel.vercel.app/checkin
 
 This is what a senior hears on a phone call.
 
-1. Three questions, each with big **1 / 2 / 3** buttons. That is the whole
-   interface on a basic phone — no app, no screen needed.
+1. **Six** short questions, each with big **1 / 2 / 3** buttons: how they
+   feel, pain, medicines, sleep, eating, and whether they have had a fall.
+   That is the whole interface on a basic phone — no app, no screen needed.
 
 2. **Click "Hear the question".** It reads the question out loud.
 
@@ -184,6 +185,13 @@ This is what a senior hears on a phone call.
    background noise. If it ever fills in an answer when the senior said
    nothing, that is a serious bug — the whole design treats silence as
    information.
+
+6. **Check the last question records the right way round.** On "Have you had
+   a fall or a slip?" say **"haan"** (yes). It must pick the **worst** option,
+   not the best.
+
+   "Yes" is good on the medicine question and bad on this one. Recording it
+   backwards would file a fall as a good day.
 
 ---
 

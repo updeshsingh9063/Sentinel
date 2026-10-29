@@ -69,6 +69,44 @@ const SCRIPT = [
       { code: 3, hi: "नहीं", roman: "Nahi, bhool gaya", en: "No, missed it" },
     ],
   },
+  {
+    key: "sleep",
+    hi: "कल रात नींद कैसी आई?",
+    roman: "Kal raat neend kaisi aayi?",
+    en: "How did you sleep last night?",
+    options: [
+      { code: 1, hi: "अच्छी", roman: "Achhi", en: "Well" },
+      { code: 2, hi: "ठीक-ठाक", roman: "Theek-thaak", en: "So-so" },
+      { code: 3, hi: "ठीक नहीं", roman: "Theek nahi", en: "Badly" },
+    ],
+  },
+  {
+    key: "appetite",
+    hi: "आज खाना ठीक से खाया?",
+    roman: "Aaj khana theek se khaya?",
+    en: "Have you eaten properly today?",
+    options: [
+      { code: 1, hi: "हाँ", roman: "Haan", en: "Yes" },
+      { code: 2, hi: "थोड़ा", roman: "Thoda", en: "A little" },
+      { code: 3, hi: "नहीं", roman: "Nahi", en: "No" },
+    ],
+  },
+  {
+    // Asked last on purpose. It is the only question here that can describe
+    // something that already went wrong, and opening a welfare call with it
+    // sets the wrong tone. Asked plainly, because "did you have a fall" is
+    // what a person actually says — and a senior who did fall often will not
+    // volunteer it unless asked directly.
+    key: "fall",
+    hi: "क्या आप कहीं गिरे या फिसले?",
+    roman: "Kya aap kahin gire ya phisle?",
+    en: "Have you had a fall or a slip?",
+    options: [
+      { code: 1, hi: "नहीं", roman: "Nahi", en: "No" },
+      { code: 2, hi: "लगभग", roman: "Lagbhag", en: "Nearly" },
+      { code: 3, hi: "हाँ", roman: "Haan", en: "Yes" },
+    ],
+  },
 ];
 
 /** Spoken as "<option> ke liye <digit>", the way an IVR prompt reads. */
@@ -151,12 +189,31 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
     const digit = matchDigit(transcript, q.options.map((o) => o.code));
     if (digit !== null) { record(digit, transcript); return; }
 
-    if (key === "meds") {
+    // YES/NO QUESTIONS DO NOT ALL POINT THE SAME WAY, and getting that
+    // backwards records the opposite of what the senior said.
+    //
+    //   "Did you take your medicine?"  yes is GOOD  -> 1
+    //   "Have you eaten properly?"     yes is GOOD  -> 1
+    //   "Have you had a fall?"         yes is BAD   -> 3
+    //
+    // So the polarity is declared per question rather than assumed from the
+    // shape of the answer.
+    const YES_IS_GOOD: Record<string, boolean> = {
+      meds: true,
+      appetite: true,
+      fall: false,
+    };
+
+    if (key in YES_IS_GOOD) {
       const m = matchYesNo(transcript);
       if (m.value === null) { setUnclear(t.unclear); return; }
-      record(m.value ? 1 : 3, transcript);
+      const good = YES_IS_GOOD[key] ? m.value : !m.value;
+      record(good ? 1 : 3, transcript);
       return;
     }
+
+    // feeling and sleep both run better / same / worse, which is what
+    // matchFeeling returns. Pain has its own scale.
     const m = key === "pain" ? matchPain(transcript) : matchFeeling(transcript);
     if (m.value === null) { setUnclear(t.unclear); return; }
     record(m.value, transcript);

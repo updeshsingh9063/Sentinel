@@ -162,9 +162,17 @@ summaries, **1 was rejected** for producing "diabet…" and discarded rather tha
 edited — silently repairing unsafe output teaches you nothing about how often
 it happens.
 
-**Low-tech seniors.** The check-in works over a phone call: three questions,
-keypad 1/2/3, in Hindi or English. The keypad is the primary interface, not a
-fallback. Whisper hallucinates confident Devanagari from a pure tone, so audio
+**Low-tech seniors.** The check-in works over a phone call: six short
+questions — how they feel, pain, medicines, sleep, eating, and whether they
+have had a fall — answered on keypad 1/2/3, in Hindi or English. The keypad is
+the primary interface, not a fallback. The questions map onto cue types the
+model already scores, so the call and the notes describe the same things.
+
+Yes and no do not point the same way across those questions, and the polarity
+is declared per question rather than inferred: "did you take your medicine" and
+"have you eaten" are good when yes, "have you had a fall" is bad when yes.
+Getting that backwards would record the opposite of what a senior said, so it
+is tested in both scripts. Whisper hallucinates confident Devanagari from a pure tone, so audio
 below a loudness floor is never sent and "no speech" is returned rather than a
 string a caller might store — silence is evidence, not a gap.
 
