@@ -106,8 +106,13 @@ console.log("\nwithout the secret");
 console.log("\nwith the secret");
 {
   const token = await signIn("coordinator");
+  // Not the demo line. That senior is the one the public check-in simulator
+  // writes to, so they may already carry a full set of answers for today --
+  // and a missed call is REQUIRED not to overwrite those. Testing the thin
+  // case on them would be testing two rules at once and failing on the wrong
+  // one. The no-downgrade rule gets its own check below.
   const list = await fetch(
-    `${URL_}/rest/v1/seniors?select=id,display_name,phone&phone=not.is.null&limit=1`,
+    `${URL_}/rest/v1/seniors?select=id,display_name,phone&phone=not.is.null&demo_line=is.false&limit=1`,
     { headers: { apikey: ANON, Authorization: `Bearer ${token}` } },
   );
   const [senior] = await list.json();
@@ -142,6 +147,36 @@ console.log("\nwith the secret");
     check("carries no answers it never collected",
           rows[0] && rows[0].feeling_code === null && rows[0].pain_code === null && rows[0].meds_taken === null,
           JSON.stringify(rows[0]));
+  }
+
+  // A MISSED CALL MUST NEVER REPLACE A FULLER RECORD. If a senior answered
+  // six questions this morning and dialled in again this afternoon, the
+  // afternoon call is not new information and overwriting the morning with it
+  // would delete the only real answers of the day.
+  {
+    const demo = await fetch(
+      `${URL_}/rest/v1/seniors?demo_line=is.true&select=id,phone`,
+      { headers: { apikey: ANON, Authorization: `Bearer ${token}` } },
+    ).then((r) => r.json());
+
+    if (demo[0]?.phone) {
+      // Full answers first, through the public check-in path...
+      await fetch(`${URL_}/rest/v1/rpc/record_demo_checkin`, {
+        method: "POST",
+        headers: { apikey: ANON, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_feeling: 2, p_pain: 2, p_meds: 1, p_sleep: 2, p_appetite: 2, p_fall: 1 }),
+      });
+      // ...then a missed call from the same number.
+      await rpc(SECRET, demo[0].phone);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const [row] = await fetch(
+        `${URL_}/rest/v1/checkins?senior_id=eq.${demo[0].id}&checked_on=eq.${today}&select=source,feeling_code`,
+        { headers: { apikey: ANON, Authorization: `Bearer ${token}` } },
+      ).then((r) => r.json());
+      check("a missed call does not overwrite a fuller record",
+            row?.source === "ivr" && row?.feeling_code === 2, JSON.stringify(row));
+    }
   }
 
   const unknown = await rpc(SECRET, "+919999999999");

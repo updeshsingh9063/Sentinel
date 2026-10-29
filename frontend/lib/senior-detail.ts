@@ -67,6 +67,21 @@ export interface FamilyInput {
   text: string;
 }
 
+/**
+ * The senior's own answers from the most recent check-in.
+ *
+ * Everything else on this page is a machine's reading of them -- a score, a
+ * cue extracted from somebody else's note, a number off a cuff. This is the
+ * one block where the senior speaks for themselves, which is why it is kept
+ * whole rather than folded into the score.
+ */
+export interface LatestCheckin {
+  day: string;
+  /** Which channel it arrived on: a missed call carries no answers at all. */
+  source: string;
+  answers: { key: string; code: number | null }[];
+}
+
 export interface SeniorRecord {
   state: "ok" | "not-found";
   id: string;
@@ -95,6 +110,8 @@ export interface SeniorRecord {
   contacts: DetailContact[];
   /** What the family has reported. Their words, unedited. */
   familyNotes: FamilyInput[];
+  /** The senior's own last answers, or null if they have never answered. */
+  latestCheckin: LatestCheckin | null;
 }
 
 function levelFor(score: number): Level {
@@ -161,6 +178,7 @@ export async function loadSeniorRecord(
     cues: [],
     contacts: [],
     familyNotes: [],
+    latestCheckin: null,
   };
 
   const { data: senior } = await supabase
@@ -216,7 +234,7 @@ export async function loadSeniorRecord(
       .order("called_on", { ascending: false }),
     supabase
       .from("checkins")
-      .select("checked_on, answered, source")
+      .select("checked_on, answered, source, feeling_code, pain_code, meds_taken, sleep_code, appetite_code, fall_code")
       .eq("senior_id", seniorId)
       .gte("checked_on", windowStart)
       .order("checked_on", { ascending: false }),
@@ -354,6 +372,28 @@ export async function loadSeniorRecord(
     };
   });
 
+  // The most recent day the senior actually answered. An unanswered day is a
+  // contact attempt, already shown in the history, and showing it here would
+  // print six blanks under a heading promising their own words.
+  const answeredRows = (checkins.data ?? []).filter((c) => c.answered);
+  const newest = answeredRows[0] ?? null;
+  const latestCheckin: LatestCheckin | null = newest
+    ? {
+        day: newest.checked_on as string,
+        source: (newest.source as string) ?? "ivr",
+        answers: [
+          { key: "feeling", code: newest.feeling_code ?? null },
+          { key: "pain", code: newest.pain_code ?? null },
+          // Stored as a boolean because that is the question; rendered on the
+          // same 1..3 scale as the rest so the block reads as one thing.
+          { key: "meds", code: newest.meds_taken === null ? null : newest.meds_taken ? 1 : 3 },
+          { key: "sleep", code: newest.sleep_code ?? null },
+          { key: "appetite", code: newest.appetite_code ?? null },
+          { key: "fall", code: newest.fall_code ?? null },
+        ],
+      }
+    : null;
+
   return {
     state: "ok",
     id: senior.id,
@@ -393,5 +433,6 @@ export async function loadSeniorRecord(
       observedOn: n.observed_on as string,
       text: n.note_text as string,
     })),
+    latestCheckin,
   };
 }

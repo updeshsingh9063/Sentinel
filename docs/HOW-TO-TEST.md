@@ -193,6 +193,23 @@ This is what a senior hears on a phone call.
    "Yes" is good on the medicine question and bad on this one. Recording it
    backwards would file a fall as a good day.
 
+7. **Now answer all six and watch where it goes.** When you answer the
+   last question, the call is filed. The screen tells you whose record it
+   went into and when.
+
+   Then log in as the **care coordinator**, open that senior, and scroll to
+   **Their own answers**. All six are there, with the worst ones in red.
+
+   Answer the check-in again and look once more: the same day is *corrected*,
+   not added twice. That is a senior calling back because they pressed the
+   wrong button.
+
+   **Why it always goes to the same senior.** This page has no login, because
+   a senior never gets an account. If it could write to anyone, a stranger on
+   the internet could file fake answers for a real person — and those answers
+   change who a coordinator calls first. So it can only ever write to one
+   made-up senior, and the code has no way to name a different one.
+
 ---
 
 ## Part 6 — The missed call (1 minute)

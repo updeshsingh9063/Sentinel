@@ -6,6 +6,7 @@ import { fmt } from "@/lib/i18n";
 import { VoiceAnswer } from "@/components/app/VoiceAnswer";
 import { matchDigit, matchFeeling, matchPain, matchYesNo } from "@/lib/checkin-intent";
 import type { AppCopy } from "@/lib/i18n-app";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * Senior check-in: a simulator for the phone call, not a product surface.
@@ -158,27 +159,60 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
   // both. Nothing here interprets the words further.
   const [spoken, setSpoken] = useState<Record<string, string>>({});
   const [unclear, setUnclear] = useState<string | null>(null);
+  /** Where the completed call landed, once it has. */
+  const [filed, setFiled] = useState<
+    { state: "sending" } | { state: "done"; name: string } | { state: "failed" } | null
+  >(null);
 
   const question = SCRIPT[step];
   const done = step >= SCRIPT.length;
 
+  /**
+   * File the completed call.
+   *
+   * IT WRITES TO EXACTLY ONE SENIOR, AND CANNOT BE POINTED AT ANOTHER. This
+   * page is public, because a senior has no account and the brief forbids
+   * giving them one, so a public insert into `checkins` would let anyone file
+   * answers for a named person -- and those answers feed the risk model, so a
+   * stranger could move a real senior up or down a coordinator's worklist.
+   *
+   * `record_demo_checkin` takes no senior id at all. Its target is looked up
+   * from a flag inside the function (migration 0013), so there is no payload
+   * that reaches anybody else. Forging it forges the same synthetic demo
+   * record everyone already demonstrates with.
+   *
+   * The two channels that CAN write to any senior are both authenticated: the
+   * telephony webhook, which proves itself with a shared secret, and a
+   * signed-in coordinator logging a call as themselves under RLS.
+   */
+  async function file(all: Record<string, number | null>) {
+    setFiled({ state: "sending" });
+    const { data, error } = await createClient().rpc("record_demo_checkin", {
+      p_feeling: all.feeling ?? null,
+      p_pain: all.pain ?? null,
+      p_meds: all.meds ?? null,
+      p_sleep: all.sleep ?? null,
+      p_appetite: all.appetite ?? null,
+      p_fall: all.fall ?? null,
+    });
+    const out = data as { ok?: boolean; senior_name?: string } | null;
+    // A failure is shown as a failure. Saying the answers reached a
+    // coordinator when they did not is the one thing this screen must never
+    // do -- it is the sentence a senior is being asked to trust.
+    if (error || !out?.ok) setFiled({ state: "failed" });
+    else setFiled({ state: "done", name: out.senior_name ?? "" });
+  }
+
   function record(code: number | null, transcript?: string) {
     const key = SCRIPT[step].key;
-    setAnswers({ ...answers, [key]: code });
+    const all = { ...answers, [key]: code };
+    setAnswers(all);
     if (transcript) setSpoken({ ...spoken, [key]: transcript });
     setUnclear(null);
     setStep(step + 1);
-    // NOT PERSISTED, AND THAT IS THE DECISION RATHER THAN AN OMISSION.
-    // This page is public, because a senior has no account and the brief
-    // forbids giving them one. A public page that could write a named
-    // person's health record would let anyone on the internet forge a
-    // check-in for a senior they picked off a list, and that record feeds
-    // the risk model. So the two channels that DO write are the two that
-    // can be authenticated: the telephony webhook at
-    // /api/checkin/missed-call, which proves itself with a shared secret,
-    // and a signed-in coordinator logging a call they took themselves.
-    // What runs here is the script, the speech matching and the fallback
-    // logic -- the parts worth seeing -- against no one in particular.
+    // Sent once, when the last question is answered -- a real call is filed
+    // when it ends, not question by question.
+    if (step + 1 >= SCRIPT.length) void file(all);
   }
 
   /**
@@ -234,6 +268,7 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
     setSpoken({});
     setUnclear(null);
     setStep(0);
+    setFiled(null);
   }
 
   return (
@@ -276,6 +311,19 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
               })}
             </ul>
             <p className="ivr__note">{t.recapNote}</p>
+
+            {/* The spoken lines above are the SCRIPT -- what a senior hears
+                down the line. This is what the system actually did with the
+                call, which is a different claim and gets its own sentence. */}
+            {filed?.state === "sending" && <p className="ivr__filed">{t.filing}</p>}
+            {filed?.state === "done" && (
+              <p className="ivr__filed ivr__filed--ok">
+                {fmt(t.filedTo, { name: filed.name })} {t.filedWhere}
+              </p>
+            )}
+            {filed?.state === "failed" && (
+              <p className="ivr__filed ivr__filed--bad" role="alert">{t.fileFailed}</p>
+            )}
 
             <button type="button" className="btn btn--outline ivr__again" onClick={restart}>
               {t.again}
@@ -452,6 +500,14 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
           border-radius: var(--radius);
           font-size: 1rem; line-height: 1.6; color: var(--risk-med, #8d620f);
         }
+        .ivr__filed {
+          margin-top: var(--s-4); padding: var(--s-3) var(--s-4);
+          border-radius: 10px; font-size: 1rem; line-height: 1.6;
+          background: var(--cream-2); color: var(--ink-2);
+        }
+        .ivr__filed--ok  { background: #eef3ec; color: var(--forest); }
+        .ivr__filed--bad { background: #fbeceb; color: #8a2a21; }
+
         .ivr__done {
           margin: 0 0 var(--s-4); padding: var(--s-3) var(--s-4);
           background: var(--risk-low-bg, #e4f1e4);

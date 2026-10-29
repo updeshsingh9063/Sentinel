@@ -133,6 +133,36 @@ export default async function SeniorDetailPage({
             <p className="sd__note">{t.senior.whyNote}</p>
           </section>
 
+          {/* THE ONE BLOCK WHERE THE SENIOR SPEAKS FOR THEMSELVES. Everything
+              else on this page is a machine reading them — a score, a cue
+              pulled out of somebody else's note, a number off a cuff. These
+              are their own answers, in the order the call asks them, kept
+              whole rather than folded into the score. */}
+          {detail?.latestCheckin && (
+            <section className="card sd__card">
+              <h2 className="sd__h2">{t.senior.ownAnswers}</h2>
+              <p className="sd__note sd__ownlede">
+                {fmt(t.senior.ownAnswersOn, { day: detail.latestCheckin.day })}
+              </p>
+              {detail.latestCheckin.source === "missed_call" ? (
+                <p className="sd__note">{t.senior.missedCallDetail}</p>
+              ) : (
+                <ul className="sd__own">
+                  {detail.latestCheckin.answers.map((a) => (
+                    <li key={a.key}>
+                      <span>{t.senior.checkinQ[a.key]}</span>
+                      <strong data-worst={a.code === 3 ? "" : undefined}>
+                        {a.code === null
+                          ? t.senior.checkinUnanswered
+                          : t.senior.checkinA[a.key][a.code - 1]}
+                      </strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
           {detail && (
             <section className="card sd__card">
               <h2 className="sd__h2">{t.senior.said}</h2>
@@ -283,6 +313,22 @@ export default async function SeniorDetailPage({
           font-style: normal; color: var(--ink-3);
           font-variant-numeric: tabular-nums; white-space: nowrap;
         }
+        .sd__ownlede { margin-top: 0; margin-bottom: var(--s-4); }
+        .sd__own { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+        .sd__own li {
+          display: flex; align-items: baseline; justify-content: space-between;
+          gap: var(--s-4); padding: var(--s-3) 0;
+          border-bottom: 1px solid var(--line-2);
+          font-size: var(--fs-sm); line-height: 1.5;
+        }
+        .sd__own li:last-child { border-bottom: 0; }
+        .sd__own span { color: var(--ink-2); }
+        .sd__own strong { font-weight: 600; text-align: right; }
+        /* The worst answer on each scale carries the colour the rest of this
+           page uses for concern, so a coordinator scanning six rows sees the
+           one that matters without reading all six. */
+        .sd__own strong[data-worst] { color: var(--risk-high); }
+
         .sd__cues { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-5); }
         .sd__cues li { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: var(--s-3); }
         .sd__day {

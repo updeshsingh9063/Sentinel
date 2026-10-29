@@ -160,6 +160,11 @@ export interface AppCopy {
     channelCall: string;
     channelCheckin: string;
     channelMissedCall: string;
+    ownAnswers: string;
+    ownAnswersOn: string;
+    checkinUnanswered: string;
+    checkinQ: Record<string, string>;
+    checkinA: Record<string, string[]>;
     missedCallDetail: string;
     noAnswerDetail: string;
     medsDrug: string;
@@ -221,6 +226,10 @@ export interface AppCopy {
     micUnsupported: string;
     voiceNote: string;
     orPress: string;
+    filing: string;
+    filedTo: string;
+    filedWhere: string;
+    fileFailed: string;
   };
   ops: {
     emptyTitle: string;
@@ -488,6 +497,27 @@ const en: AppCopy = {
     channelCall: "Call",
     channelCheckin: "Check-in",
     channelMissedCall: "Missed call",
+    ownAnswers: "Their own answers",
+    ownAnswersOn: "From the check-in on {day}. Their words, not a reading.",
+    checkinUnanswered: "Not answered",
+    checkinQ: {
+      feeling: "How are you feeling today?",
+      pain: "Do you have pain anywhere?",
+      meds: "Did you take your medicine today?",
+      sleep: "How did you sleep last night?",
+      appetite: "Have you eaten properly today?",
+      fall: "Have you had a fall or a slip?",
+    },
+    checkinA: {
+      feeling: ["Better", "Same", "Worse"],
+      pain: ["No pain", "A little", "A lot"],
+      meds: ["Taken", "Taken", "Missed"],
+      sleep: ["Well", "So-so", "Badly"],
+      appetite: ["Yes", "A little", "No"],
+      // "Nearly" is kept rather than rounded down to "no": a near-fall is the
+      // signal that arrives before somebody is on the floor.
+      fall: ["No", "Nearly", "Yes"],
+    },
     missedCallDetail: "Dialled in and hung up. Confirms they are up and able to call \u2014 no questions were answered.",
     noAnswerDetail: "No answer recorded",
     medsDrug: "Medicine",
@@ -576,6 +606,12 @@ const en: AppCopy = {
     voiceNote:
       "On a real call this is spoken down the line and the senior just answers. Here it uses the browser’s voice and microphone. The buttons always work without either.",
     orPress: "or press a number",
+    filing: "Sending it through\u2026",
+    filedTo: "Filed to {name}'s record just now.",
+    filedWhere:
+      "Sign in as the care coordinator and open their record to see it \u2014 it is today's check-in.",
+    fileFailed:
+      "It could not be filed. Nothing was recorded, and a coordinator has not been told \u2014 better to say so than to let someone believe help is on the way.",
   },
   ops: {
     emptyTitle: "No aggregates to show",
@@ -873,6 +909,25 @@ const hi: AppCopy = {
     channelCall: "\u0915\u0949\u0932",
     channelCheckin: "\u091c\u093e\u0901\u091a",
     channelMissedCall: "\u091b\u0942\u091f\u0940 \u0915\u0949\u0932",
+    ownAnswers: "उनके अपने जवाब",
+    ownAnswersOn: "{day} की जाँच से। उनके अपने शब्द, कोई रीडिंग नहीं।",
+    checkinUnanswered: "जवाब नहीं मिला",
+    checkinQ: {
+      feeling: "आज आप कैसा महसूस कर रहे हैं?",
+      pain: "क्या आपको कहीं दर्द है?",
+      meds: "क्या आपने आज दवाई ली?",
+      sleep: "कल रात नींद कैसी आई?",
+      appetite: "आज खाना ठीक से खाया?",
+      fall: "क्या आप कहीं गिरे या फिसले?",
+    },
+    checkinA: {
+      feeling: ["बेहतर", "वैसा ही", "खराब"],
+      pain: ["नहीं", "थोड़ा", "बहुत"],
+      meds: ["ले ली", "ले ली", "नहीं ली"],
+      sleep: ["अच्छी", "ठीक-ठाक", "ठीक नहीं"],
+      appetite: ["हाँ", "थोड़ा", "नहीं"],
+      fall: ["नहीं", "लगभग", "हाँ"],
+    },
     missedCallDetail: "\u0915\u0949\u0932 \u0915\u0930\u0915\u0947 \u0915\u093e\u091f \u0926\u0940\u0964 \u0907\u0924\u0928\u093e \u092a\u0924\u093e \u091a\u0932\u0924\u093e \u0939\u0948 \u0915\u093f \u0935\u0939 \u0909\u0920\u0947 \u0939\u0948\u0902 \u0914\u0930 \u092b\u093c\u094b\u0928 \u0915\u0930 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902 \u2014 \u0915\u093f\u0938\u0940 \u0938\u0935\u093e\u0932 \u0915\u093e \u091c\u0935\u093e\u092c \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e\u0964",
     noAnswerDetail: "\u0915\u094b\u0908 \u091c\u0935\u093e\u092c \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902",
     medsDrug: "\u0926\u0935\u093e",
@@ -961,6 +1016,12 @@ const hi: AppCopy = {
     voiceNote:
       "असली कॉल पर यह फ़ोन पर बोला जाता है और बुज़ुर्ग बस जवाब देती हैं। यहाँ ब्राउज़र की आवाज़ और माइक इस्तेमाल होता है। बटन हमेशा दोनों के बिना भी चलते हैं।",
     orPress: "या कोई नंबर दबाएँ",
+    filing: "भेजा जा रहा है…",
+    filedTo: "अभी {name} के रिकॉर्ड में दर्ज कर दिया गया है।",
+    filedWhere:
+      "केयर कोऑर्डिनेटर बनकर साइन इन कीजिए और उनका रिकॉर्ड खोलिए — यही आज की जाँच है।",
+    fileFailed:
+      "दर्ज नहीं हो पाया। कुछ भी रिकॉर्ड नहीं हुआ और किसी कोऑर्डिनेटर को खबर नहीं गई — यह बता देना बेहतर है, बजाय इसके कि कोई मदद आने का भरोसा करता रह जाए।",
   },
   ops: {
     emptyTitle: "दिखाने के लिए कोई आँकड़ा नहीं",

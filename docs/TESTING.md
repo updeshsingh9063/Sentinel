@@ -55,6 +55,7 @@ npm run lint             # expect: ✔ No ESLint warnings or errors
 node scripts/verify-access.mjs        # expect: all access rules hold
 node scripts/verify-missed-call.mjs   # expect: the missed-call channel holds
 node scripts/verify-reset.mjs         # expect: the password reset flow holds
+node scripts/verify-checkin-loop.mjs  # expect: the check-in loop holds
 npm run check:auth                    # expect: redirect URLs look right
 
 # from the repo root
@@ -237,6 +238,31 @@ Say each of these and confirm it is understood:
 That last row is the important one. Whisper produces confident Devanagari from
 a pure tone, so a silent recording must come back as *no speech* rather than a
 transcript. If it ever returns words from silence, that is a serious bug.
+
+### 6.0 It reaches a coordinator, and you can check that it did
+
+The last question answered files the call. Finish all six, then:
+
+- [ ] The screen names whose record it went to and when
+- [ ] Sign in as the coordinator, open that senior, and **Their own answers**
+      shows all six, worst answers in red
+- [ ] Answer again and the same day is corrected, not duplicated — that is a
+      senior calling back having pressed wrong
+
+**One senior, by construction.** This page is public, because a senior has no
+account. A public insert into `checkins` would let anyone file answers for a
+named person, and those answers feed the risk model — a stranger could push a
+real senior up or down a coordinator's worklist. So the write goes through
+`record_demo_checkin`, which takes **no senior id at all**: its target is read
+from a flag inside the function, and exactly one row carries that flag.
+`verify-checkin-loop.mjs` asserts there is no parameter to point it elsewhere,
+that anon still cannot insert into `checkins` directly, and that a family
+member still reads zero rows from it.
+
+Sleep, appetite and falls had nowhere to be stored before migration 0013 —
+three of the six questions were being asked and dropped. They are stored now,
+and `fall_code` keeps "nearly" rather than rounding it down to "no": a
+near-fall is the signal that arrives before somebody is on the floor.
 
 ### 6.1 The missed-call channel
 
