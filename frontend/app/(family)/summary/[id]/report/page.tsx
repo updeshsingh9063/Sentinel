@@ -91,6 +91,32 @@ export default async function FamilyReportPage({
                   {report.reach.answered}
                   <small>/{report.reach.of}</small>
                 </span>
+
+                {/* The only chart on this page, and the only one it is
+                    entitled to. It shows WHETHER the phone was answered, never
+                    what was said — a filled day and an empty one, nothing
+                    graded in between. */}
+                <ul className="famrep__week">
+                  {report.days.map((d) => (
+                    <li key={d.date}>
+                      <span
+                        className={
+                          d.answered
+                            ? "famrep__day famrep__day--yes"
+                            : d.known
+                              ? "famrep__day famrep__day--no"
+                              : "famrep__day"
+                        }
+                        aria-hidden="true"
+                      />
+                      <span className="famrep__dayname">{d.weekday}</span>
+                      <span className="visually-hidden">
+                        {d.answered ? r.moodLabels["1"] : r.moodLabels["0"]}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
                 <p className="rep__tilenote">{r.reachNote}</p>
               </section>
             )}
@@ -131,6 +157,16 @@ export default async function FamilyReportPage({
         .famrep__headline { font-size: 1.15rem; line-height: 1.7; margin-bottom: var(--s-4); }
         .famrep__para { font-size: 1.0625rem; line-height: 1.75; color: var(--ink-2); margin-bottom: var(--s-4); }
         .famrep__reach { background: var(--cream); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s-4); margin-top: var(--s-5); }
+        .famrep__week { list-style: none; margin: var(--s-4) 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--s-2); max-width: 22rem; }
+        .famrep__week li { display: grid; gap: 4px; justify-items: center; }
+        /* Answered is solid, unanswered is an outline, and a day with no
+           record at all is a dashed outline. Three states, because "we did not
+           call" and "we called and nobody picked up" are different things to
+           read about your own parent. */
+        .famrep__day { display: block; width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1.5px dashed var(--line-2); }
+        .famrep__day--yes { background: var(--forest); border: 1.5px solid var(--forest); }
+        .famrep__day--no { background: var(--white); border: 1.5px solid var(--line-2); }
+        .famrep__dayname { font-size: 0.625rem; color: var(--ink-3); }
 
         .rep__limits { margin-top: var(--s-6); padding: var(--s-5); border: 1px dashed var(--line-2); border-radius: var(--radius); }
         .rep__limits h3 { font-size: var(--fs-sm); margin-bottom: var(--s-2); }

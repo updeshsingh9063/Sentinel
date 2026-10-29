@@ -425,6 +425,8 @@ export interface FamilyReport {
    * on themselves — by picking up the phone.
    */
   reach: { answered: number; of: number } | null;
+  /** The same seven days, so the pattern is visible and not just counted. */
+  days: { date: string; weekday: string; answered: boolean; known: boolean }[];
 }
 
 export async function loadFamilyReport(
@@ -440,6 +442,7 @@ export async function loadFamilyReport(
     headline: "",
     body: [],
     reach: null,
+    days: [],
   });
 
   const { data: links } = await supabase
@@ -475,15 +478,28 @@ export async function loadFamilyReport(
     .map((p: string) => p.trim())
     .filter(Boolean);
 
-  // Check-ins carry no reading, so a family member may see whether their
-  // parent picked up the phone. Everything else on this table stays behind
-  // the coordinator's policy.
+  // family_checkin_days, NOT checkins. The base table is coordinator-only and
+  // returns nothing here — querying it was a bug that silently produced an
+  // empty panel. The view exposes three columns (senior_id, checked_on,
+  // answered) and carries its own authorisation, so a family member learns
+  // whether the phone was answered and nothing about the answers. See
+  // backend/supabase/migrations/0006_family_checkin_view.sql.
   const { data: checkins } = await supabase
-    .from("checkins")
-    .select("answered")
+    .from("family_checkin_days")
+    .select("checked_on, answered")
     .eq("senior_id", seniorId)
     .gte("checked_on", week.start)
     .lte("checked_on", week.end);
+
+  const seen = new Map((checkins ?? []).map((c) => [c.checked_on, c.answered]));
+  const days = weekdayNames(lang, week).map(({ date, weekday }) => ({
+    date,
+    weekday,
+    answered: seen.get(date) === true,
+    // A day with no row at all is not the same as a call that went
+    // unanswered, and the strip draws them differently.
+    known: seen.has(date),
+  }));
 
   return {
     state: "ok",
@@ -492,7 +508,8 @@ export async function loadFamilyReport(
     headline: paras[0] ?? "",
     body: paras.slice(1),
     reach: checkins?.length
-      ? { answered: checkins.filter((c) => c.answered).length, of: 7 }
+      ? { answered: days.filter((d) => d.answered).length, of: 7 }
       : null,
+    days,
   };
 }
