@@ -234,6 +234,56 @@ seniors.
 
 ---
 
+## Part 7 — Forgot password (2 minutes)
+
+On the sign in page, next to the word **Password**, there is now a link:
+**Forgot your password?** Click it.
+
+1. The form changes to ask only for your email address.
+
+2. **First, type a demo address** — `coordinator@samarth.demo` — and press the
+   button.
+
+   It should tell you the password is printed on this page and **not** send any
+   email. That is on purpose: those demo mailboxes do not exist, so a link sent
+   there would never arrive and you would sit waiting for it.
+
+3. **Now type a real address** and press the button.
+
+   It says *"if an account exists for that address, a reset link is on its
+   way."* Notice it says **if**. It gives the same answer whether or not the
+   account is real — otherwise anyone could use this box to find out which
+   families are on the system.
+
+4. **Check the email.** It can take a few minutes: the free plan sends only a
+   few emails an hour.
+
+5. **Click the link in the email.** It opens a page headed **Choose a new
+   password**, with two boxes — the new password, and the same one again.
+
+6. Type a new password twice and save. You are taken straight into the app.
+
+7. **Click the same link in the email a second time.** It must refuse, and say
+   the link has expired or was already used. A reset link that keeps working
+   is a key left lying in an inbox forever.
+
+**If the link takes you to a page that will not load**, that is a settings
+problem rather than a broken feature. Run `npm run check:auth` in the
+`frontend` folder — it prints exactly what to paste into the Supabase
+dashboard. The same setting controls Google sign-in.
+
+**To test the whole thing without waiting for email at all**, run this in the
+`frontend` folder:
+
+```
+npm run verify:reset
+```
+
+It makes a temporary account, resets its password, checks the old one stopped
+working and the link cannot be used twice, then deletes the account.
+
+---
+
 ## Things that look wrong but are correct
 
 Before reporting a problem, check this list.

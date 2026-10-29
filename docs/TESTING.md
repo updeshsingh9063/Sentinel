@@ -54,6 +54,8 @@ npm run typecheck        # expect: no output
 npm run lint             # expect: ✔ No ESLint warnings or errors
 node scripts/verify-access.mjs        # expect: all access rules hold
 node scripts/verify-missed-call.mjs   # expect: the missed-call channel holds
+node scripts/verify-reset.mjs         # expect: the password reset flow holds
+npm run check:auth                    # expect: redirect URLs look right
 
 # from the repo root
 .venv/Scripts/python.exe -m pytest model -q    # expect: 40 passed
@@ -261,6 +263,48 @@ including a signed-in coordinator, the reply carries no name or id, a retry
 does not create a second check-in, and a caller without the secret gets the
 same answer for an enrolled number as for an unenrolled one — so the endpoint
 cannot be used to test whether a given phone belongs to a senior on the books.
+
+### 6.2 Forgetting a password
+
+Testing this by hand means waiting on email, and the free tier sends a few
+messages an hour, so you get about two attempts before the test itself stops
+working. `verify-reset.mjs` mints the exact link the email would have carried
+using the admin API, which makes the whole path testable in seconds:
+
+```bash
+node scripts/verify-reset.mjs --url https://samarth-sentinel.vercel.app
+```
+
+It creates a throwaway account, resets it, and deletes it again, asserting:
+
+- [ ] the link becomes a real session
+- [ ] that session can change the password
+- [ ] the new password works and the old one stops working
+- [ ] **the link is single-use** — a reset email that stays valid is a
+      permanent key sitting in an inbox, and a forwarded one is a takeover
+- [ ] our `/auth/callback` sends it to the new-password form, not to the
+      role's home page (landing someone on their worklist signed in with the
+      password they could not remember is worse than useless)
+- [ ] a dead link lands on that form with an explanation rather than a blank page
+
+By hand, in the browser:
+
+- [ ] `/signin` shows **Forgot your password?** beside the Password label
+- [ ] Clicking it swaps to an email-only form; the page heading stays "Sign in"
+- [ ] Typing a **demo** address (`coordinator@samarth.demo`) does **not** send
+      an email — it says the password is printed on the page. Those mailboxes
+      do not exist, so a link sent there is a person waiting for nothing.
+- [ ] Any other address always answers *"if an account exists for that
+      address"*. It must never say whether the account is real: this form
+      would otherwise be a way to test which families are on the system.
+- [ ] `/signin?flow=reset&expired=1` shows the expired-link message and offers
+      a new link, in both languages
+
+**One setting this depends on, in the dashboard, not in the code.** Supabase
+only honours redirect URLs on its allowlist, and when one is missing it does
+not error — it quietly substitutes the Site URL, so the link in the email goes
+somewhere else entirely. `npm run check:auth` reads the allowlist back and
+prints the exact URLs to paste if any are missing.
 
 ---
 

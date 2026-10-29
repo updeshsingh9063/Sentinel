@@ -66,6 +66,24 @@ export interface AppCopy {
     google: string;
     googleNote: string;
     oauthDivider: string;
+    forgot: string;
+    forgotTitle: string;
+    forgotBody: string;
+    forgotSubmit: string;
+    forgotSent: string;
+    forgotDemo: string;
+    forgotSlow: string;
+    backToSignIn: string;
+    resetTitle: string;
+    resetBody: string;
+    resetNew: string;
+    resetConfirm: string;
+    resetSubmit: string;
+    resetMismatch: string;
+    resetSame: string;
+    resetDone: string;
+    resetChecking: string;
+    resetExpired: string;
   };
   roles: Record<DemoRole, RoleCopy>;
   bar: {
@@ -342,6 +360,29 @@ const en: AppCopy = {
     googleNote:
       "A Google account signs in as a family member. Roles that can reach an individual senior's health data are granted by an operator, not chosen at sign-in.",
     oauthDivider: "or",
+    forgot: "Forgot your password?",
+    forgotTitle: "Reset your password",
+    forgotBody:
+      "Type the address you signed up with. We will email a link that lets you set a new password.",
+    forgotSubmit: "Email me a reset link",
+    forgotSent:
+      "If an account exists for that address, a reset link is on its way. It works once and expires in an hour.",
+    forgotDemo:
+      "That is one of the demo accounts below, and its password is printed on this page: {password}. No email needed \u2014 just use the card.",
+    forgotSlow:
+      "Email on this project's free tier is rate-limited to a few an hour, so a link can take a few minutes to arrive. The demo accounts below never need one.",
+    backToSignIn: "Back to sign in",
+    resetTitle: "Choose a new password",
+    resetBody: "This is where a password reset link lands.",
+    resetNew: "New password",
+    resetConfirm: "Type it again",
+    resetSubmit: "Save new password",
+    resetMismatch: "Those two do not match.",
+    resetSame: "That is already your password. Choose a different one.",
+    resetDone: "Password changed. Taking you in\u2026",
+    resetChecking: "Checking the link\u2026",
+    resetExpired:
+      "That link has expired, has already been used, or was opened in a different browser from the one that asked for it. Ask for a new one below.",
   },
   roles: {
     coordinator: {
@@ -702,6 +743,29 @@ const hi: AppCopy = {
     googleNote:
       "Google खाता परिवार के सदस्य के रूप में साइन इन करता है। जिन भूमिकाओं को किसी बुज़ुर्ग का स्वास्थ्य डेटा दिखता है, वे साइन-इन पर चुनी नहीं जातीं — उन्हें ऑपरेटर देता है।",
     oauthDivider: "या",
+    forgot: "पासवर्ड भूल गए?",
+    forgotTitle: "पासवर्ड दोबारा बनाएँ",
+    forgotBody:
+      "वही ईमेल पता लिखिए जिससे खाता बनाया था। हम एक लिंक भेजेंगे जिससे आप नया पासवर्ड रख सकेंगे।",
+    forgotSubmit: "मुझे लिंक भेजें",
+    forgotSent:
+      "अगर उस पते पर खाता है तो लिंक भेज दिया गया है। वह एक ही बार चलेगा और एक घंटे में खत्म हो जाएगा।",
+    forgotDemo:
+      "यह नीचे दिए डेमो खातों में से एक है, और उसका पासवर्ड इसी पन्ने पर लिखा है: {password}. ईमेल की ज़रूरत नहीं — सीधे कार्ड पर क्लिक कीजिए।",
+    forgotSlow:
+      "इस प्रोजेक्ट के मुफ़्त प्लान पर घंटे में कुछ ही ईमेल जाते हैं, इसलिए लिंक आने में कुछ मिनट लग सकते हैं। नीचे दिए डेमो खातों को ईमेल की ज़रूरत कभी नहीं पड़ती।",
+    backToSignIn: "वापस साइन इन पर",
+    resetTitle: "नया पासवर्ड चुनिए",
+    resetBody: "पासवर्ड बदलने का लिंक यहीं पहुँचाता है।",
+    resetNew: "नया पासवर्ड",
+    resetConfirm: "दोबारा लिखिए",
+    resetSubmit: "नया पासवर्ड सहेजें",
+    resetMismatch: "दोनों एक जैसे नहीं हैं।",
+    resetSame: "यह तो पहले से ही आपका पासवर्ड है। कोई दूसरा चुनिए।",
+    resetDone: "पासवर्ड बदल गया। अंदर ले जा रहे हैं\u2026",
+    resetChecking: "लिंक जाँचा जा रहा है\u2026",
+    resetExpired:
+      "यह लिंक खत्म हो चुका है, पहले इस्तेमाल हो चुका है, या जिस ब्राउज़र से माँगा था उससे अलग ब्राउज़र में खोला गया है। नीचे से नया लिंक माँगिए।",
   },
   roles: {
     coordinator: {

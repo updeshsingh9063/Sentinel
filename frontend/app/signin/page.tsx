@@ -49,9 +49,21 @@ export async function generateMetadata() {
   return { title: `${t.titles.signin} · Samarth Sentinel` };
 }
 
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { lang, t } = await getAppCopy();
   const { t: landing } = await getCopy();
+
+  // A reset link lands on this same page, so the page has to stop calling
+  // itself "Sign in". Someone who arrived here from a password-reset email is
+  // not being offered a choice of tabs, and a heading that says otherwise
+  // reads as the wrong page having loaded.
+  const resetting = (await searchParams).flow === "reset";
+  const heading = resetting ? t.signin.resetTitle : t.signin.title;
+  const standfirst = resetting ? t.signin.resetBody : t.signin.sub;
 
   const meta = SLOTS.signin;
   const filled = hasImage("signin");
@@ -129,8 +141,8 @@ export default async function SignInPage() {
             <LangSwitch lang={lang} label={t.bar.language} />
           </div>
 
-          <h1 className="display si__title">{t.signin.title}</h1>
-          <p className="si__sub">{t.signin.sub}</p>
+          <h1 className="display si__title">{heading}</h1>
+          <p className="si__sub">{standfirst}</p>
 
           <Suspense fallback={<p className="si__sub">{t.signin.loading}</p>}>
             <SignInForm t={t} />

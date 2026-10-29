@@ -63,6 +63,66 @@ console.log(
   `\n  providers enabled: ${Object.entries(ext).filter(([, v]) => v).map(([k]) => k).join(", ") || "(none)"}`,
 );
 
+/**
+ * Which redirect URLs the project will actually honour.
+ *
+ * This is the setting that fails most quietly. If a URL is not on the
+ * allowlist Supabase does not refuse it — it silently substitutes the Site
+ * URL, so a password-reset email sent from the deployed site lands on
+ * whatever Site URL happens to say, and a judge clicking the link in their
+ * inbox ends up at a machine that is not theirs. Nothing logs an error.
+ *
+ * `generate_link` runs that same substitution and hands back the result
+ * WITHOUT sending any mail, so the allowlist can be read off it exactly. The
+ * alternative is sending real emails on a tier that allows a few an hour.
+ */
+const service = env("SUPABASE_SERVICE_ROLE_KEY");
+const siteUrl = settings.site_url ?? "(not reported)";
+const WANT = [
+  "http://localhost:3000/auth/callback",
+  "https://samarth-sentinel.vercel.app/auth/callback",
+];
+let redirectsOk = true;
+
+if (!service) {
+  console.log("\n  redirect URLs: skipped (needs SUPABASE_SERVICE_ROLE_KEY in .env.local)");
+} else {
+  const admin = (p, init = {}) =>
+    fetch(`${url}/auth/v1${p}`, {
+      ...init,
+      headers: {
+        apikey: service,
+        Authorization: `Bearer ${service}`,
+        "Content-Type": "application/json",
+        ...(init.headers ?? {}),
+      },
+    });
+
+  const tag = Math.random().toString(36).slice(2, 8);
+  const probeEmail = `redirect-probe-${tag}@samarth.demo`;
+  const made = await admin("/admin/users", {
+    method: "POST",
+    body: JSON.stringify({ email: probeEmail, password: `Probe!${tag}2026`, email_confirm: true }),
+  }).then((r) => r.json()).catch(() => ({}));
+
+  console.log(`\n  site URL: ${siteUrl}`);
+  console.log("  redirect URLs the project will honour:");
+  for (const want of WANT) {
+    const r = await admin("/admin/generate_link", {
+      method: "POST",
+      body: JSON.stringify({ type: "recovery", email: probeEmail, options: { redirect_to: want } }),
+    }).then((x) => x.json()).catch(() => ({}));
+    const link = r.action_link ?? r.properties?.action_link ?? "";
+    let got = "";
+    try { got = new URL(link).searchParams.get("redirect_to") ?? ""; } catch { /* no link */ }
+    const ok = got === want;
+    if (!ok) redirectsOk = false;
+    line(ok, ok ? "allowed" : "NOT allowed", `${want}${ok ? "" : `  ->  rewritten to ${got || "(nothing)"}`}`);
+  }
+
+  if (made.id) await admin(`/admin/users/${made.id}`, { method: "DELETE" }).catch(() => {});
+}
+
 const todo = [];
 if (settings.mailer_autoconfirm !== true) {
   todo.push(
@@ -81,12 +141,21 @@ if (!ext.google) {
     `       -> Google -> enable -> paste Client ID and Secret -> Save`,
   );
 }
-todo.push(
-  `Allow the local redirect (needed for Google):\n` +
-  `    https://supabase.com/dashboard/project/${ref}/auth/url-configuration\n` +
-  `    Site URL: http://localhost:3000\n` +
-  `    Redirect URLs: http://localhost:3000/auth/callback`,
-);
+if (redirectsOk) {
+  console.log("\n  redirect URLs look right.");
+} else {
+  todo.push(
+    `Allow the redirect URLs. Google sign-in AND the password-reset email both\n` +
+    `    depend on this, and when it is wrong neither reports an error — the\n` +
+    `    link just lands on the Site URL instead:\n` +
+    `    https://supabase.com/dashboard/project/${ref}/auth/url-configuration\n` +
+    `    Site URL:       https://samarth-sentinel.vercel.app\n` +
+    `    Redirect URLs:  https://samarth-sentinel.vercel.app/auth/callback\n` +
+    `                    https://samarth-sentinel.vercel.app/**\n` +
+    `                    http://localhost:3000/auth/callback\n` +
+    `                    http://localhost:3000/**`,
+  );
+}
 
 console.log(`\nto do in the dashboard:\n`);
 todo.forEach((t, i) => console.log(`  ${i + 1}. ${t}\n`));

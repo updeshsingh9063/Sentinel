@@ -15,6 +15,7 @@
     "db:summaries": "node scripts/generate-family-summaries.mjs",
     "verify:access": "node scripts/verify-access.mjs",
     "verify:missed-call": "node scripts/verify-missed-call.mjs",
+    "verify:reset": "node scripts/verify-reset.mjs",
     "verify:signup": "node scripts/verify-signup.mjs",
     "check:auth": "node scripts/check-auth-config.mjs"
   },

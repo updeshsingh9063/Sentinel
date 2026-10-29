@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { IconArrow, IconLock } from "@/components/ui/Icons";
+import { fmt } from "@/lib/i18n";
 import type { AppCopy } from "@/lib/i18n-app";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -12,6 +13,7 @@ import {
   ROLE_ORDER,
   type AuthRole,
   type DemoRole,
+  isDemoRole,
   mayOpen,
 } from "@/lib/session";
 
@@ -32,7 +34,17 @@ import {
  * the product by an email that has not arrived.
  */
 
-type Mode = "signin" | "signup";
+/**
+ * `forgot` asks for a reset link; `reset` is where the link lands. They are
+ * modes of this form rather than pages of their own so that the split layout,
+ * the language switch and the demo cards are all still there — someone locked
+ * out needs the demo cards more than anyone, and a bare password box on an
+ * unfamiliar route is exactly what a phishing page looks like.
+ */
+type Mode = "signin" | "signup" | "forgot" | "reset";
+
+/** Whether the link that landed on /signin?flow=reset still carries a session. */
+type Recovery = "checking" | "ready" | "expired";
 
 const ROLE_CHOICES: AuthRole[] = ["coordinator", "family", "ops"];
 
@@ -40,12 +52,17 @@ export function SignInForm({ t }: { t: AppCopy }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next");
+  const flow = params.get("flow");
 
-  const [mode, setMode] = useState<Mode>("signin");
+  const [mode, setMode] = useState<Mode>(flow === "reset" ? "reset" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<AuthRole>("family");
+  const [recovery, setRecovery] = useState<Recovery>(
+    flow === "reset" ? "checking" : "ready",
+  );
 
   const [busy, setBusy] = useState(false);
   const [demoBusy, setDemoBusy] = useState<DemoRole | null>(null);
@@ -60,6 +77,29 @@ export function SignInForm({ t }: { t: AppCopy }) {
     family: t.signin.roleFamily,
     ops: t.signin.roleOps,
   };
+
+  /**
+   * A reset link grants a real session, so "did the link work" is answered by
+   * asking whether we have a user — not by trusting the URL. getUser()
+   * revalidates against the auth server rather than reading a cookie, which
+   * matters here because the whole page hangs off the answer.
+   */
+  useEffect(() => {
+    if (flow !== "reset") return;
+    if (params.get("expired")) {
+      setRecovery("expired");
+      return;
+    }
+    let live = true;
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (live) setRecovery(data.user ? "ready" : "expired");
+      });
+    return () => {
+      live = false;
+    };
+  }, [flow, params]);
 
   function go(r: DemoRole) {
     const dest = next && mayOpen(r, next) ? next : DEMO_USERS[r].home;
@@ -114,6 +154,81 @@ export function SignInForm({ t }: { t: AppCopy }) {
     setBusy(false);
   }
 
+  /**
+   * Ask for a reset link.
+   *
+   * THIS FORM MUST NOT BECOME A WAY TO TEST WHETHER AN ADDRESS HAS AN ACCOUNT
+   * HERE. Supabase deliberately answers the same whether or not the user
+   * exists, and this says the same thing back either way: "if an account
+   * exists for that address". Branching on the answer would turn a convenience
+   * into a way to enumerate the families and coordinators on this system.
+   * Genuine failures — a rate limit, SMTP being down — are shown, because
+   * those are actionable and reveal nothing about who is registered.
+   */
+  async function sendReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+
+    // A demo account's mailbox does not exist, so a link sent there never
+    // arrives and the person waits for nothing. Its password is printed a few
+    // centimetres further down the page; say so instead.
+    const typed = email.trim().toLowerCase();
+    const isDemo = ROLE_ORDER.some((r) => DEMO_USERS[r].email?.toLowerCase() === typed);
+    if (isDemo) {
+      setError(null);
+      setNotice(fmt(t.signin.forgotDemo, { password: DEMO_PASSWORD }));
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    const supabase = createClient();
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth/callback?flow=recovery`,
+    });
+    if (err) setError(err.message);
+    else setNotice(t.signin.forgotSent);
+    setBusy(false);
+  }
+
+  /** Set the new password, using the session the reset link established. */
+  async function savePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    if (password !== confirm) {
+      setError(t.signin.resetMismatch);
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    const supabase = createClient();
+    const { data, error: err } = await supabase.auth.updateUser({ password });
+    if (err) {
+      // Supabase refuses a password identical to the current one. Its wording
+      // is for developers; this one is for whoever is locked out.
+      setError(
+        /different from the old|should be different|same.*password/i.test(err.message)
+          ? t.signin.resetSame
+          : err.message,
+      );
+      setBusy(false);
+      return;
+    }
+
+    setNotice(t.signin.resetDone);
+    // The role decides where they land. If the metadata is missing, the
+    // middleware corrects the guess on arrival rather than this file holding a
+    // second copy of the routing rules.
+    const r = data.user?.user_metadata?.demo_role as string | undefined;
+    router.push(isDemoRole(r) ? DEMO_USERS[r].home : "/summary");
+    router.refresh();
+  }
+
   async function google() {
     if (googleBusy) return;
     setGoogleBusy(true);
@@ -154,6 +269,97 @@ export function SignInForm({ t }: { t: AppCopy }) {
     go(r);
   }
 
+  /**
+   * Leave the reset flow. The URL has to be cleaned up as well as the state:
+   * ?flow=reset is what makes the PAGE call itself "Choose a new password",
+   * so leaving it behind would put that heading over a sign-in form.
+   */
+  function leaveReset(to: Mode = "signin") {
+    setMode(to);
+    setError(null);
+    setNotice(null);
+    setPassword("");
+    setConfirm("");
+    if (flow) router.replace("/signin");
+  }
+
+  // WHERE A RESET LINK LANDS. One job, so the tabs, the Google button and the
+  // demo cards all stand down until it is finished — the person arrived here
+  // from their email to do exactly one thing.
+  if (mode === "reset") {
+    return (
+      <>
+        {/* No heading here: the page itself is titled "Choose a new password"
+            when ?flow=reset is set, and saying it twice would read as a
+            template that forgot to fill one of them in. */}
+        {recovery === "checking" && <p className="si__sub">{t.signin.resetChecking}</p>}
+
+        {recovery === "expired" && (
+          <div className="si__resetState">
+            <p className="si__error" role="alert">{t.signin.resetExpired}</p>
+            <button
+              type="button"
+              className="btn btn--forest si__submit"
+              onClick={() => {
+                setRecovery("ready");
+                leaveReset("forgot");
+              }}
+            >
+              {t.signin.forgotSubmit}
+            </button>
+          </div>
+        )}
+
+        {recovery === "ready" && (
+          <>
+            {error && <p className="si__error" role="alert">{error}</p>}
+            {notice && <p className="si__notice" role="status">{notice}</p>}
+
+            <form className="si__form" onSubmit={savePassword}>
+              <label className="si__field">
+                <span>{t.signin.resetNew}</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  autoFocus
+                />
+                <small>{t.signin.passwordHint}</small>
+              </label>
+
+              {/* Typed twice, because there is no way back from a typo here:
+                  the link is single-use, and a password saved wrong locks the
+                  account out again with no second link waiting. */}
+              <label className="si__field">
+                <span>{t.signin.resetConfirm}</span>
+                <input
+                  type="password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </label>
+
+              <button type="submit" className="btn btn--forest si__submit" disabled={busy}>
+                {busy ? t.signin.working : t.signin.resetSubmit}
+              </button>
+            </form>
+          </>
+        )}
+
+        <button type="button" className="si__link si__link--away" onClick={() => leaveReset()}>
+          {t.signin.backToSignIn}
+        </button>
+        <FormStyles />
+      </>
+    );
+  }
+
   return (
     <>
       {next && (
@@ -171,7 +377,13 @@ export function SignInForm({ t }: { t: AppCopy }) {
             role="tab"
             aria-selected={mode === m}
             className={mode === m ? "si__tab si__tab--on" : "si__tab"}
-            onClick={() => { setMode(m); setError(null); setNotice(null); }}
+            onClick={() => {
+              setMode(m);
+              setError(null);
+              setNotice(null);
+              setPassword("");
+              setConfirm("");
+            }}
           >
             {m === "signin" ? t.signin.tabSignIn : t.signin.tabSignUp}
           </button>
@@ -181,6 +393,15 @@ export function SignInForm({ t }: { t: AppCopy }) {
       {error && <p className="si__error" role="alert">{error}</p>}
       {notice && <p className="si__notice" role="status">{notice}</p>}
 
+      {mode === "forgot" && (
+        <div className="si__forgotHead">
+          <h2 className="si__formTitle">{t.signin.forgotTitle}</h2>
+          <p className="si__sub">{t.signin.forgotBody}</p>
+        </div>
+      )}
+
+      {mode !== "forgot" && (
+      <>
       <button
         type="button"
         className="si__google"
@@ -198,8 +419,10 @@ export function SignInForm({ t }: { t: AppCopy }) {
       <p className="si__hint si__hint--centre">{t.signin.googleNote}</p>
 
       <p className="si__divider"><span>{t.signin.oauthDivider}</span></p>
+      </>
+      )}
 
-      <form className="si__form" onSubmit={submit}>
+      <form className="si__form" onSubmit={mode === "forgot" ? sendReset : submit}>
         {mode === "signup" && (
           <label className="si__field">
             <span>{t.signin.fullName}</span>
@@ -224,18 +447,36 @@ export function SignInForm({ t }: { t: AppCopy }) {
           />
         </label>
 
-        <label className="si__field">
-          <span>{t.signin.password}</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === "signup" ? "new-password" : "current-password"}
-            minLength={8}
-            required
-          />
-          {mode === "signup" && <small>{t.signin.passwordHint}</small>}
-        </label>
+        {mode !== "forgot" && (
+          <label className="si__field">
+            <span className="si__labelRow">
+              {t.signin.password}
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  className="si__link si__link--inline"
+                  onClick={() => {
+                    setMode("forgot");
+                    setError(null);
+                    setNotice(null);
+                    setPassword("");
+                  }}
+                >
+                  {t.signin.forgot}
+                </button>
+              )}
+            </span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              minLength={8}
+              required
+            />
+            {mode === "signup" && <small>{t.signin.passwordHint}</small>}
+          </label>
+        )}
 
         {mode === "signup" && (
           <fieldset className="si__field si__roles-pick">
@@ -260,10 +501,20 @@ export function SignInForm({ t }: { t: AppCopy }) {
             ? t.signin.working
             : mode === "signin"
               ? t.signin.submitSignIn
-              : t.signin.submitSignUp}
+              : mode === "forgot"
+                ? t.signin.forgotSubmit
+                : t.signin.submitSignUp}
         </button>
 
         {mode === "signup" && <p className="si__hint">{t.signin.emptyAccountNote}</p>}
+        {mode === "forgot" && (
+          <>
+            <p className="si__hint">{t.signin.forgotSlow}</p>
+            <button type="button" className="si__link" onClick={() => leaveReset()}>
+              {t.signin.backToSignIn}
+            </button>
+          </>
+        )}
       </form>
 
       <p className="si__divider"><span>{t.signin.demoDivider}</span></p>
@@ -299,6 +550,40 @@ export function SignInForm({ t }: { t: AppCopy }) {
           );
         })}
       </ul>
+      <FormStyles />
     </>
+  );
+}
+
+/**
+ * The handful of rules the reset flow adds. Everything else it uses — fields,
+ * buttons, errors — already exists on the sign-in page, which is most of the
+ * reason these are modes of this form rather than a route of their own.
+ */
+function FormStyles() {
+  return (
+    <style>{`
+      .si__formTitle {
+        font-family: var(--display); font-size: 1.5rem; line-height: 1.2;
+        margin: 0 0 var(--s-2);
+      }
+      .si__forgotHead { margin: var(--s-6) 0 var(--s-5); }
+      .si__link--away { display: inline-block; margin-top: var(--s-5); }
+      .si__resetState { display: grid; gap: var(--s-4); margin-top: var(--s-6); }
+      .si__labelRow {
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: var(--s-3);
+      }
+      .si__link {
+        background: none; border: 0; padding: 0; cursor: pointer;
+        font: inherit; color: var(--forest);
+        text-decoration: underline; text-underline-offset: 3px;
+      }
+      .si__link:hover { opacity: .75; }
+      /* Sits beside the "Password" label, so it must not shout louder than
+         the field it belongs to. */
+      .si__link--inline { font-size: var(--fs-xs); font-weight: 400; }
+      form > .si__link { margin-top: var(--s-3); justify-self: start; }
+    `}</style>
   );
 }
