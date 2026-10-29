@@ -126,6 +126,7 @@ export interface AppCopy {
     saidAte: string;
     saidFell: string;
     saidNearlyFell: string;
+    saidFine: string;
     emptyTitle: string;
     emptyBody: string;
     date: string;
@@ -235,6 +236,7 @@ export interface AppCopy {
     micUnsupported: string;
     voiceNote: string;
     orPress: string;
+    lineOf: string;
     filing: string;
     filedTo: string;
     filedWhere: string;
@@ -354,7 +356,7 @@ const en: AppCopy = {
     note2:
       "What protects the data is the schema, not this page. Row-level security grants the family and operations roles no policy on vitals, call_notes, note_cues or risk_scores. Signed in as the family member, those tables return zero rows — checked against the live database, not assumed.",
     note3:
-      "The senior has no account at all. The brief forbids a senior-facing app, so there is nothing for her to sign in to; that card opens a simulator of what she hears on a basic phone.",
+      "The senior has no account at all. The brief forbids a senior-facing app, so there is nothing for them to sign in to; that card opens a simulator of what they hear on a basic phone.",
     tabSignIn: "Sign in",
     tabSignUp: "Create account",
     email: "Email",
@@ -425,7 +427,7 @@ const en: AppCopy = {
     senior: {
       name: "Savitri Devi",
       label: "Senior",
-      sees: "Nothing on a screen, and no account. This opens the phone check-in simulator — what she hears, not an app she installs.",
+      sees: "Nothing on a screen, and no account. This opens the phone check-in simulator — what they hear, not an app they install.",
     },
   },
   bar: {
@@ -471,6 +473,7 @@ const en: AppCopy = {
     saidAte: "has not eaten",
     saidFell: "had a fall",
     saidNearlyFell: "nearly fell",
+    saidFine: "picked up, nothing of concern",
     emptyTitle: "No seniors are assigned to you",
     emptyBody:
       "The database returned no care assignments for this account, so there is no queue to build. That is row-level security working, not an error — an account with no seniors sees none.",
@@ -626,6 +629,7 @@ const en: AppCopy = {
     voiceNote:
       "On a real call this is spoken down the line and the senior just answers. Here it uses the browser’s voice and microphone. The buttons always work without either.",
     orPress: "or press a number",
+    lineOf: "This is {name}'s line \u2014 answers here go onto their record.",
     filing: "Sending it through\u2026",
     filedTo: "Filed to {name}'s record just now.",
     filedWhere:
@@ -894,6 +898,7 @@ const hi: AppCopy = {
     saidAte: "खाना नहीं खाया",
     saidFell: "गिर गए",
     saidNearlyFell: "गिरते-गिरते बचे",
+    saidFine: "फ़ोन उठाया, सब ठीक बताया",
     emptyTitle: "आपके नाम कोई बुज़ुर्ग नहीं हैं",
     emptyBody:
       "इस खाते के लिए कोई देखभाल सौंपनी नहीं मिली, इसलिए कोई सूची नहीं बनी। यह त्रुटि नहीं, पंक्ति-स्तरीय सुरक्षा का काम करना है।",
@@ -1047,6 +1052,7 @@ const hi: AppCopy = {
     voiceNote:
       "असली कॉल पर यह फ़ोन पर बोला जाता है और बुज़ुर्ग बस जवाब देती हैं। यहाँ ब्राउज़र की आवाज़ और माइक इस्तेमाल होता है। बटन हमेशा दोनों के बिना भी चलते हैं।",
     orPress: "या कोई नंबर दबाएँ",
+    lineOf: "यह {name} की लाइन है। जो जवाब यहाँ दिए जाएँगे वे उन्हीं के रिकॉर्ड में दर्ज होंगे।",
     filing: "भेजा जा रहा है…",
     filedTo: "अभी {name} के रिकॉर्ड में दर्ज कर दिया गया है।",
     filedWhere:

@@ -49,7 +49,19 @@ type Recovery = "checking" | "ready" | "expired";
 
 const ROLE_CHOICES: AuthRole[] = ["coordinator", "family", "ops"];
 
-export function SignInForm({ t }: { t: AppCopy }) {
+export function SignInForm({
+  t,
+  /**
+   * The senior whose line the check-in card opens, read from the database
+   * rather than the copy file. The copy carried a fixture name the cohort
+   * loader replaced long ago, so the card named a person this database has
+   * never heard of — and the call it opens files to somebody else entirely.
+   */
+  seniorName = "",
+}: {
+  t: AppCopy;
+  seniorName?: string;
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next");
@@ -540,7 +552,9 @@ export function SignInForm({ t }: { t: AppCopy }) {
               >
                 <span className="si__avatar" aria-hidden="true">{u.initials}</span>
                 <span className="si__text">
-                  <span className="si__name">{who.name}</span>
+                  <span className="si__name">
+                    {r === "senior" && seniorName ? seniorName : who.name}
+                  </span>
                   <span className="si__label">
                     {who.label}
                     {!u.email && ` · ${t.signin.noAccount}`}

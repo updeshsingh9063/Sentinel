@@ -13,6 +13,7 @@ import {
   Logo,
 } from "@/components/ui/Icons";
 import { getAppCopy, getCopy } from "@/lib/i18n-server";
+import { createClient as createSupabaseClient } from "@/lib/supabase/server";
 import { SLOTS, hasImage, slotSrc } from "@/lib/images";
 
 /**
@@ -61,6 +62,15 @@ export default async function SignInPage({
   // itself "Sign in". Someone who arrived here from a password-reset email is
   // not being offered a choice of tabs, and a heading that says otherwise
   // reads as the wrong page having loaded.
+  // Whose line the check-in card opens. The copy used to carry a hand-written
+  // fixture name that the cohort loader long ago replaced, so the card named
+  // somebody who is not in this database — and a person could answer six
+  // questions as one name, then search the coordinator's dashboard for it and
+  // find nothing. The name is read from the row that actually receives the
+  // call. Just the name: anon reads zero rows from `seniors` and still does.
+  const supabase = await createSupabaseClient();
+  const { data: lineName } = await supabase.rpc("demo_line_name");
+
   const resetting = (await searchParams).flow === "reset";
   const heading = resetting ? t.signin.resetTitle : t.signin.title;
   const standfirst = resetting ? t.signin.resetBody : t.signin.sub;
@@ -145,7 +155,7 @@ export default async function SignInPage({
           <p className="si__sub">{standfirst}</p>
 
           <Suspense fallback={<p className="si__sub">{t.signin.loading}</p>}>
-            <SignInForm t={t} />
+            <SignInForm t={t} seniorName={typeof lineName === "string" ? lineName : ""} />
           </Suspense>
 
           <section className="si__note">

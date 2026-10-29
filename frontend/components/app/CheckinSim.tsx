@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { fmt } from "@/lib/i18n";
 import { VoiceAnswer } from "@/components/app/VoiceAnswer";
@@ -163,6 +163,20 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
   const [filed, setFiled] = useState<
     { state: "sending" } | { state: "done"; name: string } | { state: "failed" } | null
   >(null);
+  /** Whose line this is, asked for before anyone starts answering. */
+  const [lineName, setLineName] = useState("");
+
+  useEffect(() => {
+    let live = true;
+    createClient()
+      .rpc("demo_line_name")
+      .then(({ data }) => {
+        if (live && typeof data === "string") setLineName(data);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const question = SCRIPT[step];
   const done = step >= SCRIPT.length;
@@ -273,7 +287,15 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
 
   return (
     <div className="ivr">
-      <p className="ivr__chrome">{t.chrome}</p>
+      {/* WHOSE LINE THIS IS, SAID BEFORE THE FIRST QUESTION. The call files
+          to one designated senior, and until this said so a person could
+          answer six questions and then search the coordinator's dashboard
+          for whichever name the card they clicked happened to show. The
+          feature worked; it was simply not saying who it was. */}
+      <p className="ivr__chrome">
+        {t.chrome}
+        {lineName && <span className="ivr__line">{fmt(t.lineOf, { name: lineName })}</span>}
+      </p>
 
       <main className="ivr__phone senior-scale">
         {done ? (
@@ -421,6 +443,7 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
           display: grid; align-content: start; justify-items: center;
           padding: var(--s-6) var(--gutter) var(--s-16);
         }
+        .ivr__line { display: block; margin-top: 2px; font-weight: 600; }
         .ivr__chrome {
           font-size: var(--fs-xs); color: var(--ink-3);
           margin-bottom: var(--s-5); text-align: center;

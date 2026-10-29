@@ -71,7 +71,15 @@ export default async function WorklistPage() {
                 <i className="wl__avatar" aria-hidden="true">{c.initials}</i>
                 <span>
                   <Link href={`/senior/${c.seniorId}`} className="wl__name">{c.name}</Link>
-                  <em>{c.concerns.join(" · ")}</em>
+                  {/* A call where nothing was wrong still appears. Dropping it
+                      would make a check-in that worked look like one that
+                      never arrived, and "they picked up and said they were
+                      fine" is information a coordinator wants. */}
+                  {c.concerns.length ? (
+                    <em>{c.concerns.join(" · ")}</em>
+                  ) : (
+                    <em className="wl__fine">{t.worklist.saidFine}</em>
+                  )}
                 </span>
               </li>
             ))}
@@ -203,6 +211,11 @@ export default async function WorklistPage() {
         .wl__camelist em {
           font-style: normal; font-size: var(--fs-sm); color: var(--risk-high);
         }
+        /* Nothing wrong is not nothing, but it must not wear the colour this
+           page reserves for concern. Qualified by the list, because the rule
+           above it is (0,1,1) and a bare class would lose to it and paint
+           "nothing of concern" in alarm red. */
+        .wl__camelist em.wl__fine { color: var(--ink-3); }
         .wl__camenote {
           margin: var(--s-4) 0 0; font-size: var(--fs-xs);
           line-height: 1.6; color: var(--ink-3);

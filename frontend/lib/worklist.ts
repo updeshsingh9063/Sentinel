@@ -69,7 +69,11 @@ export interface TodayCheckin {
   seniorId: string;
   name: string;
   initials: string;
-  /** Answers worth a coordinator's attention, already worded. */
+  /**
+   * Answers worth a coordinator's attention, already worded. Empty when the
+   * senior answered and nothing they said needs acting on -- which is still
+   * shown, because it is the answer to "did my call go through".
+   */
   concerns: string[];
 }
 
@@ -317,11 +321,13 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
     )
     .filter((r): r is WorklistRow => r !== null);
 
-  // Only the answers a coordinator would act on. A senior who says they
-  // slept well and took their medicine has still been heard -- that is on
-  // their record -- but it is not something to put in front of someone
-  // triaging a caseload, and padding this with good news is how a signal
-  // becomes a thing people stop reading.
+  // Every call that came in is listed; only the answers worth ACTING on are
+  // spelled out. An earlier version dropped a senior entirely when nothing
+  // they said was concerning, which was wrong twice over: it made a
+  // successful check-in indistinguishable from one that never arrived, and it
+  // threw away the single most reassuring fact a coordinator can have, which
+  // is that somebody picked up and said they were fine. Good news is still
+  // news; it just does not get six red words.
   const answeredToday: TodayCheckin[] = (todayCalls.data ?? [])
     .map((c) => {
       const s = seniorById.get(c.senior_id);
@@ -336,7 +342,6 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
       // somebody is actually on the floor.
       if (c.fall_code === 3) concerns.push(t.worklist.saidFell);
       else if (c.fall_code === 2) concerns.push(t.worklist.saidNearlyFell);
-      if (!concerns.length) return null;
       return {
         seniorId: c.senior_id,
         name: s.display_name,
