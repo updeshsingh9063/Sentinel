@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Consent } from "@/components/app/Consent";
 import { IconLock } from "@/components/ui/Icons";
 import type { FamilyView } from "@/lib/family";
@@ -61,6 +63,14 @@ export function FamilySummaryView({ view, t }: { view: FamilyView; t: AppCopy })
               {p}
             </p>
           ))}
+          {/* The same words as a sheet to keep or send on. It carries no
+              readings and no score — there is nothing on it a family member
+              could not already read here. */}
+          {view.seniorId && (
+            <Link href={`/summary/${view.seniorId}/report`} className="btn btn--outline fs__report">
+              {t.report.download}
+            </Link>
+          )}
         </article>
       )}
 
@@ -114,6 +124,7 @@ function FamilyStyles() {
         margin: 0 0 var(--s-4);
       }
       .fs__private { background: var(--cream-2); }
+      .fs__report { margin-top: var(--s-5); }
       .fs__private ul { margin: 0; padding-left: 1.15rem; display: grid; gap: var(--s-2); }
       .fs__private li { font-size: var(--fs-sm); line-height: 1.6; color: var(--ink-2); }
       .fs__note {

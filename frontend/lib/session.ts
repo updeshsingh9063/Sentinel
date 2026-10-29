@@ -79,7 +79,7 @@ export const DEMO_PASSWORD = "SamarthDemo!2026";
 export const ALLOWED: Record<DemoRole, string[]> = {
   // Coordinators may open the ops view: the view is granted to `authenticated`
   // and emits only aggregates, so there is nothing there they should not see.
-  coordinator: ["/worklist", "/senior", "/dashboard"],
+  coordinator: ["/worklist", "/senior", "/reports", "/dashboard"],
   family: ["/summary"],
   ops: ["/dashboard"],
   senior: ["/checkin"],
@@ -89,7 +89,7 @@ export const ALLOWED: Record<DemoRole, string[]> = {
  * Prefixes that require a signed-in session. /checkin is NOT here: the senior
  * has no account, and the simulator is part of the public story.
  */
-export const GUARDED = ["/worklist", "/senior", "/summary", "/dashboard"];
+export const GUARDED = ["/worklist", "/senior", "/reports", "/summary", "/dashboard"];
 
 export function isDemoRole(value: string | undefined | null): value is DemoRole {
   return (

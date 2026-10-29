@@ -15,6 +15,7 @@ export default async function CoordinatorLayout({
         links={[
           { href: "/worklist", label: t.nav.today },
           { href: "/senior/savitri-devi", label: t.nav.seniors },
+          { href: "/reports", label: t.nav.reports },
           { href: "/dashboard", label: t.nav.operations },
         ]}
       />

@@ -80,6 +80,7 @@ export interface AppCopy {
     operations: string;
     thisWeek: string;
     overview: string;
+    reports: string;
   };
   notice: {
     fixtures: string;
@@ -195,6 +196,63 @@ export interface AppCopy {
     privacyTitle: string;
     privacyBody: string;
   };
+  report: {
+    heading: string;
+    sub: string;
+    download: string;
+    backToSenior: string;
+    backToSummary: string;
+    notFoundTitle: string;
+    notFoundBody: string;
+    noDataTitle: string;
+    noDataBody: string;
+    meta: string;
+    weekOf: string;
+    generated: string;
+    healthScore: string;
+    healthScoreNote: string;
+    deltaUp: string;
+    deltaDown: string;
+    deltaFlat: string;
+    deltaNone: string;
+    mood: string;
+    moodNote: string;
+    moodLabels: Record<string, string>;
+    reach: string;
+    reachNote: string;
+    adherence: string;
+    adherenceNote: string;
+    vitals: string;
+    vitalsNote: string;
+    vitalsEmpty: string;
+    latest: string;
+    noReading: string;
+    byDrug: string;
+    alwaysMissed: string;
+    dosesOf: string;
+    concerns: string;
+    concernsNote: string;
+    concernsEmpty: string;
+    daysMentioned: string;
+    inTheirWords: string;
+    cueLabels: Record<string, string>;
+    notes: string;
+    notesNote: string;
+    notReached: string;
+    action: string;
+    actionNote: string;
+    noAlert: string;
+    statusLabels: Record<string, string>;
+    notMeasuredTitle: string;
+    notMeasuredBody: string;
+    footer: string;
+    confidential: string;
+    familyHeading: string;
+    familySub: string;
+    familyNoSummary: string;
+    familyWhatYouSee: string;
+    familyWhatYouSeeBody: string;
+  };
 }
 
 const en: AppCopy = {
@@ -276,12 +334,13 @@ const en: AppCopy = {
     today: "Today",
     seniors: "Seniors",
     operations: "Operations",
+    reports: "Reports",
     thisWeek: "This week",
     overview: "Overview",
   },
   notice: {
     fixtures:
-      "Demo data — the synthetic cohort is not generated yet, so these figures are fixtures. No real patient data. The system flags risk and routes it to a human; it never diagnoses.",
+      "Demo data on a synthetic cohort of 200 seniors over 90 days — no real patient data. Reports and operations read that cohort live; the worklist and senior detail are still fixtures. The system flags risk and routes it to a human; it never diagnoses.",
     ops: "Live aggregates, read from the database. The cohort behind them is generated, not real people. Operations holds no table policy anywhere in the schema — there is no individual record this surface could show.",
     family:
       "Demo data. A family member never sees readings, scores or call notes — there is no policy granting them.",
@@ -430,6 +489,82 @@ const en: AppCopy = {
     privacyBody:
       "This page is one aggregated view. The operations role has no policy on vitals, call_notes, note_cues or risk_scores, so there is no query from here that returns a senior. The restriction is an absence in the schema, not a check in this code that could be written wrong — signed in as operations, those tables return zero rows.",
   },
+  report: {
+    heading: "Weekly health & wellbeing report",
+    sub: "Everything below is drawn from recorded data for the seven days shown. Nothing is estimated.",
+    download: "Download report",
+    backToSenior: "Back to senior",
+    backToSummary: "Back to summary",
+    notFoundTitle: "This senior is not on your list",
+    notFoundBody:
+      "No record came back for this id. Either it does not exist, or it belongs to a coordinator other than you \u2014 the database returns nothing in both cases, which is row-level security working rather than an error.",
+    noDataTitle: "No scored days in this window",
+    noDataBody:
+      "This senior exists but has no risk scores for the week requested, so there is nothing to report on. That is a gap in the data, not a clean bill of health.",
+    meta: "Age {age} \u00b7 {sex} \u00b7 {city}",
+    weekOf: "Week of {week}",
+    generated: "Generated {date} from recorded data",
+    healthScore: "Wellbeing score",
+    healthScoreNote:
+      "Mean across the week. 100 is this senior's own normal, not a population average.",
+    deltaUp: "{n} better than last week",
+    deltaDown: "{n} lower than last week",
+    deltaFlat: "Unchanged from last week",
+    deltaNone: "No prior week to compare",
+    mood: "How they said they felt",
+    moodNote: "Their own answer on the daily check-in. Blank where the call went unanswered.",
+    moodLabels: { "0": "No answer", "1": "Better", "2": "Same", "3": "Worse" },
+    reach: "Check-ins answered",
+    reachNote: "Out of seven. An unanswered call is recorded as evidence, not skipped.",
+    adherence: "Medication",
+    adherenceNote: "Doses logged against doses due.",
+    vitals: "Vital signs",
+    vitalsNote:
+      "Readings as recorded. Days without a reading are left as gaps, never joined up.",
+    vitalsEmpty: "No readings were recorded this week.",
+    latest: "Most recent",
+    noReading: "Not recorded",
+    byDrug: "By medicine",
+    alwaysMissed: "Not taken once this week",
+    dosesOf: "{taken} of {due} doses",
+    concerns: "What came up on calls",
+    concernsNote:
+      "Extracted from call notes by the language layer, in Hindi and English. The label is a summary; the sentence underneath is what was actually said.",
+    concernsEmpty: "No concerns were picked out of this week's calls.",
+    daysMentioned: "{n} day(s)",
+    inTheirWords: "In their words",
+    cueLabels: {
+      pain: "Pain",
+      low_appetite: "Eating less",
+      poor_sleep: "Sleeping poorly",
+      breathlessness: "Breathlessness",
+      loneliness: "Loneliness",
+      confusion: "Confusion",
+      fall: "A fall",
+      dizziness: "Dizziness",
+      low_mood: "Low mood",
+      fatigue: "Tiredness",
+    },
+    notes: "Call notes",
+    notesNote: "Recorded by the coordinator at the time of the call.",
+    notReached: "Could not reach",
+    action: "Open alert and next step",
+    actionNote: "The reason the system raised this, and what it suggests doing about it.",
+    noAlert: "No alert was raised for this senior this week.",
+    statusLabels: { open: "Open", actioned: "Actioned", dismissed: "Marked not useful" },
+    notMeasuredTitle: "What this report does not contain",
+    notMeasuredBody:
+      "There are no sleep-hour or activity figures here because nothing in this system measures either. Where sleep appears, it is because the senior mentioned it on a call. This report flags concerns and routes them to a person; it does not diagnose, and no number on it should be read as a clinical finding.",
+    footer: "Samarth Sentinel \u00b7 Better care. Brighter tomorrows.",
+    confidential: "Confidential \u00b7 For internal use only",
+    familyHeading: "Weekly wellbeing summary",
+    familySub: "A short note on how the week went, written in plain language.",
+    familyNoSummary:
+      "No summary has been published for this week yet. Summaries are written after the week closes and checked before they are shared.",
+    familyWhatYouSee: "What this summary includes",
+    familyWhatYouSeeBody:
+      "Wellbeing in plain words, and how often the daily check-in was answered. It carries no blood pressure, sugar, oxygen or weight readings, no risk score and no call transcripts \u2014 a family account has no permission to read any of those, by design. If something needs urgent attention, a Care Coordinator calls you; it does not wait for this page.",
+  },
 };
 
 const hi: AppCopy = {
@@ -511,12 +646,13 @@ const hi: AppCopy = {
     today: "आज",
     seniors: "बुज़ुर्ग",
     operations: "संचालन",
+    reports: "\u0930\u093f\u092a\u094b\u0930\u094d\u091f",
     thisWeek: "इस हफ़्ते",
     overview: "अवलोकन",
   },
   notice: {
     fixtures:
-      "डेमो डेटा — सिंथेटिक समूह अभी बनाया नहीं गया है, इसलिए ये आँकड़े नमूना हैं। किसी वास्तविक मरीज़ का डेटा नहीं। यह प्रणाली जोखिम चिह्नित करके किसी व्यक्ति तक पहुँचाती है; निदान कभी नहीं करती।",
+      "200 बुज़ुर्गों के 90 दिन के सिंथेटिक डेटा पर डेमो — कोई वास्तविक मरीज़ डेटा नहीं। रिपोर्ट और ऑपरेशंस उसी डेटा से पढ़ते हैं; वर्कलिस्ट और बुज़ुर्ग विवरण अभी नमूना आँकड़े हैं। यह सिस्टम जोखिम को चिह्नित करके किसी व्यक्ति तक पहुँचाता है; निदान कभी नहीं करता।",
     ops: "लाइव आँकड़े, सीधे डेटाबेस से। इनके पीछे का समूह बनाया हुआ है, वास्तविक लोग नहीं। संचालन भूमिका के पास स्कीमा में कहीं कोई तालिका-अनुमति नहीं है — इस सतह पर कोई व्यक्तिगत रिकॉर्ड दिख ही नहीं सकता।",
     family:
       "डेमो डेटा। परिवार के सदस्य को कभी कोई रीडिंग, स्कोर या कॉल नोट नहीं दिखते — उन्हें देखने की अनुमति ही नहीं है।",
@@ -664,6 +800,82 @@ const hi: AppCopy = {
     privacyTitle: "संचालन क्या नहीं देख सकता",
     privacyBody:
       "यह पेज एक जोड़ा हुआ दृश्य है। संचालन भूमिका के पास vitals, call_notes, note_cues या risk_scores पर कोई अनुमति नहीं है, इसलिए यहाँ से ऐसी कोई क्वेरी नहीं जो किसी बुज़ुर्ग को लौटाए। यह रोक स्कीमा में एक अनुपस्थिति है, इस कोड में लिखी कोई जाँच नहीं जो ग़लत हो सके — संचालन के रूप में साइन इन करने पर ये तालिकाएँ शून्य पंक्तियाँ देती हैं।",
+  },
+  report: {
+    heading: "\u0938\u093e\u092a\u094d\u0924\u093e\u0939\u093f\u0915 \u0938\u094d\u0935\u093e\u0938\u094d\u0925\u094d\u092f \u090f\u0935\u0902 \u0915\u0941\u0936\u0932-\u0915\u094d\u0937\u0947\u092e \u0930\u093f\u092a\u094b\u0930\u094d\u091f",
+    sub: "\u0928\u0940\u091a\u0947 \u0926\u0940 \u0917\u0908 \u0939\u0930 \u092c\u093e\u0924 \u0926\u0930\u094d\u091c \u0915\u093f\u090f \u0917\u090f \u0938\u093e\u0924 \u0926\u093f\u0928\u094b\u0902 \u0915\u0947 \u0906\u0901\u0915\u0921\u093c\u094b\u0902 \u0938\u0947 \u0932\u0940 \u0917\u0908 \u0939\u0948\u0964 \u0915\u0941\u091b \u092d\u0940 \u0905\u0928\u0941\u092e\u093e\u0928\u093f\u0924 \u0928\u0939\u0940\u0902 \u0939\u0948\u0964",
+    download: "\u0930\u093f\u092a\u094b\u0930\u094d\u091f \u0921\u093e\u0909\u0928\u0932\u094b\u0921 \u0915\u0930\u0947\u0902",
+    backToSenior: "\u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u0915\u0947 \u092a\u0947\u091c \u092a\u0930 \u0935\u093e\u092a\u0938",
+    backToSummary: "\u0938\u093e\u0930\u093e\u0902\u0936 \u092a\u0930 \u0935\u093e\u092a\u0938",
+    notFoundTitle: "\u092f\u0939 \u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u0906\u092a\u0915\u0940 \u0938\u0942\u091a\u0940 \u092e\u0947\u0902 \u0928\u0939\u0940\u0902 \u0939\u0948\u0902",
+    notFoundBody:
+      "\u0907\u0938 \u092a\u0939\u091a\u093e\u0928-\u0938\u0902\u0916\u094d\u092f\u093e \u092a\u0930 \u0915\u094b\u0908 \u0930\u093f\u0915\u0949\u0930\u094d\u0921 \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e\u0964 \u092f\u093e \u0924\u094b \u0935\u0939 \u092e\u094c\u091c\u0942\u0926 \u0928\u0939\u0940\u0902 \u0939\u0948, \u092f\u093e \u0935\u0939 \u0915\u093f\u0938\u0940 \u0914\u0930 \u0938\u092e\u0928\u094d\u0935\u092f\u0915 \u0915\u0947 \u092a\u093e\u0938 \u0939\u0948 \u2014 \u0926\u094b\u0928\u094b\u0902 \u0939\u0940 \u0938\u094d\u0925\u093f\u0924\u093f\u092f\u094b\u0902 \u092e\u0947\u0902 \u0921\u0947\u091f\u093e\u092c\u0947\u0938 \u0915\u0941\u091b \u0928\u0939\u0940\u0902 \u0932\u094c\u091f\u093e\u0924\u093e\u0964",
+    noDataTitle: "\u0907\u0938 \u0905\u0935\u0927\u093f \u092e\u0947\u0902 \u0915\u094b\u0908 \u0938\u094d\u0915\u094b\u0930 \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902",
+    noDataBody:
+      "\u092f\u0939 \u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u092e\u094c\u091c\u0942\u0926 \u0939\u0948\u0902, \u092a\u0930 \u092e\u093e\u0901\u0917\u0947 \u0917\u090f \u0938\u092a\u094d\u0924\u093e\u0939 \u0915\u0947 \u0932\u093f\u090f \u0915\u094b\u0908 \u091c\u094b\u0916\u093f\u092e \u0938\u094d\u0915\u094b\u0930 \u0928\u0939\u0940\u0902 \u0939\u0948\u0964 \u092f\u0939 \u0906\u0901\u0915\u0921\u093c\u094b\u0902 \u0915\u0940 \u0915\u092e\u0940 \u0939\u0948, \u0938\u094d\u0935\u0938\u094d\u0925 \u0939\u094b\u0928\u0947 \u0915\u093e \u092a\u094d\u0930\u092e\u093e\u0923 \u0928\u0939\u0940\u0902\u0964",
+    meta: "\u0909\u092e\u094d\u0930 {age} \u00b7 {sex} \u00b7 {city}",
+    weekOf: "\u0938\u092a\u094d\u0924\u093e\u0939: {week}",
+    generated: "{date} \u0915\u094b \u0926\u0930\u094d\u091c \u0906\u0901\u0915\u0921\u093c\u094b\u0902 \u0938\u0947 \u092c\u0928\u0940",
+    healthScore: "\u0915\u0941\u0936\u0932-\u0915\u094d\u0937\u0947\u092e \u0938\u094d\u0915\u094b\u0930",
+    healthScoreNote:
+      "\u0938\u092a\u094d\u0924\u093e\u0939 \u0915\u093e \u0914\u0938\u0924\u0964 100 \u0915\u093e \u0905\u0930\u094d\u0925 \u0907\u0928\u094d\u0939\u0940\u0902 \u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u0915\u0940 \u0905\u092a\u0928\u0940 \u0938\u093e\u092e\u093e\u0928\u094d\u092f \u0938\u094d\u0925\u093f\u0924\u093f \u0939\u0948, \u091c\u0928\u0938\u0902\u0916\u094d\u092f\u093e \u0915\u093e \u0914\u0938\u0924 \u0928\u0939\u0940\u0902\u0964",
+    deltaUp: "\u092a\u093f\u091b\u0932\u0947 \u0938\u092a\u094d\u0924\u093e\u0939 \u0938\u0947 {n} \u092c\u0947\u0939\u0924\u0930",
+    deltaDown: "\u092a\u093f\u091b\u0932\u0947 \u0938\u092a\u094d\u0924\u093e\u0939 \u0938\u0947 {n} \u0915\u092e",
+    deltaFlat: "\u092a\u093f\u091b\u0932\u0947 \u0938\u092a\u094d\u0924\u093e\u0939 \u091c\u0948\u0938\u093e \u0939\u0940",
+    deltaNone: "\u0924\u0941\u0932\u0928\u093e \u0915\u0947 \u0932\u093f\u090f \u092a\u093f\u091b\u0932\u093e \u0938\u092a\u094d\u0924\u093e\u0939 \u0928\u0939\u0940\u0902",
+    mood: "\u0909\u0928\u094d\u0939\u094b\u0902\u0928\u0947 \u0915\u0948\u0938\u093e \u092c\u0924\u093e\u092f\u093e",
+    moodNote: "\u0930\u094b\u095b \u0915\u0940 \u091c\u093e\u0901\u091a \u092a\u0930 \u0909\u0928\u0915\u093e \u0905\u092a\u0928\u093e \u091c\u0935\u093e\u092c\u0964 \u091c\u093f\u0938 \u0926\u093f\u0928 \u091c\u0935\u093e\u092c \u0928\u0939\u0940\u0902 \u0906\u092f\u093e, \u0935\u0939 \u0916\u093e\u0932\u0940 \u0939\u0948\u0964",
+    moodLabels: { "0": "\u091c\u0935\u093e\u092c \u0928\u0939\u0940\u0902", "1": "\u092c\u0947\u0939\u0924\u0930", "2": "\u0935\u0948\u0938\u093e \u0939\u0940", "3": "\u0916\u0930\u093e\u092c" },
+    reach: "\u091c\u093e\u0901\u091a \u092e\u0947\u0902 \u091c\u0935\u093e\u092c",
+    reachNote: "\u0938\u093e\u0924 \u092e\u0947\u0902 \u0938\u0947\u0964 \u092c\u093f\u0928\u093e \u091c\u0935\u093e\u092c \u0935\u093e\u0932\u0940 \u0915\u0949\u0932 \u092d\u0940 \u092a\u094d\u0930\u092e\u093e\u0923 \u0915\u0947 \u0930\u0942\u092a \u092e\u0947\u0902 \u0926\u0930\u094d\u091c \u0939\u094b\u0924\u0940 \u0939\u0948\u0964",
+    adherence: "\u0926\u0935\u093e",
+    adherenceNote: "\u0926\u0947\u092f \u0916\u0941\u0930\u093e\u0915\u094b\u0902 \u0915\u0947 \u092e\u0941\u0915\u093e\u092c\u0932\u0947 \u0926\u0930\u094d\u091c \u0916\u0941\u0930\u093e\u0915\u0947\u0902\u0964",
+    vitals: "\u091c\u0940\u0935\u0928-\u0938\u0902\u0915\u0947\u0924",
+    vitalsNote:
+      "\u091c\u0948\u0938\u0947 \u0926\u0930\u094d\u091c \u0939\u0941\u090f \u0935\u0948\u0938\u0947 \u0939\u0940\u0964 \u091c\u093f\u0928 \u0926\u093f\u0928\u094b\u0902 \u0930\u0940\u0921\u093f\u0902\u0917 \u0928\u0939\u0940\u0902 \u0939\u0948, \u0935\u0939\u093e\u0901 \u0916\u093e\u0932\u0940 \u091c\u0917\u0939 \u091b\u094b\u0921\u093c\u0940 \u0917\u0908 \u0939\u0948, \u091c\u094b\u0921\u093c\u0940 \u0928\u0939\u0940\u0902 \u0917\u0908\u0964",
+    vitalsEmpty: "\u0907\u0938 \u0938\u092a\u094d\u0924\u093e\u0939 \u0915\u094b\u0908 \u0930\u0940\u0921\u093f\u0902\u0917 \u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902 \u0939\u0941\u0908\u0964",
+    latest: "\u0938\u092c\u0938\u0947 \u0939\u093e\u0932\u093f\u092f\u093e",
+    noReading: "\u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902",
+    byDrug: "\u0926\u0935\u093e \u0915\u0947 \u0905\u0928\u0941\u0938\u093e\u0930",
+    alwaysMissed: "\u0907\u0938 \u0938\u092a\u094d\u0924\u093e\u0939 \u090f\u0915 \u092c\u093e\u0930 \u092d\u0940 \u0928\u0939\u0940\u0902 \u0932\u0940",
+    dosesOf: "{due} \u092e\u0947\u0902 \u0938\u0947 {taken} \u0916\u0941\u0930\u093e\u0915",
+    concerns: "\u0915\u0949\u0932 \u092a\u0930 \u0915\u094d\u092f\u093e \u0938\u093e\u092e\u0928\u0947 \u0906\u092f\u093e",
+    concernsNote:
+      "\u0915\u0949\u0932 \u0928\u094b\u091f\u094d\u0938 \u0938\u0947 \u092d\u093e\u0937\u093e-\u092a\u0930\u0924 \u0926\u094d\u0935\u093e\u0930\u093e \u0928\u093f\u0915\u093e\u0932\u093e \u0917\u092f\u093e, \u0939\u093f\u0902\u0926\u0940 \u0914\u0930 \u0905\u0902\u0917\u094d\u0930\u0947\u095b\u0940 \u0926\u094b\u0928\u094b\u0902 \u092e\u0947\u0902\u0964 \u090a\u092a\u0930 \u0915\u093e \u0936\u092c\u094d\u0926 \u0938\u093e\u0930\u093e\u0902\u0936 \u0939\u0948; \u0928\u0940\u091a\u0947 \u0915\u093e \u0935\u093e\u0915\u094d\u092f \u0935\u0939\u0940 \u0939\u0948 \u091c\u094b \u0915\u0939\u093e \u0917\u092f\u093e\u0964",
+    concernsEmpty: "\u0907\u0938 \u0938\u092a\u094d\u0924\u093e\u0939 \u0915\u0940 \u0915\u0949\u0932 \u0938\u0947 \u0915\u094b\u0908 \u091a\u093f\u0902\u0924\u093e \u0915\u0940 \u092c\u093e\u0924 \u0928\u0939\u0940\u0902 \u0928\u093f\u0915\u0932\u0940\u0964",
+    daysMentioned: "{n} \u0926\u093f\u0928",
+    inTheirWords: "\u0909\u0928\u094d\u0939\u0940\u0902 \u0915\u0947 \u0936\u092c\u094d\u0926\u094b\u0902 \u092e\u0947\u0902",
+    cueLabels: {
+      pain: "\u0926\u0930\u094d\u0926",
+      low_appetite: "\u0915\u092e \u0916\u093e\u0928\u093e",
+      poor_sleep: "\u0928\u0940\u0902\u0926 \u0920\u0940\u0915 \u0928\u0939\u0940\u0902",
+      breathlessness: "\u0938\u093e\u0901\u0938 \u092b\u0942\u0932\u0928\u093e",
+      loneliness: "\u0905\u0915\u0947\u0932\u093e\u092a\u0928",
+      confusion: "\u092d\u094d\u0930\u092e",
+      fall: "\u0917\u093f\u0930\u0928\u093e",
+      dizziness: "\u091a\u0915\u094d\u0915\u0930",
+      low_mood: "\u092e\u0928 \u0909\u0926\u093e\u0938",
+      fatigue: "\u0925\u0915\u093e\u0928",
+    },
+    notes: "\u0915\u0949\u0932 \u0928\u094b\u091f\u094d\u0938",
+    notesNote: "\u0915\u0949\u0932 \u0915\u0947 \u0938\u092e\u092f \u0938\u092e\u0928\u094d\u0935\u092f\u0915 \u0926\u094d\u0935\u093e\u0930\u093e \u0926\u0930\u094d\u091c\u0964",
+    notReached: "\u0938\u0902\u092a\u0930\u094d\u0915 \u0928\u0939\u0940\u0902 \u0939\u094b \u0938\u0915\u093e",
+    action: "\u0916\u0941\u0932\u093e \u0905\u0932\u0930\u094d\u091f \u0914\u0930 \u0905\u0917\u0932\u093e \u0915\u0926\u092e",
+    actionNote: "\u0938\u093f\u0938\u094d\u091f\u092e \u0928\u0947 \u092f\u0939 \u0915\u094d\u092f\u094b\u0902 \u0909\u0920\u093e\u092f\u093e, \u0914\u0930 \u0907\u0938 \u092a\u0930 \u0915\u094d\u092f\u093e \u0915\u0930\u0928\u0947 \u0915\u093e \u0938\u0941\u091d\u093e\u0935 \u0939\u0948\u0964",
+    noAlert: "\u0907\u0938 \u0938\u092a\u094d\u0924\u093e\u0939 \u0907\u0928 \u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u0915\u0947 \u0932\u093f\u090f \u0915\u094b\u0908 \u0905\u0932\u0930\u094d\u091f \u0928\u0939\u0940\u0902 \u0909\u0920\u093e\u0964",
+    statusLabels: { open: "\u0916\u0941\u0932\u093e", actioned: "\u0915\u093e\u0930\u094d\u0930\u0935\u093e\u0908 \u0939\u0941\u0908", dismissed: "\u0909\u092a\u092f\u094b\u0917\u0940 \u0928\u0939\u0940\u0902 \u092c\u0924\u093e\u092f\u093e" },
+    notMeasuredTitle: "\u0907\u0938 \u0930\u093f\u092a\u094b\u0930\u094d\u091f \u092e\u0947\u0902 \u0915\u094d\u092f\u093e \u0928\u0939\u0940\u0902 \u0939\u0948",
+    notMeasuredBody:
+      "\u092f\u0939\u093e\u0901 \u0928\u0940\u0902\u0926 \u0915\u0947 \u0918\u0902\u091f\u0947 \u092f\u093e \u0917\u0924\u093f\u0935\u093f\u0927\u093f \u0915\u0947 \u0906\u0901\u0915\u0921\u093c\u0947 \u0928\u0939\u0940\u0902 \u0939\u0948\u0902, \u0915\u094d\u092f\u094b\u0902\u0915\u093f \u092f\u0939 \u0938\u093f\u0938\u094d\u091f\u092e \u0907\u0928\u092e\u0947\u0902 \u0938\u0947 \u0915\u0941\u091b \u092d\u0940 \u0928\u0939\u0940\u0902 \u092e\u093e\u092a\u0924\u093e\u0964 \u091c\u0939\u093e\u0901 \u0928\u0940\u0902\u0926 \u0915\u093e \u095b\u093f\u0915\u094d\u0930 \u0939\u0948, \u0935\u0939 \u0907\u0938\u0932\u093f\u090f \u0915\u093f \u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u0928\u0947 \u0915\u0949\u0932 \u092a\u0930 \u092c\u0924\u093e\u092f\u093e\u0964 \u092f\u0939 \u0930\u093f\u092a\u094b\u0930\u094d\u091f \u0928\u093f\u0926\u093e\u0928 \u0928\u0939\u0940\u0902 \u0915\u0930\u0924\u0940\u0964",
+    footer: "\u0938\u092e\u0930\u094d\u0925 \u0938\u0947\u0902\u091f\u093f\u0928\u0932 \u00b7 \u092c\u0947\u0939\u0924\u0930 \u0926\u0947\u0916\u092d\u093e\u0932\u0964 \u0909\u091c\u094d\u091c\u094d\u0935\u0932 \u0915\u0932\u0964",
+    confidential: "\u0917\u094b\u092a\u0928\u0940\u092f \u00b7 \u0915\u0947\u0935\u0932 \u0906\u0902\u0924\u0930\u093f\u0915 \u0909\u092a\u092f\u094b\u0917 \u0939\u0947\u0924\u0941",
+    familyHeading: "\u0938\u093e\u092a\u094d\u0924\u093e\u0939\u093f\u0915 \u0915\u0941\u0936\u0932-\u0915\u094d\u0937\u0947\u092e \u0938\u093e\u0930\u093e\u0902\u0936",
+    familySub: "\u0938\u092a\u094d\u0924\u093e\u0939 \u0915\u0948\u0938\u093e \u0930\u0939\u093e, \u0938\u0930\u0932 \u092d\u093e\u0937\u093e \u092e\u0947\u0902 \u090f\u0915 \u091b\u094b\u091f\u093e \u0928\u094b\u091f\u0964",
+    familyNoSummary:
+      "\u0907\u0938 \u0938\u092a\u094d\u0924\u093e\u0939 \u0915\u093e \u0938\u093e\u0930\u093e\u0902\u0936 \u0905\u092d\u0940 \u092a\u094d\u0930\u0915\u093e\u0936\u093f\u0924 \u0928\u0939\u0940\u0902 \u0939\u0941\u0906 \u0939\u0948\u0964 \u0938\u093e\u0930\u093e\u0902\u0936 \u0938\u092a\u094d\u0924\u093e\u0939 \u092a\u0942\u0930\u093e \u0939\u094b\u0928\u0947 \u0915\u0947 \u092c\u093e\u0926 \u0932\u093f\u0916\u0947 \u091c\u093e\u0924\u0947 \u0939\u0948\u0902\u0964",
+    familyWhatYouSee: "\u0907\u0938 \u0938\u093e\u0930\u093e\u0902\u0936 \u092e\u0947\u0902 \u0915\u094d\u092f\u093e \u0939\u0948",
+    familyWhatYouSeeBody:
+      "\u0938\u0930\u0932 \u0936\u092c\u094d\u0926\u094b\u0902 \u092e\u0947\u0902 \u0915\u0941\u0936\u0932-\u0915\u094d\u0937\u0947\u092e, \u0914\u0930 \u0930\u094b\u095b \u0915\u0940 \u091c\u093e\u0901\u091a \u0915\u093e \u0915\u093f\u0924\u0928\u0940 \u092c\u093e\u0930 \u091c\u0935\u093e\u092c \u092e\u093f\u0932\u093e\u0964 \u0907\u0938\u092e\u0947\u0902 \u0930\u0915\u094d\u0924\u091a\u093e\u092a, \u0936\u0941\u0917\u0930, \u0911\u0915\u094d\u0938\u0940\u091c\u0928 \u092f\u093e \u0935\u095b\u0928 \u0915\u0940 \u0915\u094b\u0908 \u0930\u0940\u0921\u093f\u0902\u0917 \u0928\u0939\u0940\u0902, \u0915\u094b\u0908 \u091c\u094b\u0916\u093f\u092e \u0938\u094d\u0915\u094b\u0930 \u0928\u0939\u0940\u0902, \u0914\u0930 \u0915\u0949\u0932 \u0915\u0940 \u0915\u094b\u0908 \u092a\u094d\u0930\u0924\u093f\u0932\u093f\u092a\u093f \u0928\u0939\u0940\u0902 \u2014 \u092a\u0930\u093f\u0935\u093e\u0930 \u0915\u0947 \u0916\u093e\u0924\u0947 \u0915\u094b \u0907\u0928\u092e\u0947\u0902 \u0938\u0947 \u0915\u0941\u091b \u092d\u0940 \u092a\u0922\u093c\u0928\u0947 \u0915\u0940 \u0905\u0928\u0941\u092e\u0924\u093f \u0939\u0948 \u0939\u0940 \u0928\u0939\u0940\u0902\u0964 \u0905\u0917\u0930 \u0915\u0941\u091b \u095b\u0930\u0942\u0930\u0940 \u0939\u0941\u0906 \u0924\u094b \u0938\u092e\u0928\u094d\u0935\u092f\u0915 \u0906\u092a\u0915\u094b \u095e\u094b\u0928 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902\u0964",
   },
 };
 
