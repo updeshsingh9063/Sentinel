@@ -256,6 +256,19 @@
       "alt_text": "An older man with a cup of tea at home, a younger family member leaning in beside him",
       "sha256": "2f080b9c43f162e45dceabc202ab7a12fccff91c89765eae88f0e87f11e5f59c",
       "bytes": 272628
+    },
+    {
+      "name": "Check-in background: empty sitting room",
+      "kind": "image",
+      "path": "frontend/public/img/checkin.jpg",
+      "where": "Senior check-in page, full-bleed background behind the question card",
+      "source_file": "docs/photography/checkin-room.png",
+      "provenance": "AI-generated still, supplied by the project owner on 2026-10-30. Generator and model not recorded by the supplier.",
+      "people": "NONE. This frame deliberately contains no people — it sits behind large type on the one surface built for low-vision users.",
+      "processing": "frontend/scripts/prep-image.mjs: warm grade, lanczos resample to 1920px, mozjpeg q82. No watermark on this source.",
+      "alt_text": "",
+      "sha256": "ce3d917238cc51dac86ee66dd80ea35b99811cb109f8134906cbc88a513062c5",
+      "bytes": 174222
     }
   ]
 }

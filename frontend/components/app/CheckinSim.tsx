@@ -355,7 +355,11 @@ export function CheckinSim({ t, lang }: { t: AppCopy["checkin"]; lang: string })
       <style>{`
         .ivr {
           min-height: 100svh;
-          background: var(--cream-2);
+          /* Transparent, not cream. The page behind this places a photograph
+             of an empty room under the whole surface, and a solid fill here
+             covered every pixel of it. Where there is no photograph the page
+             itself is still cream, so this loses nothing. */
+          background: transparent;
           display: grid; align-content: start; justify-items: center;
           padding: var(--s-6) var(--gutter) var(--s-16);
         }

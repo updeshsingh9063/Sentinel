@@ -15,7 +15,7 @@ import path from "node:path";
  * filesystem, so never import this file from a "use client" module.
  */
 
-export type Slot = "hero" | "impact" | "closing" | "signin";
+export type Slot = "hero" | "impact" | "closing" | "signin" | "checkin";
 
 export interface ImageSlot {
   slot: Slot;
@@ -46,6 +46,17 @@ export const SLOTS: Record<Slot, ImageSlot> = {
       "An older Indian man in a kurta with a cup of tea, a younger family member leaning in beside him — a home, not a clinic; upright enough to fill half a screen",
     alt: "An older man with a cup of tea at home, a younger family member leaning in beside him",
     objectPosition: "50% 38%",
+  },
+  checkin: {
+    slot: "checkin",
+    intent:
+      "An empty, sunlit sitting room — armchair, window, plants — with a wide bare wall through the middle. Deliberately has NOBODY in it: this sits behind the check-in card, and a face behind large type is a face competing with it",
+    alt: "",
+    // Pulled left of centre. At 50% a narrow screen crops to the bare middle
+    // of the wall and the room disappears entirely — the window and the
+    // armchair, which are the only reason to use this picture, sit off to one
+    // side. This keeps them in frame while the card still lands on plain wall.
+    objectPosition: "32% 58%",
   },
   closing: {
     slot: "closing",

@@ -13,6 +13,7 @@ stand-in that names what it wants, so the page is presentable either way.
 | `hero` | `frontend/public/img/hero.jpg` | **Filled.** Generated: an older Indian man with tea, a care worker's hand on his shoulder, bright plant-filled room. |
 | `closing` | `frontend/public/img/closing.jpg` | **Filled.** Generated: a care worker holding an older person's hand. |
 | `impact` | — | **Deliberately empty.** See below. |
+| `checkin` | `frontend/public/img/checkin.jpg` | **Filled.** An empty sitting room, no people, bare wall through the middle. It sits behind the check-in card, so a face there would compete with the largest type in the product. |
 | `signin` | `frontend/public/img/signin.jpg` | **Filled.** Generated: an older man in a kurta with tea, a younger family member leaning in. Fills the left half of the sign-in split; no watermark on this source, so no trim. |
 
 Both were supplied as PNGs and processed through `npm run img:prep` (see
