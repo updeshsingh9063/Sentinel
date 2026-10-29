@@ -229,6 +229,8 @@ export interface AppCopy {
     noReading: string;
     byDrug: string;
     alwaysMissed: string;
+    medReview: string;
+    medReviewNote: string;
     dosesOf: string;
     concerns: string;
     concernsNote: string;
@@ -526,6 +528,9 @@ const en: AppCopy = {
     noReading: "Not recorded",
     byDrug: "By medicine",
     alwaysMissed: "Not taken once this week",
+    medReview: "Worth a medicine review",
+    medReviewNote:
+      "Flags from the 2023 AGS Beers Criteria, which lists medicines and combinations whose risks more often outweigh their benefits after 65. A flag is not a reason to stop anything and names no condition — it is a prompt to ask the prescribing doctor.",
     dosesOf: "{taken} of {due} doses",
     concerns: "What came up on calls",
     concernsNote:
@@ -838,6 +843,9 @@ const hi: AppCopy = {
     noReading: "\u0926\u0930\u094d\u091c \u0928\u0939\u0940\u0902",
     byDrug: "\u0926\u0935\u093e \u0915\u0947 \u0905\u0928\u0941\u0938\u093e\u0930",
     alwaysMissed: "\u0907\u0938 \u0938\u092a\u094d\u0924\u093e\u0939 \u090f\u0915 \u092c\u093e\u0930 \u092d\u0940 \u0928\u0939\u0940\u0902 \u0932\u0940",
+    medReview: "दवाओं की समीक्षा ज़रूरी",
+    medReviewNote:
+      "2023 AGS Beers मानदंडों से। यह कोई दवा बंद करने का कारण नहीं है और किसी बीमारी का नाम नहीं लेता — यह सिर्फ़ डॉक्टर से पूछने की याद दिलाता है।",
     dosesOf: "{due} \u092e\u0947\u0902 \u0938\u0947 {taken} \u0916\u0941\u0930\u093e\u0915",
     concerns: "\u0915\u0949\u0932 \u092a\u0930 \u0915\u094d\u092f\u093e \u0938\u093e\u092e\u0928\u0947 \u0906\u092f\u093e",
     concernsNote:

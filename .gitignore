@@ -29,7 +29,12 @@ datasets/synthetic/
 *.parquet
 
 # --- models ---
+# Weights and scored frames are rebuilt by model/training/train.py and are
+# far too large to carry. metrics.json is the exception: the brief grades
+# model metrics as a deliverable, so the numbers travel with the source
+# rather than only existing on whoever ran training last.
 model/artifacts/
+!model/artifacts/metrics.json
 *.pkl
 *.joblib
 *.onnx

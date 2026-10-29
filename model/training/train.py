@@ -43,6 +43,7 @@ from samarth_model.alerts.rank import blend, rank_all  # noqa: E402
 from samarth_model.explain.reasons import summarise  # noqa: E402
 from samarth_model.features.windows import build, feature_columns  # noqa: E402
 from samarth_model.scoring import baseline as layer_b  # noqa: E402
+from samarth_model.scoring import feedback as layer_f  # noqa: E402
 from samarth_model.scoring import ml as layer_c  # noqa: E402
 from samarth_model.scoring import rules as layer_a  # noqa: E402
 
@@ -268,6 +269,133 @@ def main() -> int:
               f"early median={res['median_days_early']:.0f}d  "
               f"before-obvious {res['episodes_caught_before_obvious']}/{res['episodes_total']}")
 
+    # ---- the coordinator feedback loop ------------------------------------
+    #
+    # The brief's stretch goal is a loop where coordinators mark alerts useful
+    # or not and the model improves from it. Doing that honestly needs three
+    # things, and skipping any one of them turns it into theatre.
+    #
+    # ONE: verdicts that carry signal. A simulated coordinator who agrees with
+    # the ground truth 85% of the time is a fair stand-in for a real one. A
+    # simulated coordinator who says "true concern" 71% of the time regardless
+    # of what happened — which is what the demo loader used to generate — is
+    # noise, and a model that learns from noise has not learned anything.
+    #
+    # TWO: a split in TIME. Feedback is fitted on the first half of the window
+    # and measured on the second, because that is the only arrangement that
+    # answers the actual question: does last month's feedback improve next
+    # month's list. Fitting and scoring on the same days would report the
+    # model's ability to memorise verdicts it had already seen.
+    #
+    # THREE: the comparison reported either way. If the loop does not help, it
+    # says so below and the number goes in the write-up unchanged.
+    print("\nfeedback loop (verdicts from the first half, measured on the second)...")
+
+    full_scored = base.copy()
+    full_scored["score"] = blend(**layers).to_numpy()
+    full_ranked = apply_budget(rank_all(full_scored), k=args.k)
+
+    mid_day = int(full_ranked["day"].max() // 2)
+    rng = np.random.default_rng(20261029)
+
+    # Ground truth per senior-day: was this person actually declining.
+    truth = daily.set_index(["senior_id", "day"])["declining"].to_dict()
+
+    feat_idx = feats.set_index(["senior_id", "day"])
+    train_rows = []
+    for r in full_ranked[(full_ranked["surfaced"]) & (full_ranked["day"] <= mid_day)].itertuples():
+        key = (r.senior_id, r.day)
+        try:
+            record = feat_idx.loc[key].to_dict()
+        except KeyError:
+            continue
+        top, _ = summarise(layer_a.evaluate(record))
+        if not top:
+            continue
+        actually_declining = bool(truth.get(key, False))
+        roll = rng.random()
+        if roll < 0.10:
+            verdict = "unreachable"          # nobody learned anything
+        elif rng.random() < 0.85:
+            verdict = "true_concern" if actually_declining else "false_alarm"
+        else:
+            verdict = "false_alarm" if actually_declining else "true_concern"
+        train_rows.append({"reasons": top, "verdict": verdict})
+
+    weights = layer_f.fit(pd.DataFrame(train_rows))
+    print(f"  {len(train_rows)} verdicts, base rate {weights.base_rate:.3f}")
+    tbl = weights.table()
+    if not tbl.empty:
+        moved = tbl[tbl["multiplier"] != 1.0]
+        for row in moved.head(4).itertuples():
+            print(f"    {row.code:22} x{row.multiplier:.3f}  ({row.verdicts} verdicts)")
+        if moved.empty:
+            print("    no reason code had enough verdicts to move")
+
+    # Measure on the untouched second half, with and without the adjustment.
+    later = full_ranked[full_ranked["day"] > mid_day].copy()
+    later_reasons = []
+    for r in later.itertuples():
+        try:
+            record = feat_idx.loc[(r.senior_id, r.day)].to_dict()
+        except KeyError:
+            later_reasons.append([])
+            continue
+        top, _ = summarise(layer_a.evaluate(record))
+        later_reasons.append(top)
+
+    # Episodes key on real dates; the frame keys on a day index, so the
+    # cut has to be translated through the same START the generator used.
+    mid_date = START + timedelta(days=mid_day)
+    later_eps = [e for e in episodes if e.onset > mid_date]
+    before = evaluate(later[["senior_id", "day", "coordinator_id",
+                             "days_since_contact", "score"]].copy(),
+                      later_eps, args.k, "second half, no feedback")
+    after_df = later[["senior_id", "day", "coordinator_id", "days_since_contact"]].copy()
+    after_df["score"] = weights.apply(later["score"].to_numpy(), later_reasons).to_numpy()
+    after = evaluate(after_df, later_eps, args.k, "second half, with feedback")
+
+    delta = after["precision_at_k"] - before["precision_at_k"]
+
+    # Swept across budgets, not reported at one K. A re-ranking signal this
+    # gentle changes who sits at positions 3-10 long before it changes who
+    # sits at position 1, so a single K can hide the whole effect — in either
+    # direction. Every value measured goes in the table, including the ones
+    # that go the wrong way.
+    sweep = []
+    for kk in (3, 5, 10, 20):
+        b = evaluate(later[["senior_id", "day", "coordinator_id",
+                            "days_since_contact", "score"]].copy(),
+                     later_eps, kk, f"no feedback k={kk}")
+        a = evaluate(after_df.copy(), later_eps, kk, f"with feedback k={kk}")
+        sweep.append({
+            "k": kk,
+            "precision_without": b["precision_at_k"],
+            "precision_with": a["precision_at_k"],
+            "delta": round(a["precision_at_k"] - b["precision_at_k"], 4),
+            "recall_without": b["episode_recall"],
+            "recall_with": a["episode_recall"],
+        })
+        print(f"  k={kk:<3} without {b['precision_at_k']:.3f}"
+              f"   with {a['precision_at_k']:.3f}"
+              f"   ({a['precision_at_k'] - b['precision_at_k']:+.3f})"
+              f"   recall {b['episode_recall']:.2f} -> {a['episode_recall']:.2f}")
+
+    helped = [x for x in sweep if x["delta"] > 0]
+    if not helped:
+        print("  the loop did not improve precision at any budget; reported as measured")
+
+    feedback_result = {
+        "verdicts_used": len(train_rows),
+        "base_rate": round(float(weights.base_rate), 4),
+        "multipliers": weights.table().to_dict(orient="records"),
+        "precision_without": before["precision_at_k"],
+        "precision_with": after["precision_at_k"],
+        "delta": round(float(delta), 4),
+        "episodes_in_window": len(later_eps),
+        "sweep": sweep,
+    }
+
     # ---- validation on a DIFFERENT decline mechanism ----------------------
     val_dir = REPO / args.validation
     val_result = None
@@ -299,35 +427,65 @@ def main() -> int:
     for name, vals in layers.items():
         scored[f"score_{name}"] = vals
     ranked = apply_budget(rank_all(scored), k=args.k)
-    ranked.to_parquet(out / "scored.parquet", index=False)
 
-    # ---- alerts, with the sentence a coordinator reads --------------------
+    # ---- reasons, for EVERY scored day ------------------------------------
     # Generated HERE, in the layer that produced the contributions, so the
     # reason text and the score cannot drift apart. The loader copies them
     # verbatim into Postgres rather than recomputing anything in JavaScript.
-    print("writing alerts with reasons...")
+    #
+    # This used to run only over surfaced alerts, which left every other
+    # scored day with no explanation at all — and the brief asks for the top
+    # reasons behind EACH SCORE, not only behind the ones that made the cut.
+    # A coordinator opening a senior who was never alerted still deserves to
+    # see why the system thought they were fine. It also means the day a
+    # senior ranked eleventh is inspectable after the fact, which is how you
+    # tell a near miss from a lucky escape.
+    print("explaining every scored day...")
     feat_by_key = feats.set_index(["senior_id", "day"])
-    alert_rows = []
-    for r in ranked[ranked["surfaced"]].itertuples():
+    explanations: dict[tuple, tuple[list, str]] = {}
+    for r in ranked.itertuples():
+        key = (r.senior_id, r.day)
         try:
-            record = feat_by_key.loc[(r.senior_id, r.day)].to_dict()
+            record = feat_by_key.loc[key].to_dict()
         except KeyError:
             continue
-        hits = layer_a.evaluate(record)
-        top, step = summarise(hits)
+        top, step = summarise(layer_a.evaluate(record))
         if not top:
+            # No rule fired. The score is then carried by the baseline, ML and
+            # anomaly layers, which is a real finding and gets said plainly
+            # rather than left blank.
             top = [{"code": "baseline_shift",
                     "text": "Readings drifting from their own recent range",
                     "contribution": round(float(r.score), 3)}]
             step = "Call today and ask how the last few days have been."
+        explanations[key] = (top, step)
+
+    scored_out = ranked.copy()
+    scored_out["reasons"] = [
+        json.dumps(explanations.get((r.senior_id, r.day), ([], ""))[0], ensure_ascii=False)
+        for r in ranked.itertuples()
+    ]
+    scored_out["reason_text"] = [
+        (explanations.get((r.senior_id, r.day), ([{}], ""))[0] or [{}])[0].get("text", "")
+        for r in ranked.itertuples()
+    ]
+    scored_out["next_step"] = [
+        explanations.get((r.senior_id, r.day), ([], ""))[1] for r in ranked.itertuples()
+    ]
+    scored_out.to_parquet(out / "scored.parquet", index=False)
+    print(f"  {len(explanations)} of {len(ranked)} scored days explained")
+
+    # ---- alerts: the subset a coordinator is actually shown ---------------
+    alert_rows = []
+    for r in scored_out[scored_out["surfaced"]].itertuples():
         alert_rows.append({
             "senior_id": r.senior_id, "day": int(r.day),
             "coordinator_id": r.coordinator_id,
             "score": float(r.score), "rank_in_day": int(r.rank_in_day),
             "escalated": bool(r.escalated),
-            "reasons": json.dumps(top, ensure_ascii=False),
-            "reason_text": top[0]["text"],
-            "next_step": step,
+            "reasons": r.reasons,
+            "reason_text": r.reason_text,
+            "next_step": r.next_step,
         })
     alerts_df = pd.DataFrame(alert_rows)
     alerts_df.to_parquet(out / "alerts.parquet", index=False)
@@ -344,6 +502,7 @@ def main() -> int:
                    "planted_declines": int(seniors.declines.sum()),
                    "hard_negatives": int((seniors.hard_negative != "").sum())},
         "features": len(cols),
+        "feedback": feedback_result,
         "ablation": results,
         "validation_unseen_mechanism": val_result,
         "days_early_definition": (

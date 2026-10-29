@@ -1,3 +1,4 @@
+import { type MedicationFlag, reviewRegimen } from "@/lib/medication-rules";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -101,6 +102,8 @@ export interface WeeklyReport {
   reach: { answered: number; of: number };
   vitals: { series: VitalPoint[]; latest: VitalPoint | null; readings: number };
   adherence: { taken: number; due: number; byDrug: DrugAdherence[] };
+  /** Beers-criteria findings on the current regimen. See lib/medication-rules.ts. */
+  medFlags: MedicationFlag[];
   cues: CueRollup[];
   notes: CallNote[];
   alert: {
@@ -201,6 +204,7 @@ export async function loadWeeklyReport(
     reach: { answered: 0, of: 7 },
     vitals: { series: [], latest: null, readings: 0 },
     adherence: { taken: 0, due: 0, byDrug: [] },
+    medFlags: [],
     cues: [],
     notes: [],
     alert: null,
@@ -391,6 +395,10 @@ export async function loadWeeklyReport(
       due: (meds.data ?? []).length,
       byDrug,
     },
+    // Run over the whole regimen, not just the drugs missed. An interaction
+    // is a property of what is prescribed together, so a perfectly adherent
+    // senior can still be the one worth a call.
+    medFlags: reviewRegimen(byDrug.map((d) => d.drug)),
     cues: [...cueMap.values()].sort((a, b) => b.days - a.days),
     notes: (notes.data ?? []).map((n) => ({
       date: n.called_on,

@@ -163,6 +163,13 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         model: process.env.GROQ_MODEL || DEFAULT_MODEL,
         max_tokens: MAX_TOKENS,
+        // The default model reasons before it answers, and that reasoning is
+        // billed against max_tokens while arriving in a separate field. Left
+        // alone, a question it thinks hard about returns an EMPTY reply with
+        // a 200 status — the failure looks like the model had nothing to say.
+        // This route answers from a supplied reference; it does not need to
+        // deliberate.
+        reasoning_effort: "low",
         // Warm enough to sound like a person, low enough that site facts
         // stay faithful to the reference. Raised past ~0.5 it started
         // improvising on who can see what, which is the one thing here that

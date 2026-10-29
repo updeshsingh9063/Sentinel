@@ -199,6 +199,28 @@ export function ReportView({
                 </li>
               ))}
             </ul>
+
+            {/* Beers-criteria findings on what is prescribed, not on what was
+                taken. Every one asks for a clinician's review and none names
+                a condition — see lib/medication-rules.ts for why that line is
+                drawn where it is. */}
+            {report.medFlags.length > 0 && (
+              <div className="rep__medrev">
+                <h4>{r.medReview}</h4>
+                <ul>
+                  {report.medFlags.map((f) => (
+                    <li key={f.code} className={`rep__medflag rep__medflag--${f.severity}`}>
+                      <p className="rep__medtext">{f.text}</p>
+                      <p className="rep__medaction">{f.action}</p>
+                      <p className="rep__medsrc">
+                        {f.drugs.join(" · ")} — {f.source}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                <p className="rep__panelnote">{r.medReviewNote}</p>
+              </div>
+            )}
           </section>
         </div>
 
@@ -344,6 +366,17 @@ export function ReportView({
         .rep__drugbar span { display: block; height: 100%; background: var(--risk-low); }
         .rep__drug--bad .rep__drugbar span { background: var(--risk-high); }
         .rep__drugflag { grid-column: 1 / -1; font-size: var(--fs-xs); font-style: normal; font-weight: 600; color: var(--risk-high); }
+
+        .rep__medrev { margin-top: var(--s-5); padding-top: var(--s-4); border-top: 1px solid var(--line); }
+        .rep__medrev h4 { font-size: var(--fs-sm); font-weight: 600; margin: 0 0 var(--s-3); }
+        .rep__medrev ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+        .rep__medflag { padding: var(--s-3); background: var(--white); border-left: 2px solid var(--line-2); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+        .rep__medflag--review { border-left-color: var(--risk-med); }
+        .rep__medtext { font-size: var(--fs-sm); line-height: 1.5; }
+        .rep__medaction { font-size: var(--fs-xs); color: var(--ink-2); line-height: 1.55; margin-top: 4px; }
+        /* The citation is small but never hidden: an unsourced clinical rule
+           on a care screen is worth less than no rule. */
+        .rep__medsrc { font-size: 0.625rem; color: var(--ink-3); margin-top: 6px; line-height: 1.5; }
 
         .rep__cues { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
         .rep__cuehead { display: flex; justify-content: space-between; gap: var(--s-3); font-size: var(--fs-sm); }

@@ -156,6 +156,43 @@ async function ensureAccounts(coordinatorIds) {
 }
 
 /* ------------------------------------------------------------ insert ---- */
+/**
+ * Medicine regimens, assigned per senior and held stable across the window.
+ *
+ * Chosen to look like what an Indian geriatric caseload actually carries:
+ * blood-pressure and sugar control in almost everyone, then the cheap
+ * widely-sold additions — amitriptyline for pain or sleep, diclofenac for
+ * joints, alprazolam for sleep, glimepiride alongside metformin. Several
+ * combinations here are ones the 2023 AGS Beers Criteria flag for review in
+ * someone over 65, which is the point: lib/medication-rules.ts has to have
+ * something real to find.
+ *
+ * Deterministic from the senior id so a reload produces the same regimen and
+ * a screenshot taken yesterday still matches the database today.
+ */
+const REGIMENS = [
+  [{ name: "Amlodipine", dose: "5 mg" }, { name: "Metformin", dose: "500 mg" }],
+  [{ name: "Telmisartan", dose: "40 mg" }, { name: "Metformin", dose: "500 mg" },
+   { name: "Atorvastatin", dose: "10 mg" }],
+  [{ name: "Amlodipine", dose: "5 mg" }, { name: "Glimepiride", dose: "1 mg" },
+   { name: "Pantoprazole", dose: "40 mg" }],
+  [{ name: "Amlodipine", dose: "5 mg" }, { name: "Amitriptyline", dose: "10 mg" },
+   { name: "Chlorpheniramine", dose: "4 mg" }],
+  [{ name: "Telmisartan", dose: "40 mg" }, { name: "Diclofenac", dose: "50 mg" },
+   { name: "Pantoprazole", dose: "40 mg" }],
+  [{ name: "Metformin", dose: "500 mg" }, { name: "Alprazolam", dose: "0.25 mg" },
+   { name: "Amitriptyline", dose: "10 mg" }, { name: "Tramadol", dose: "50 mg" }],
+  [{ name: "Amlodipine", dose: "5 mg" }, { name: "Atorvastatin", dose: "10 mg" }],
+  [{ name: "Losartan", dose: "50 mg" }, { name: "Sertraline", dose: "50 mg" },
+   { name: "Warfarin", dose: "3 mg" }],
+];
+
+function regimenFor(seniorId) {
+  let h = 0;
+  for (const ch of String(seniorId)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return REGIMENS[h % REGIMENS.length];
+}
+
 async function insertMany(c, table, cols, rows, extra = "") {
   if (!rows.length) return 0;
   const chunk = Math.max(1, Math.floor(50000 / cols.length));
@@ -259,7 +296,10 @@ const dayToDate = (day, lastDay) => {
       const on = dayToDate(d.day, lastDay);
       if (d.systolic_bp != null) {
         vitals.push([id, on, "device", d.systolic_bp, d.diastolic_bp, d.pulse_bpm,
-                     d.spo2_pct, d.weight_kg, d.glucose_mgdl, d.temperature_c]);
+                     d.spo2_pct, d.weight_kg, d.glucose_mgdl, d.temperature_c,
+                     // Rounded, because a step count with decimals in it
+                     // announces that it came from a generator.
+                     d.steps == null ? null : Math.round(d.steps)]);
       }
       checks.push([id, on, !!d.checkin_answered,
                    d.feeling_code || null, d.pain_code || null,
@@ -267,13 +307,25 @@ const dayToDate = (day, lastDay) => {
       // One row per drug per day rather than per slot: the demo surfaces the
       // daily adherence number, and 6 rows per senior-day is volume without
       // information here.
-      meds.push([id, on, "Amlodipine", "5 mg",
-                 d.doses_taken >= d.doses_due * 0.5, "ivr_checkin"]);
-      meds.push([id, on, "Metformin", "500 mg",
-                 d.doses_taken >= d.doses_due * 0.75, "ivr_checkin"]);
+      //
+      // The regimen is per senior and deterministic, not two drugs for all
+      // 200. Everybody on the same Amlodipine-and-Metformin pair made the
+      // medication-review rules untestable — there is no interaction between
+      // those two to find — and it misrepresents the population the brief
+      // describes, where polypharmacy is the norm rather than the exception.
+      // See REGIMENS above for what is prescribed and why.
+      const regimen = regimenFor(d.senior_id);
+      regimen.forEach((drug, idx) => {
+        // Adherence per drug, worst-first, so the overall daily rate is
+        // preserved while individual drugs differ — which is what makes a
+        // missed-dose PATTERN visible rather than an average.
+        const threshold = 0.4 + (idx * 0.25);
+        meds.push([id, on, drug.name, drug.dose,
+                   d.doses_taken >= d.doses_due * threshold, "ivr_checkin"]);
+      });
     }
     console.log(`vitals: ${await insertMany(c, "vitals",
-      ["senior_id","measured_on","source","systolic_bp","diastolic_bp","pulse_bpm","spo2_pct","weight_kg","glucose_mgdl","temperature_c"],
+      ["senior_id","measured_on","source","systolic_bp","diastolic_bp","pulse_bpm","spo2_pct","weight_kg","glucose_mgdl","temperature_c","steps"],
       vitals, "on conflict do nothing")}`);
     console.log(`checkins: ${await insertMany(c, "checkins",
       ["senior_id","checked_on","answered","feeling_code","pain_code","meds_taken"],
@@ -316,7 +368,12 @@ const dayToDate = (day, lastDay) => {
       Math.min(0.9999, Math.max(0, r.score)),
       r.score_rules ?? null, r.score_baseline ?? null,
       r.score_ml ?? null, r.score_anomaly ?? null,
-      "layerABC_v1", JSON.stringify([]),
+      "layerABC_v1",
+      // Written by model/samarth_model/explain for EVERY scored day, not
+      // just the surfaced ones, and already through the never-diagnose
+      // gate. This used to be a hard-coded empty array, which left all
+      // 18,000 rows with no explanation behind their score.
+      r.reasons ?? JSON.stringify([]),
     ]);
     console.log(`risk_scores: ${await insertMany(c, "risk_scores",
       ["senior_id","scored_on","score","rules_score","baseline_score","ml_score","nlp_score","model_version","reasons"],
@@ -393,14 +450,15 @@ const dayToDate = (day, lastDay) => {
       ["alert_id", "reviewer_id", "result", "acted_at"], fb, "on conflict do nothing")}`);
 
     // ---- family summary --------------------------------------------------
-    await insertMany(c, "family_summaries",
-      ["senior_id", "covers_on", "summary_text", "safety_checked"],
-      [[uuid[familySenior], dayToDate(lastDay, lastDay),
-        "A quieter week than usual, and we have been in touch.\n\n" +
-        "We spoke with her this week, and your coordinator is calling again " +
-        "today to go through the evening routine.\n\n" +
-        "Nothing here needs you to do anything right now. If that changes, we " +
-        "will call you directly rather than leave it in a summary.", true]]);
+    // No family summary is written here any more.
+    //
+    // It used to insert one hard-coded paragraph, which meant every reload
+    // quietly replaced real generated summaries with a fixture — and made the
+    // "LLM-generated weekly family summary" stretch goal look done when it
+    // was a string literal. The summaries are written by
+    //   node scripts/generate-family-summaries.mjs
+    // which builds a digest, calls the model, and discards anything the
+    // never-diagnose gate rejects. Run it after this script.
 
     await c.query("commit");
     console.log("\ncommitted.");

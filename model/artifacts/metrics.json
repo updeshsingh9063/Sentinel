@@ -1,0 +1,236 @@
+{
+  "k": 10,
+  "cohort": {
+    "seniors": 200,
+    "senior_days": 18000,
+    "planted_declines": 24,
+    "hard_negatives": 49
+  },
+  "features": 55,
+  "feedback": {
+    "verdicts_used": 1381,
+    "base_rate": 0.1551,
+    "multipliers": [
+      {
+        "code": "bp_very_high",
+        "multiplier": 0.893,
+        "verdicts": 25
+      },
+      {
+        "code": "pain_reported",
+        "multiplier": 0.937,
+        "verdicts": 51
+      },
+      {
+        "code": "cue_confusion",
+        "multiplier": 0.945,
+        "verdicts": 10
+      },
+      {
+        "code": "dose_missed",
+        "multiplier": 0.948,
+        "verdicts": 227
+      },
+      {
+        "code": "cue_poor_sleep",
+        "multiplier": 0.963,
+        "verdicts": 16
+      },
+      {
+        "code": "bp_high",
+        "multiplier": 0.987,
+        "verdicts": 155
+      },
+      {
+        "code": "cue_dizziness",
+        "multiplier": 1.0,
+        "verdicts": 9
+      },
+      {
+        "code": "cue_loneliness",
+        "multiplier": 1.0,
+        "verdicts": 5
+      },
+      {
+        "code": "cue_fall",
+        "multiplier": 1.0,
+        "verdicts": 6
+      },
+      {
+        "code": "spo2_low",
+        "multiplier": 1.0,
+        "verdicts": 2
+      },
+      {
+        "code": "bp_low",
+        "multiplier": 1.0,
+        "verdicts": 4
+      },
+      {
+        "code": "dose_patchy",
+        "multiplier": 1.016,
+        "verdicts": 673
+      },
+      {
+        "code": "cue_breathlessness",
+        "multiplier": 1.028,
+        "verdicts": 11
+      },
+      {
+        "code": "feels_worse",
+        "multiplier": 1.03,
+        "verdicts": 187
+      },
+      {
+        "code": "contact_thin",
+        "multiplier": 1.064,
+        "verdicts": 132
+      },
+      {
+        "code": "cue_pain",
+        "multiplier": 1.073,
+        "verdicts": 19
+      },
+      {
+        "code": "no_contact",
+        "multiplier": 1.073,
+        "verdicts": 19
+      },
+      {
+        "code": "cue_low_appetite",
+        "multiplier": 1.134,
+        "verdicts": 15
+      }
+    ],
+    "precision_without": 0.1593,
+    "precision_with": 0.1593,
+    "delta": 0.0,
+    "episodes_in_window": 14,
+    "sweep": [
+      {
+        "k": 3,
+        "precision_without": 0.3556,
+        "precision_with": 0.3568,
+        "delta": 0.0012,
+        "recall_without": 1.0,
+        "recall_with": 1.0
+      },
+      {
+        "k": 5,
+        "precision_without": 0.2867,
+        "precision_with": 0.2859,
+        "delta": -0.0008,
+        "recall_without": 1.0,
+        "recall_with": 1.0
+      },
+      {
+        "k": 10,
+        "precision_without": 0.1593,
+        "precision_with": 0.1593,
+        "delta": 0.0,
+        "recall_without": 1.0,
+        "recall_with": 1.0
+      },
+      {
+        "k": 20,
+        "precision_without": 0.0893,
+        "precision_with": 0.0894,
+        "delta": 0.0001,
+        "recall_without": 1.0,
+        "recall_with": 1.0
+      }
+    ]
+  },
+  "ablation": [
+    {
+      "layer": "rules only",
+      "k": 10,
+      "precision_at_k": 0.1324,
+      "episode_recall": 1.0,
+      "episodes_total": 24,
+      "episodes_caught": 24,
+      "precision_ceiling": 0.1924,
+      "mean_days_early": 21.46,
+      "median_days_early": 21.5,
+      "episodes_caught_before_obvious": 24,
+      "episodes_missed": 0,
+      "surfaced_alerts": 5171,
+      "suppressed_cooldown": 8593,
+      "suppressed_budget": 4236,
+      "escalated": 1460
+    },
+    {
+      "layer": "+ baseline",
+      "k": 10,
+      "precision_at_k": 0.14,
+      "episode_recall": 1.0,
+      "episodes_total": 24,
+      "episodes_caught": 24,
+      "precision_ceiling": 0.1924,
+      "mean_days_early": 21.5,
+      "median_days_early": 22.0,
+      "episodes_caught_before_obvious": 24,
+      "episodes_missed": 0,
+      "surfaced_alerts": 4821,
+      "suppressed_cooldown": 11216,
+      "suppressed_budget": 1963,
+      "escalated": 538
+    },
+    {
+      "layer": "+ ML",
+      "k": 10,
+      "precision_at_k": 0.1689,
+      "episode_recall": 1.0,
+      "episodes_total": 24,
+      "episodes_caught": 24,
+      "precision_ceiling": 0.1924,
+      "mean_days_early": 21.42,
+      "median_days_early": 21.0,
+      "episodes_caught_before_obvious": 24,
+      "episodes_missed": 0,
+      "surfaced_alerts": 4837,
+      "suppressed_cooldown": 10558,
+      "suppressed_budget": 2605,
+      "escalated": 687
+    },
+    {
+      "layer": "+ anomaly (full)",
+      "k": 10,
+      "precision_at_k": 0.1689,
+      "episode_recall": 1.0,
+      "episodes_total": 24,
+      "episodes_caught": 24,
+      "precision_ceiling": 0.1924,
+      "mean_days_early": 21.46,
+      "median_days_early": 22.0,
+      "episodes_caught_before_obvious": 24,
+      "episodes_missed": 0,
+      "surfaced_alerts": 4843,
+      "suppressed_cooldown": 10557,
+      "suppressed_budget": 2600,
+      "escalated": 706
+    }
+  ],
+  "validation_unseen_mechanism": {
+    "layer": "full, unseen mechanism",
+    "k": 10,
+    "precision_at_k": 0.2252,
+    "episode_recall": 1.0,
+    "episodes_total": 14,
+    "episodes_caught": 14,
+    "precision_ceiling": 0.2404,
+    "mean_days_early": 8.29,
+    "median_days_early": 8.5,
+    "episodes_caught_before_obvious": 14,
+    "episodes_missed": 0,
+    "surfaced_alerts": 2700,
+    "suppressed_cooldown": 4702,
+    "suppressed_budget": 3398,
+    "escalated": 500
+  },
+  "days_early_definition": "obvious_day - first surfaced alert day, where obvious_day is the first day the planted decline reaches strength 0.8. Missed episodes excluded, not counted as zero.",
+  "caveats": [
+    "The cohort is synthetic and generated by this repository, so the supervised number is partly a measure of the generator. The Isolation Forest and the validation cohort's unseen decline mechanism exist to bound that circularity, not to remove it.",
+    "No real patient data was used at any point."
+  ]
+}
