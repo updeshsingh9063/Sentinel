@@ -84,6 +84,7 @@ export interface AppCopy {
     resetDone: string;
     resetChecking: string;
     resetExpired: string;
+    resetWrongBrowser: string;
   };
   roles: Record<DemoRole, RoleCopy>;
   bar: {
@@ -383,6 +384,8 @@ const en: AppCopy = {
     resetChecking: "Checking the link\u2026",
     resetExpired:
       "That link has expired, has already been used, or was opened in a different browser from the one that asked for it. Ask for a new one below.",
+    resetWrongBrowser:
+      "This link is still good, but it has to be opened in the same browser that asked for the reset \u2014 the one you typed your email into. Open it there, or ask for a new link below.",
   },
   roles: {
     coordinator: {
@@ -766,6 +769,8 @@ const hi: AppCopy = {
     resetChecking: "लिंक जाँचा जा रहा है\u2026",
     resetExpired:
       "यह लिंक खत्म हो चुका है, पहले इस्तेमाल हो चुका है, या जिस ब्राउज़र से माँगा था उससे अलग ब्राउज़र में खोला गया है। नीचे से नया लिंक माँगिए।",
+    resetWrongBrowser:
+      "यह लिंक सही है, पर इसे उसी ब्राउज़र में खोलना पड़ता है जिसमें आपने रीसेट माँगा था — जहाँ आपने अपना ईमेल लिखा था। वहीं खोलिए, या नीचे से नया लिंक माँगिए।",
   },
   roles: {
     coordinator: {

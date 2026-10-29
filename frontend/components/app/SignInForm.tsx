@@ -296,7 +296,11 @@ export function SignInForm({ t }: { t: AppCopy }) {
 
         {recovery === "expired" && (
           <div className="si__resetState">
-            <p className="si__error" role="alert">{t.signin.resetExpired}</p>
+            <p className="si__error" role="alert">
+              {params.get("reason") === "pkce"
+                ? t.signin.resetWrongBrowser
+                : t.signin.resetExpired}
+            </p>
             <button
               type="button"
               className="btn btn--forest si__submit"

@@ -83,7 +83,18 @@ export async function GET(request: NextRequest) {
     : await supabase.auth.exchangeCodeForSession(code!);
 
   if (error) {
-    const back = recovery ? "/signin?flow=reset&expired=1&" : "/signin?";
+    // ONE FAILURE HERE IS NOT A DEAD LINK AND SHOULD NOT SAY IT IS. A PKCE
+    // code is only redeemable in the browser that asked for the reset,
+    // because the matching verifier is a cookie there. Open the email on a
+    // phone and the link is perfectly valid and simply cannot be completed —
+    // "expired or already used" sends someone off requesting link after link,
+    // each of which fails the same way. It is named separately so the page
+    // can say what actually went wrong, and the real fix is an email template
+    // that sends a token_hash instead (see the header).
+    const pkce = /code verifier|code_verifier/i.test(error.message);
+    const back = recovery
+      ? `/signin?flow=reset&expired=1${pkce ? "&reason=pkce" : ""}&`
+      : "/signin?";
     return NextResponse.redirect(
       `${origin}${back}error=${encodeURIComponent(error.message)}`,
     );
