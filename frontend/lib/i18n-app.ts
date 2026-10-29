@@ -146,6 +146,8 @@ export interface AppCopy {
     cueRaised: string;
     notFoundTitle: string;
     notFoundBody: string;
+    familySaid: string;
+    familySaidNote: string;
   };
   family: {
     title: string;
@@ -162,6 +164,15 @@ export interface AppCopy {
     noSummaryTitle: string;
     noSummaryBody: string;
     week: string;
+    noteTitle: string;
+    noteHint: string;
+    notePlaceholder: string;
+    noteSend: string;
+    noteSending: string;
+    noteSent: string;
+    noteError: string;
+    noteYours: string;
+    noteNone: string;
   };
   checkin: {
     chrome: string;
@@ -425,6 +436,9 @@ const en: AppCopy = {
     notFoundTitle: "This senior is not on your list",
     notFoundBody:
       "No record came back for this id. Either it does not exist, or it belongs to another coordinator \u2014 the database returns nothing in both cases, which is row-level security working rather than an error.",
+    familySaid: "What the family reported",
+    familySaidNote:
+      "Sent by the family member linked to this senior. Their words, unedited, and not scored by anything — it is here because somebody who was in the room noticed something no sensor did.",
   },
   family: {
     title: "How {name} is doing",
@@ -462,6 +476,16 @@ const en: AppCopy = {
     noSummaryBody:
       "A summary is written once a week and only when consent for it has been recorded. Nothing has been published for this week yet.",
     week: "Week of",
+    noteTitle: "Tell the coordinator something",
+    noteHint:
+      "If you have noticed anything \u2014 a change in mood, eating less, a fall you were told about \u2014 write it here. It goes to the Care Coordinator looking after them, and to nobody else. It is not a way to reach them urgently: if something needs attention now, telephone.",
+    notePlaceholder: "She sounded confused on Sunday and has not been eating much since.",
+    noteSend: "Send to coordinator",
+    noteSending: "Sending\u2026",
+    noteSent: "Sent. The coordinator will see this.",
+    noteError: "Could not send. Please try again.",
+    noteYours: "What you have told us",
+    noteNone: "You have not sent anything yet.",
   },
   checkin: {
     chrome: "Phone check-in simulator · what the senior hears, not an app they install",
@@ -756,6 +780,9 @@ const hi: AppCopy = {
     notFoundTitle: "\u092f\u0939 \u092c\u0941\u095b\u0941\u0930\u094d\u0917 \u0906\u092a\u0915\u0940 \u0938\u0942\u091a\u0940 \u092e\u0947\u0902 \u0928\u0939\u0940\u0902 \u0939\u0948\u0902",
     notFoundBody:
       "\u0907\u0938 \u092a\u0939\u091a\u093e\u0928-\u0938\u0902\u0916\u094d\u092f\u093e \u092a\u0930 \u0915\u094b\u0908 \u0930\u093f\u0915\u0949\u0930\u094d\u0921 \u0928\u0939\u0940\u0902 \u092e\u093f\u0932\u093e\u0964 \u092f\u0939 \u0924\u094d\u0930\u0941\u091f\u093f \u0928\u0939\u0940\u0902, \u092a\u0902\u0915\u094d\u0924\u093f-\u0938\u094d\u0924\u0930\u0940\u092f \u0938\u0941\u0930\u0915\u094d\u0937\u093e \u0915\u093e \u0915\u093e\u092e \u0915\u0930\u0928\u093e \u0939\u0948\u0964",
+    familySaid: "परिवार ने क्या बताया",
+    familySaidNote:
+      "इस बुज़ुर्ग से जुड़े परिवार के सदस्य द्वारा भेजा गया। उन्हीं के शब्दों में, बिना बदलाव।",
   },
   family: {
     title: "{name} कैसी हैं",
@@ -793,6 +820,16 @@ const hi: AppCopy = {
     noSummaryBody:
       "सारांश हफ़्ते में एक बार लिखा जाता है, और तभी जब उसके लिए सहमति दर्ज हो। इस हफ़्ते के लिए अभी कुछ प्रकाशित नहीं हुआ है।",
     week: "सप्ताह",
+    noteTitle: "\u0938\u092e\u0928\u094d\u0935\u092f\u0915 \u0915\u094b \u0915\u0941\u091b \u092c\u0924\u093e\u090f\u0901",
+    noteHint:
+      "\u0905\u0917\u0930 \u0906\u092a\u0928\u0947 \u0915\u0941\u091b \u092e\u0939\u0938\u0942\u0938 \u0915\u093f\u092f\u093e \u0939\u0948 \u2014 \u092e\u0928 \u092e\u0947\u0902 \u092c\u0926\u0932\u093e\u0935, \u0915\u092e \u0916\u093e\u0928\u093e, \u0915\u094b\u0908 \u0917\u093f\u0930\u0928\u0947 \u0915\u0940 \u092c\u093e\u0924 \u2014 \u0924\u094b \u092f\u0939\u093e\u0901 \u0932\u093f\u0916\u0947\u0902\u0964 \u092f\u0939 \u0938\u093f\u0930\u094d\u095e \u0909\u0928\u0915\u0947 \u0926\u0947\u0916\u092d\u093e\u0932 \u0938\u092e\u0928\u094d\u0935\u092f\u0915 \u0924\u0915 \u092a\u0939\u0941\u0901\u091a\u0924\u093e \u0939\u0948\u0964 \u091c\u093c\u0930\u0942\u0930\u0940 \u092c\u093e\u0924 \u0915\u0947 \u0932\u093f\u090f \u095e\u094b\u0928 \u0915\u0930\u0947\u0902\u0964",
+    notePlaceholder: "\u0930\u0935\u093f\u0935\u093e\u0930 \u0915\u094b \u0935\u0939 \u0915\u0941\u091b \u0909\u0932\u091d\u0947 \u0939\u0941\u090f \u0932\u0917\u0947 \u0914\u0930 \u0924\u092c \u0938\u0947 \u0916\u093e\u0928\u093e \u0915\u092e \u0916\u093e \u0930\u0939\u0947 \u0939\u0948\u0902\u0964",
+    noteSend: "\u0938\u092e\u0928\u094d\u0935\u092f\u0915 \u0915\u094b \u092d\u0947\u091c\u0947\u0902",
+    noteSending: "\u092d\u0947\u091c\u093e \u091c\u093e \u0930\u0939\u093e \u0939\u0948\u2026",
+    noteSent: "\u092d\u0947\u091c \u0926\u093f\u092f\u093e\u0964 \u0938\u092e\u0928\u094d\u0935\u092f\u0915 \u0907\u0938\u0947 \u0926\u0947\u0916\u0947\u0902\u0917\u0947\u0964",
+    noteError: "\u092d\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u091c\u093e \u0938\u0915\u093e\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964",
+    noteYours: "\u0906\u092a\u0928\u0947 \u091c\u094b \u092c\u0924\u093e\u092f\u093e",
+    noteNone: "\u0906\u092a\u0928\u0947 \u0905\u092d\u0940 \u0915\u0941\u091b \u0928\u0939\u0940\u0902 \u092d\u0947\u091c\u093e \u0939\u0948\u0964",
   },
   checkin: {
     chrome: "फ़ोन चेक-इन सिम्युलेटर · जो बुज़ुर्ग सुनती हैं, कोई ऐप नहीं जो उन्हें लगाना पड़े",

@@ -49,6 +49,11 @@ export interface DetailContact {
   detail: string;
 }
 
+export interface FamilyInput {
+  observedOn: string;
+  text: string;
+}
+
 export interface SeniorRecord {
   state: "ok" | "not-found";
   id: string;
@@ -65,6 +70,8 @@ export interface SeniorRecord {
   adherence: { day: string; drug: string; taken: boolean }[];
   cues: DetailCue[];
   contacts: DetailContact[];
+  /** What the family has reported. Their words, unedited. */
+  familyNotes: FamilyInput[];
 }
 
 function levelFor(score: number): Level {
@@ -129,6 +136,7 @@ export async function loadSeniorRecord(
     adherence: [],
     cues: [],
     contacts: [],
+    familyNotes: [],
   };
 
   const { data: senior } = await supabase
@@ -155,7 +163,7 @@ export async function loadSeniorRecord(
         .slice(0, 10)
     : "1970-01-01";
 
-  const [vitals, meds, cues, notes, checkins, alert] = await Promise.all([
+  const [vitals, meds, cues, notes, checkins, alert, famNotes] = await Promise.all([
     supabase
       .from("vitals")
       .select("measured_on, systolic_bp")
@@ -193,6 +201,13 @@ export async function loadSeniorRecord(
       .order("raised_on", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // A coordinator reads these for their own seniors; see 0010.
+    supabase
+      .from("family_notes")
+      .select("observed_on, note_text")
+      .eq("senior_id", seniorId)
+      .order("observed_on", { ascending: false })
+      .limit(5),
   ]);
 
   // One continuous axis of days, so a missing reading is a visible hole
@@ -298,5 +313,9 @@ export async function loadSeniorRecord(
       negated: Boolean(c.negated),
     })),
     contacts: contacts.slice(0, 10),
+    familyNotes: (famNotes.data ?? []).map((n) => ({
+      observedOn: n.observed_on as string,
+      text: n.note_text as string,
+    })),
   };
 }

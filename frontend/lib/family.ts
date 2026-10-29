@@ -27,6 +27,12 @@ export interface FamilyConsent {
   granted: boolean;
 }
 
+export interface FamilyNoteRow {
+  id: number;
+  observedOn: string;
+  text: string;
+}
+
 export interface FamilyView {
   state: "ok" | "no-link" | "no-summary";
   seniorId?: string;
@@ -35,6 +41,8 @@ export interface FamilyView {
   headline?: string;
   body?: string[];
   consents: FamilyConsent[];
+  /** What this family member has told the coordinator. Their own notes only. */
+  notes: FamilyNoteRow[];
 }
 
 /** Scopes offered to a family member, in display order. */
@@ -74,7 +82,11 @@ export async function loadFamilyView(
   const supabase = await createClient();
 
   const consentCopy = t.family.consents;
-  const empty = (state: FamilyView["state"]): FamilyView => ({ state, consents: [] });
+  const empty = (state: FamilyView["state"]): FamilyView => ({
+    state,
+    consents: [],
+    notes: [],
+  });
 
   // Which senior is this account linked to? RLS limits family_links to the
   // signed-in user's own rows, so this cannot return someone else's.
@@ -117,6 +129,21 @@ export async function loadFamilyView(
   // never-diagnose gate to have passed, so a row coming back here is a row a
   // family member is allowed to read. No second check is needed, and adding
   // one would imply the policy might be wrong.
+  // Their own notes only — the read policy scopes to author_id = auth.uid(),
+  // so one family member never sees another's.
+  const { data: noteRows } = await supabase
+    .from("family_notes")
+    .select("id, observed_on, note_text")
+    .eq("senior_id", chosen)
+    .order("observed_on", { ascending: false })
+    .limit(10);
+
+  const notes = (noteRows ?? []).map((n) => ({
+    id: n.id as number,
+    observedOn: n.observed_on as string,
+    text: n.note_text as string,
+  }));
+
   const { data: summary } = await supabase
     .from("family_summaries")
     .select("summary_text, covers_on")
@@ -131,6 +158,7 @@ export async function loadFamilyView(
       seniorId: senior.id,
       seniorName: senior.display_name,
       consents,
+      notes,
     };
   }
 
@@ -143,5 +171,6 @@ export async function loadFamilyView(
     headline,
     body,
     consents,
+    notes,
   };
 }

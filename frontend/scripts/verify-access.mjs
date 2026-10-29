@@ -153,6 +153,21 @@ console.log("\ncoordinator@samarth.demo");
   check("cannot read the family view", fam.count === 0, `count=${fam.count}`);
 }
 
+// ---- 5. family notes travel one way only ---------------------------------
+console.log("\nfamily_notes (family -> coordinator)");
+{
+  const anon = await countAs(null, "family_notes?select=*");
+  check("anon cannot reach it", anon.status === 401 || anon.status === 403 || anon.count === 0,
+        `status=${anon.status} count=${anon.count}`);
+  const opsSees = await countAs("ops", "family_notes?select=*");
+  check("ops sees none", opsSees.count === 0, `count=${opsSees.count}`);
+  // A coordinator reading their own seniors' notes is the point of the table,
+  // so this asserts reachability rather than a count: there may be none yet.
+  const coord = await countAs("coordinator", "family_notes?select=*");
+  check("coordinator can reach it", coord.status === 200 || coord.status === 206,
+        `status=${coord.status}`);
+}
+
 console.log(
   failures
     ? `\n${failures} FAILURE(S) — the product is claiming something it does not enforce\n`

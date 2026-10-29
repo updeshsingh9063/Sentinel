@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Consent } from "@/components/app/Consent";
+import { FamilyNote } from "@/components/app/FamilyNote";
 import { IconLock } from "@/components/ui/Icons";
 import type { FamilyView } from "@/lib/family";
 import { fmt } from "@/lib/i18n";
@@ -74,6 +75,29 @@ export function FamilySummaryView({ view, t }: { view: FamilyView; t: AppCopy })
         </article>
       )}
 
+        {/* The one thing that travels the other way: family -> coordinator.
+          Everywhere else this view is read-only, which is right for health
+          data flowing outward. A family member noticing something knows what
+          no sensor recorded. */}
+      {view.seniorId && (
+        <section className="card fs__card">
+          <FamilyNote seniorId={view.seniorId} t={t.family} />
+          {view.notes.length > 0 && (
+            <div className="fs__notes">
+              <h3 className="fs__noteshead">{t.family.noteYours}</h3>
+              <ul>
+                {view.notes.map((n) => (
+                  <li key={n.id}>
+                    <span>{n.observedOn}</span>
+                    <p>{n.text}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="card fs__card fs__private">
         <h2 className="fs__h2">
           <IconLock size={17} />
@@ -124,6 +148,12 @@ function FamilyStyles() {
         margin: 0 0 var(--s-4);
       }
       .fs__private { background: var(--cream-2); }
+      .fs__notes { margin-top: var(--s-5); padding-top: var(--s-4); border-top: 1px solid var(--line); }
+      .fs__noteshead { font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: var(--s-3); }
+      .fs__notes ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+      .fs__notes li { display: grid; gap: 2px; }
+      .fs__notes li span { font-size: 0.625rem; color: var(--ink-3); }
+      .fs__notes li p { font-size: var(--fs-sm); line-height: 1.6; color: var(--ink-2); }
       .fs__report { margin-top: var(--s-5); }
       .fs__private ul { margin: 0; padding-left: 1.15rem; display: grid; gap: var(--s-2); }
       .fs__private li { font-size: var(--fs-sm); line-height: 1.6; color: var(--ink-2); }

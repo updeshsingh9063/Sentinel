@@ -193,6 +193,14 @@ async function digestFor(seniorId, weekStart, weekEnd) {
 
 /* ---- generation --------------------------------------------------------- */
 
+/**
+ * What the model sees instead of the senior's name.
+ *
+ * Chosen to look like a name so the sentence it writes is naturally shaped,
+ * and to be unmistakable in output so the substitution cannot silently miss.
+ */
+const NAME_TOKEN = "NAMEPLACEHOLDER";
+
 const TOPIC_WORDS = {
   pain: "some aches",
   low_appetite: "eating less than usual",
@@ -210,7 +218,12 @@ function promptFor(senior, relationship, digest, lang) {
   const topics = digest.topics.map((t) => TOPIC_WORDS[t] ?? t).join(", ") || "nothing in particular";
 
   const facts = [
-    `Name: ${senior.display_name}`,
+    // The real name never leaves this machine. The model is given a token and
+    // the name is substituted back after generation, so the only identifier
+    // in the request is a placeholder. The brief requires that personal data
+    // reaching an external service be masked, and a first name beside a
+    // week of health facts is exactly what it means.
+    `Name: ${NAME_TOKEN}`,
     `This note is addressed TO their ${relationship || "family member"}, who is reading it. The ${relationship || "family member"} is NOT the person being described and did not answer any call.`,
     `Answered the daily check-in call on ${digest.answered} of ${digest.ofDays} days`,
     `Said they felt better on ${digest.betterDays} days and worse on ${digest.worseDays} days`,
@@ -246,7 +259,7 @@ Hard rules:
 - USE NO NUMBERS OR DIGITS AT ALL. Not for days, not for doses, not for anything. Say "most days", "a few days", "nearly every day", "about half the time" instead. The exact counts are shown to the family separately, beside your words, so writing them again can only introduce a mistake.
 - Warm and calm, never alarming, never falsely cheerful. Write as a person, not a system.
 - Do not use bullet points or headings, and do not repeat the person's full name more than once.
-- Use their name EXACTLY as given. Do not add any title, honorific or qualification in front of it. Do not call them Dr, Shri, Smt, Mr or Mrs. You do not know what they do or did for a living.
+- Use their name EXACTLY as given, including if it looks unusual. Do not add any title, honorific or qualification in front of it. Do not call them Dr, Shri, Smt, Mr or Mrs. You do not know what they do or did for a living.
 - Around 90 words in total.
 
 Facts for this week:
@@ -320,6 +333,15 @@ const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
     const digest = await digestFor(senior.id, weekStart, weekEnd);
     const prompt = promptFor(senior, linkRel.get(senior.id), digest, senior.language);
 
+    // The masking is only real if it is checked. A future edit that puts the
+    // name back into the prompt should stop the run, not quietly start
+    // sending identities to a third party.
+    if (prompt.includes(senior.display_name)) {
+      throw new Error(
+        `refusing to send: prompt for ${senior.display_name} contains their name`,
+      );
+    }
+
     let result = await generate(prompt);
     if (result.retry) {
       // The free tier caps tokens per minute. Waiting is correct; dropping
@@ -328,7 +350,12 @@ const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
       await sleep(25_000);
       result = await generate(prompt);
     }
-    const text = result.text ?? "";
+    let text = result.text ?? "";
+
+    // Put the real name back before anything is checked or stored. Done here
+    // rather than at render time so what the gate inspects is exactly what a
+    // family member will read.
+    text = text.split(NAME_TOKEN).join(senior.display_name);
 
     const bad = unsafeReason(text) ?? digitsIn(text);
     if (bad || text.length < 60) {

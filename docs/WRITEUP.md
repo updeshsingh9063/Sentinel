@@ -49,9 +49,13 @@ anon `401`, family 30 rows of three columns, coordinator and ops `0`.
 
 ## 3. The four core capabilities
 
-**1 · Signal ingestion.** Four types per senior: vitals (BP, pulse, SpO₂,
-weight, glucose, daily step count), medication logs, free-text call notes, and
-IVR check-in answers. Live counts: 4,387 / 17,340 / 1,890 / 6,000.
+**1 · Signal ingestion.** Five types per senior: vitals (BP, pulse, SpO₂,
+weight, glucose, daily step count), medication logs, free-text call notes, IVR
+check-in answers, and notes written by the family. Live counts: 4,387 / 17,340
+/ 1,890 / 6,000. The family channel is the only one that travels inward: a
+daughter noticing her father sounded confused on Sunday knows something no
+sensor recorded, and it reaches the coordinator responsible for him and nobody
+else.
 
 **2 · Unstructured understanding.** A Hindi–English cue extractor over call
 notes produces eight cue types (pain, fall, poor sleep, dizziness, low
@@ -166,6 +170,13 @@ string a caller might store — silence is evidence, not a gap.
 
 **Privacy.** Role-based access enforced by RLS as above; consent is checked per
 scope and revoking it empties the family view on the next query.
+
+No identity reaches an external service. The weekly family summaries are
+written by a model that is never shown the senior's name — it receives a
+placeholder, and the real name is substituted back locally after generation.
+The generator refuses to send a prompt that contains the name, so the masking
+cannot be undone by a later edit without the run failing. The transcription
+route forwards audio once, stores nothing, and sends no name with it.
 
 **Low cost.** Free Vercel and Supabase tiers. Inference is CPU-only
 scikit-learn. The only paid-tier dependency is Groq, used for STT and for

@@ -97,6 +97,23 @@ export default async function SeniorDetailPage({
             </section>
           )}
 
+          {/* What the family reported. Shown near the top because it is the
+              only signal here that came from a person who was in the room. */}
+          {detail.familyNotes.length > 0 && (
+            <section className="card sd__card sd__family">
+              <h2 className="sd__h2">{t.senior.familySaid}</h2>
+              <ul className="sd__famnotes">
+                {detail.familyNotes.map((n) => (
+                  <li key={n.observedOn + n.text.slice(0, 10)}>
+                    <span className="sd__day">{n.observedOn}</span>
+                    <p>{n.text}</p>
+                  </li>
+                ))}
+              </ul>
+              <p className="sd__note">{t.senior.familySaidNote}</p>
+            </section>
+          )}
+
           <section className="card sd__card">
             <h2 className="sd__h2">{t.senior.why}</h2>
             <ul className="sd__reasons">
@@ -240,6 +257,10 @@ export default async function SeniorDetailPage({
           margin-top: var(--s-4); font-size: var(--fs-xs);
           line-height: 1.6; color: var(--ink-3);
         }
+        .sd__family { border-left: 3px solid var(--gold); }
+        .sd__famnotes { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-4); }
+        .sd__famnotes li { display: grid; gap: 3px; }
+        .sd__famnotes li p { font-size: var(--fs-sm); line-height: 1.6; }
         .sd__reasons { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
         .sd__reasons li {
           display: flex; justify-content: space-between; gap: var(--s-4);
