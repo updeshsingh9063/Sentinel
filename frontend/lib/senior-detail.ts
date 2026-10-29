@@ -49,6 +49,19 @@ export interface DetailContact {
   detail: string;
 }
 
+export interface RiskDay {
+  date: string;
+  /** 0-1, as stored. */
+  score: number;
+  level: Level;
+  /** The strongest reason that day, already in the reader's language. */
+  topReason: string;
+  /** True when this day introduced a reason the previous day did not have. */
+  isNew: boolean;
+  /** True when an alert was actually surfaced to a coordinator. */
+  alerted: boolean;
+}
+
 export interface FamilyInput {
   observedOn: string;
   text: string;
@@ -66,6 +79,16 @@ export interface SeniorRecord {
   daysSinceContact: number;
   reasons: WorklistReason[];
   nextStep: string;
+  /**
+   * How the risk built up, day by day.
+   *
+   * The single most useful thing on this page for answering "why is this
+   * person on my list today". A score on its own says a senior is concerning;
+   * a fortnight of scores with the reason each day shows WHEN it started and
+   * WHAT changed, which is the difference between a number and a story a
+   * coordinator can act on.
+   */
+  timeline: RiskDay[];
   series: DetailSeries;
   adherence: { day: string; drug: string; taken: boolean }[];
   cues: DetailCue[];
@@ -132,6 +155,7 @@ export async function loadSeniorRecord(
     daysSinceContact: 0,
     reasons: [],
     nextStep: "",
+    timeline: [],
     series: { label: "", unit: "", days: [], values: [], band: [0, 0], breachAt: -1 },
     adherence: [],
     cues: [],
@@ -148,14 +172,16 @@ export async function loadSeniorRecord(
   // missing senior. The page says the same thing either way.
   if (!senior) return blank;
 
-  const { data: lastScore } = await supabase
+  // A fortnight of scores, not just today's. One query, same cost, and it is
+  // what makes the progression visible.
+  const { data: scoreRows } = await supabase
     .from("risk_scores")
     .select("scored_on, score, reasons")
     .eq("senior_id", seniorId)
     .order("scored_on", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(14);
 
+  const lastScore = scoreRows?.[0];
   const day = lastScore?.scored_on;
   const windowStart = day
     ? new Date(new Date(`${day}T00:00:00Z`).getTime() - 13 * 86_400_000)
@@ -279,6 +305,37 @@ export async function loadSeniorRecord(
   const score = Number(lastScore?.score ?? 0);
   const level = levelFor(score);
 
+  // Oldest first, so it reads as a story rather than a changelog.
+  const alertDays = new Set<string>(
+    alert.data?.raised_on ? [alert.data.raised_on as string] : [],
+  );
+  const chrono = [...(scoreRows ?? [])].reverse();
+  // Seen ACROSS the window, not just yesterday. A reason that flickers off
+  // for a day and returns is the same fact, not a new one — comparing only
+  // against the previous day reported "doses missed" four times in a
+  // fortnight and turned the story back into a list.
+  const seenCodes = new Set<string>();
+  const timeline: RiskDay[] = chrono.map((row) => {
+    const reasons = parseReasons(row.reasons, lang);
+    // The sentence shown must be the reason that made this day NEW, not
+    // whichever reason happened to score highest. Otherwise a day flagged
+    // because loneliness first appeared gets labelled with the blood
+    // pressure note that had already been there for a week — which reads as
+    // the system repeating itself, and is the one thing a timeline must not
+    // do.
+    const firstNew = reasons.find((r) => !seenCodes.has(r.code));
+    for (const r of reasons) seenCodes.add(r.code);
+    const s = Number(row.score);
+    return {
+      date: row.scored_on as string,
+      score: s,
+      level: levelFor(s),
+      topReason: (firstNew ?? reasons[0])?.text ?? "",
+      isNew: Boolean(firstNew),
+      alerted: alertDays.has(row.scored_on as string),
+    };
+  });
+
   return {
     state: "ok",
     id: senior.id,
@@ -292,6 +349,7 @@ export async function loadSeniorRecord(
     reasons: parseReasons(lastScore?.reasons, lang),
     nextStep:
       (lang === "hi" && alert.data?.next_step_hi) || alert.data?.next_step || "",
+    timeline,
     series: {
       label: t.senior.seriesSystolic,
       unit: "mmHg",

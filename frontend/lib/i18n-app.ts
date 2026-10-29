@@ -148,6 +148,10 @@ export interface AppCopy {
     notFoundBody: string;
     familySaid: string;
     familySaidNote: string;
+    timeline: string;
+    timelineNote: string;
+    timelineAlerted: string;
+    timelineQuiet: string;
   };
   family: {
     title: string;
@@ -220,6 +224,13 @@ export interface AppCopy {
     outcomesNote: string;
     privacyTitle: string;
     privacyBody: string;
+    byCity: string;
+    byCityNote: string;
+    cityCol: string;
+    seniorsCol: string;
+    trueCol: string;
+    falseCol: string;
+    medianCol: string;
   };
   report: {
     heading: string;
@@ -439,6 +450,11 @@ const en: AppCopy = {
     familySaid: "What the family reported",
     familySaidNote:
       "Sent by the family member linked to this senior. Their words, unedited, and not scored by anything — it is here because somebody who was in the room noticed something no sensor did.",
+    timeline: "How this built up",
+    timelineNote:
+      "The last fortnight. Each bar is that day's score; the notes below are the days a NEW reason appeared, not every day it continued. The outlined bar is the day it reached you.",
+    timelineAlerted: "alerted",
+    timelineQuiet: "Nothing new appeared in this window — the score has been steady."
   },
   family: {
     title: "How {name} is doing",
@@ -544,6 +560,14 @@ const en: AppCopy = {
     privacyTitle: "What operations cannot see",
     privacyBody:
       "This page is one aggregated view. The operations role has no policy on vitals, call_notes, note_cues or risk_scores, so there is no query from here that returns a senior. The restriction is an absence in the schema, not a check in this code that could be written wrong — signed in as operations, those tables return zero rows.",
+    byCity: "By city",
+    byCityNote:
+      "One row per city, from a view that returns aggregates and nothing else — no senior appears in it, which is what lets this role read it at all. A dash means no verdict has been recorded there yet.",
+    cityCol: "City",
+    seniorsCol: "Seniors",
+    trueCol: "True concern",
+    falseCol: "False alarm",
+    medianCol: "Median to action",
   },
   report: {
     heading: "Weekly health & wellbeing report",
@@ -783,6 +807,11 @@ const hi: AppCopy = {
     familySaid: "परिवार ने क्या बताया",
     familySaidNote:
       "इस बुज़ुर्ग से जुड़े परिवार के सदस्य द्वारा भेजा गया। उन्हीं के शब्दों में, बिना बदलाव।",
+    timeline: "यह कैसे बढ़ा",
+    timelineNote:
+      "पिछले दो हफ़्ते। हर बार उस दिन का स्कोर है; नीचे सिर्फ़ वे दिन हैं जब कोई नई बात सामने आई।",
+    timelineAlerted: "अलर्ट गया",
+    timelineQuiet: "इस अवधि में कुछ नया नहीं आया — स्कोर स्थिर रहा है।"
   },
   family: {
     title: "{name} कैसी हैं",
@@ -888,6 +917,14 @@ const hi: AppCopy = {
     privacyTitle: "संचालन क्या नहीं देख सकता",
     privacyBody:
       "यह पेज एक जोड़ा हुआ दृश्य है। संचालन भूमिका के पास vitals, call_notes, note_cues या risk_scores पर कोई अनुमति नहीं है, इसलिए यहाँ से ऐसी कोई क्वेरी नहीं जो किसी बुज़ुर्ग को लौटाए। यह रोक स्कीमा में एक अनुपस्थिति है, इस कोड में लिखी कोई जाँच नहीं जो ग़लत हो सके — संचालन के रूप में साइन इन करने पर ये तालिकाएँ शून्य पंक्तियाँ देती हैं।",
+    byCity: "शहर के अनुसार",
+    byCityNote:
+      "हर शहर की एक पंक्ति। इसमें किसी बुज़ुर्ग का नाम नहीं आता — इसीलिए यह भूमिका इसे पढ़ सकती है।",
+    cityCol: "शहर",
+    seniorsCol: "बुज़ुर्ग",
+    trueCol: "सही चिंता",
+    falseCol: "गलत अलर्ट",
+    medianCol: "कार्रवाई तक",
   },
   report: {
     heading: "\u0938\u093e\u092a\u094d\u0924\u093e\u0939\u093f\u0915 \u0938\u094d\u0935\u093e\u0938\u094d\u0925\u094d\u092f \u090f\u0935\u0902 \u0915\u0941\u0936\u0932-\u0915\u094d\u0937\u0947\u092e \u0930\u093f\u092a\u094b\u0930\u094d\u091f",

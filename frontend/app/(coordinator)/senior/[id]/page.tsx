@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BaselineChart } from "@/components/app/BaselineChart";
+import { RiskTimeline } from "@/components/app/RiskTimeline";
 import { Verdict } from "@/components/app/Verdict";
 import { outcomeLabel } from "@/lib/demo-i18n";
 import { fmt } from "@/lib/i18n";
@@ -96,6 +97,11 @@ export default async function SeniorDetailPage({
               <p className="sd__note">{t.senior.bandNote}</p>
             </section>
           )}
+
+          {/* Placed directly under the chart: the chart shows one vital
+              drifting, this shows everything that fired and when. Together
+              they answer "why now" rather than only "how bad". */}
+          <RiskTimeline days={senior.timeline} t={t.senior} lang={lang} />
 
           {/* What the family reported. Shown near the top because it is the
               only signal here that came from a person who was in the room. */}

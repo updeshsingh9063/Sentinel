@@ -137,6 +137,38 @@ export default async function OpsDashboardPage() {
           </ul>
           <p className="ops__note">{t.ops.outcomesNote}</p>
         </section>
+
+      {ops.cities.length > 0 && (
+        <section className="ops__panel">
+          <h2 className="ops__h2">{t.ops.byCity}</h2>
+          <table className="ops__cities">
+            <thead>
+              <tr>
+                <th scope="col">{t.ops.cityCol}</th>
+                <th scope="col">{t.ops.seniorsCol}</th>
+                <th scope="col">{t.ops.raised}</th>
+                <th scope="col">{t.ops.trueCol}</th>
+                <th scope="col">{t.ops.falseCol}</th>
+                <th scope="col">{t.ops.medianCol}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ops.cities.map((c) => (
+                <tr key={c.city}>
+                  <th scope="row">{c.city}</th>
+                  <td>{c.seniors}</td>
+                  <td>{c.alertsRaised}</td>
+                  <td>{c.trueConcern}</td>
+                  <td>{c.falseAlarm}</td>
+                  <td>{c.medianMinutes === null ? "—" : `${c.medianMinutes}m`}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="ops__note">{t.ops.byCityNote}</p>
+        </section>
+      )}
+
       </div>
 
       <section className="card ops__privacy">
@@ -195,6 +227,18 @@ export default async function OpsDashboardPage() {
         .ops__privacy { padding: var(--s-5); background: var(--cream-2); }
         .ops__privacy p { font-size: var(--fs-sm); line-height: 1.7; color: var(--ink-2); max-width: 70ch; }
         .ops__privacy code { font-size: 0.85em; background: var(--white); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); }
+        .ops__cities { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+        .ops__cities th, .ops__cities td {
+          text-align: right; padding: var(--s-2) var(--s-3);
+          border-bottom: 1px solid var(--line);
+        }
+        .ops__cities thead th {
+          font-size: var(--fs-xs); font-weight: 600; color: var(--ink-3);
+          letter-spacing: .06em; text-transform: uppercase;
+        }
+        .ops__cities th:first-child, .ops__cities thead th:first-child { text-align: left; }
+        .ops__cities tbody th { font-weight: 600; }
+        .ops__cities td { font-variant-numeric: tabular-nums; color: var(--ink-2); }
         .ops__note { margin-top: var(--s-4); font-size: var(--fs-xs); line-height: 1.6; color: var(--ink-3); }
       `}</style>
     </main>

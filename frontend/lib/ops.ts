@@ -35,6 +35,15 @@ interface OpsRow {
   seniors_enrolled: number;
 }
 
+export interface OpsCity {
+  city: string;
+  seniors: number;
+  alertsRaised: number;
+  trueConcern: number;
+  falseAlarm: number;
+  medianMinutes: number | null;
+}
+
 export interface OpsMetrics {
   /** Number of days covered. The caller renders the label. */
   periodDays: number;
@@ -47,6 +56,11 @@ export interface OpsMetrics {
   seniorsCovered: number;
   outcomes: { label: string; count: number; tone: Level }[];
   daily: { day: string; raised: number; actioned: number }[];
+  /**
+   * Per city. Aggregates only — this view returns one row per city and never
+   * a senior, which is what lets the operations role read it at all.
+   */
+  cities: OpsCity[];
 }
 
 const WEEKDAY = ["S", "M", "T", "W", "T", "F", "S"];
@@ -98,6 +112,22 @@ export async function loadOps(
 
   const chronological = [...rows].reverse().slice(-14);
 
+  // One row per city, straight from the view. Ordered by volume, because an
+  // operations manager is looking for where the load is.
+  const { data: cityRows } = await supabase
+    .from("ops_city_metrics")
+    .select("city, seniors, alerts_raised, true_concern, false_alarm, median_minutes_to_action")
+    .order("alerts_raised", { ascending: false });
+
+  const cities: OpsCity[] = (cityRows ?? []).map((c) => ({
+    city: String(c.city),
+    seniors: num(c.seniors),
+    alertsRaised: num(c.alerts_raised),
+    trueConcern: num(c.true_concern),
+    falseAlarm: num(c.false_alarm),
+    medianMinutes: c.median_minutes_to_action === null ? null : num(c.median_minutes_to_action),
+  }));
+
   return {
     periodDays: rows.length,
     alertsRaised: sum("alerts_raised"),
@@ -107,6 +137,7 @@ export async function loadOps(
     precisionAtK: judged ? trueConcern / judged : 0,
     coordinators: Math.max(...rows.map((r) => num(r.coordinators_active)), 0),
     seniorsCovered: num(rows[0]?.seniors_enrolled),
+    cities,
 
     // Mutually exclusive buckets that sum to the alerts raised, so the bars
     // are a partition rather than overlapping slices.

@@ -101,7 +101,7 @@ for (const table of [
   const { count } = await countAs(null, `${table}?select=*`);
   check(`${table} returns no rows`, count === 0 || count === null, `count=${count}`);
 }
-for (const view of ["ops_daily_metrics", "family_checkin_days"]) {
+for (const view of ["ops_daily_metrics", "ops_city_metrics", "family_checkin_days"]) {
   const { status, count } = await countAs(null, `${view}?select=*`);
   check(
     `${view} is refused or empty`,
@@ -134,6 +134,13 @@ for (const table of ["seniors", "vitals", "risk_scores", "alerts", "call_notes"]
 {
   const { count } = await countAs("ops", "ops_daily_metrics?select=*");
   check("ops_daily_metrics is readable", count > 0, `count=${count}`);
+  const city = await countAs("ops", "ops_city_metrics?select=*");
+  check("ops_city_metrics is readable", city.count > 0, `count=${city.count}`);
+  // The city cut is the one place a new aggregate could leak an identity, so
+  // assert the shape as well as the reachability: asking for a senior id has
+  // to fail, because the column is not in the view at all.
+  const leak = await countAs("ops", "ops_city_metrics?select=senior_id");
+  check("ops_city_metrics carries no senior id", leak.status >= 400, `status=${leak.status}`);
 }
 
 // ---- 4. coordinator sees their caseload and no more -----------------------
