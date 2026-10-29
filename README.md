@@ -14,6 +14,9 @@ metric is precision@K rather than AUC.
 **Live:** <https://frontend-omega-dusky-18.vercel.app> — sign in as
 `coordinator@samarth.demo` / `SamarthDemo!2026` (also `family@`, `ops@`).
 
+**Just want to try it?** [`docs/HOW-TO-TEST.md`](docs/HOW-TO-TEST.md) — click
+by click, no code, about ten minutes.
+
 **Testing:** [`docs/TESTING.md`](docs/TESTING.md) — every check worth running,
 with the expected output for each, including a §9 of things that look like bugs
 and are not.
