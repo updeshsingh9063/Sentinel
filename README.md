@@ -14,6 +14,12 @@ metric is precision@K rather than AUC.
 **Live:** <https://frontend-omega-dusky-18.vercel.app> — sign in as
 `coordinator@samarth.demo` / `SamarthDemo!2026` (also `family@`, `ops@`).
 
+**Testing:** [`docs/TESTING.md`](docs/TESTING.md) — every check worth running,
+with the expected output for each, including a §9 of things that look like bugs
+and are not.
+
+**Pitch:** [`docs/PITCH.md`](docs/PITCH.md) — a five-minute running order.
+
 **Read first:** [`docs/WRITEUP.md`](docs/WRITEUP.md) — architecture, how the
 synthetic cohort was built, and the results including the one stretch goal that
 measurably did not work.

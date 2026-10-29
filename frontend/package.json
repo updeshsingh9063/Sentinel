@@ -13,6 +13,7 @@
     "db:load-cohort": "node scripts/load-cohort.mjs",
     "img:prep": "node scripts/prep-image.mjs",
     "db:summaries": "node scripts/generate-family-summaries.mjs",
+    "verify:access": "node scripts/verify-access.mjs",
     "check:auth": "node scripts/check-auth-config.mjs"
   },
   "dependencies": {
