@@ -46,10 +46,38 @@ interface Queued {
   recipient: string;
 }
 
-async function sendOne(to: string, body: string, channel: string) {
+/**
+ * Which channel this deployment can actually deliver on.
+ *
+ * A TRIAL TELEPHONY ACCOUNT CANNOT SEND A WRITTEN MESSAGE OF ITS OWN. Twilio
+ * refuses any SMS that is not one of its predefined templates — "Invalid
+ * template name. Trial accounts can only use predefined SMS templates" — so
+ * a medicine reminder in Hindi is rejected before it leaves, no matter what
+ * the code does. The WhatsApp sandbox has no such restriction once the
+ * recipient has joined it, and in India WhatsApp reaches more people than
+ * SMS anyway.
+ *
+ * So the channel is a deployment decision, set once, rather than something
+ * each message guesses at. NOTIFY_CHANNEL=whatsapp switches everything over;
+ * the default stays SMS, which is what an upgraded account should use.
+ */
+function channelFor(stored: string): "sms" | "whatsapp" {
+  const forced = (process.env.NOTIFY_CHANNEL ?? "").toLowerCase();
+  if (forced === "whatsapp" || forced === "sms") return forced;
+  return stored === "whatsapp" ? "whatsapp" : "sms";
+}
+
+async function sendOne(to: string, body: string, stored: string) {
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_TOKEN;
-  const from = process.env.TWILIO_FROM;
+  const channel = channelFor(stored);
+  // The WhatsApp sandbox sends from Twilio's own number, not the one you
+  // bought — they are different senders and using TWILIO_FROM here fails
+  // with a message about an unregistered sender.
+  const from =
+    channel === "whatsapp"
+      ? (process.env.TWILIO_WHATSAPP_FROM ?? "+14155238886")
+      : process.env.TWILIO_FROM;
   if (!sid || !token || !from) return { ok: false as const, reason: "no_provider" };
 
   const prefix = channel === "whatsapp" ? "whatsapp:" : "";
@@ -72,7 +100,7 @@ async function sendOne(to: string, body: string, channel: string) {
     if (!res.ok || !data.sid) {
       return { ok: false as const, reason: data.message ?? `provider ${res.status}` };
     }
-    return { ok: true as const, ref: data.sid };
+    return { ok: true as const, ref: data.sid, channel };
   } catch {
     return { ok: false as const, reason: "provider unreachable" };
   }
@@ -133,7 +161,14 @@ export async function POST() {
     if (out.ok) {
       await supabase
         .from("family_notifications")
-        .update({ state: "sent", sent_at: new Date().toISOString(), provider_ref: out.ref })
+        .update({
+          state: "sent",
+          sent_at: new Date().toISOString(),
+          provider_ref: out.ref,
+          // What it went out on, not what it was written as. A delivery
+          // record that names the wrong channel is worse than none.
+          channel: out.channel,
+        })
         .eq("id", q.id);
       sent += 1;
     } else if (out.reason === "no_provider") {

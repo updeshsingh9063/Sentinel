@@ -142,6 +142,7 @@ export interface AppCopy {
     remind: string;
     reminding: string;
     reminded: string;
+    remindQueued: string;
     remindTooMany: string;
     remindFailed: string;
   };
@@ -587,6 +588,7 @@ const en: AppCopy = {
     remind: "Send reminder",
     reminding: "Sending…",
     reminded: "Reminder sent.",
+    remindQueued: "Written down, but not sent — no SMS provider is configured.",
     remindTooMany: "Already reminded four times today.",
     remindFailed: "The reminder did not send.",
   },
@@ -1115,6 +1117,7 @@ const hi: AppCopy = {
     remind: "याद दिलाएँ",
     reminding: "भेज रहे हैं…",
     reminded: "याद दिला दिया।",
+    remindQueued: "दर्ज हो गया, पर भेजा नहीं गया — SMS सेवा चालू नहीं है।",
     remindTooMany: "आज चार बार याद दिला चुके हैं।",
     remindFailed: "संदेश नहीं गया।",
   },

@@ -249,10 +249,11 @@ function Remind({ seniorId, t }: { seniorId: string; t: AppCopy["callNow"] }) {
 
   async function send() {
     setPhase("sending");
-    const { data, error } = await createClient().rpc("send_reminder_now", {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("send_reminder_now", {
       p_senior_id: seniorId,
     });
-    const out = data as { ok?: boolean; reason?: string } | null;
+    const out = data as { ok?: boolean; reason?: string; id?: number } | null;
     if (error || !out?.ok) {
       setWhy(
         out?.reason === "too_many_today"
@@ -266,7 +267,36 @@ function Remind({ seniorId, t }: { seniorId: string; t: AppCopy["callNow"] }) {
       setPhase("failed");
       return;
     }
-    setPhase("done");
+
+    // WRITING THE MESSAGE IS NOT SENDING IT. send_reminder_now queues a row;
+    // delivery is a separate route, and until this call existed the button
+    // said "Reminder sent." over a message that was still sitting in the
+    // queue. That is the same failure as a verdict control that reports a
+    // verdict it never saved, and it is worse here: somebody believed an
+    // elderly person had been reminded.
+    await fetch("/api/notify/dispatch", { method: "POST" }).catch(() => null);
+
+    // Then ask the row what actually happened, rather than assuming.
+    const { data: row } = await supabase
+      .from("family_notifications")
+      .select("state, reason")
+      .eq("id", out.id!)
+      .maybeSingle();
+
+    const state = (row as { state?: string; reason?: string } | null)?.state;
+    if (state === "sent") {
+      setPhase("done");
+      return;
+    }
+    if (state === "failed") {
+      setWhy((row as { reason?: string }).reason || t.remindFailed);
+      setPhase("failed");
+      return;
+    }
+    // Still queued: no provider accepted it. Say so rather than claiming
+    // delivery — the row is real, the SMS is not.
+    setWhy(t.remindQueued);
+    setPhase("failed");
   }
 
   if (phase === "done") return <span className="cn__ok">{t.reminded}</span>;
