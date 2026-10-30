@@ -1,4 +1,4 @@
-import { AppBar, DemoNotice } from "@/components/app/AppBar";
+import { AppBar } from "@/components/app/AppBar";
 import { getAppCopy } from "@/lib/i18n-server";
 
 export default async function FamilyLayout({
@@ -11,7 +11,6 @@ export default async function FamilyLayout({
   return (
     <>
       <AppBar role="family" links={[{ href: "/summary", label: t.nav.thisWeek }]} />
-      <DemoNotice>{t.notice.family}</DemoNotice>
       {children}
     </>
   );
