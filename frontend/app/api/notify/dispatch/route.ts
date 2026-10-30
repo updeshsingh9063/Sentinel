@@ -34,6 +34,16 @@ interface Queued {
   body: string;
   channel: string;
   family_user_id: string | null;
+  /**
+   * The number to send to, when the recipient is not an app user.
+   *
+   * A senior's telephone is on `seniors`, not `app_users` — a senior has no
+   * login, by design. Carrying the number on the message also means the
+   * delivery audit shows what was actually dialled rather than whatever the
+   * record says later.
+   */
+  to_phone: string | null;
+  recipient: string;
 }
 
 async function sendOne(to: string, body: string, channel: string) {
@@ -73,7 +83,7 @@ export async function POST() {
 
   const { data, error } = await supabase
     .from("family_notifications")
-    .select("id, body, channel, family_user_id")
+    .select("id, body, channel, family_user_id, to_phone, recipient")
     .eq("state", "queued")
     .limit(25);
 
@@ -100,11 +110,21 @@ export async function POST() {
   let stillQueued = 0;
 
   for (const q of queued) {
-    const to = q.family_user_id ? phoneById.get(q.family_user_id) : "";
+    // An explicit number wins: it was resolved when the message was written,
+    // which is the number the sender meant.
+    const to = q.to_phone || (q.family_user_id ? phoneById.get(q.family_user_id) : "");
     if (!to) {
       await supabase
         .from("family_notifications")
-        .update({ state: "failed", reason: "No phone number on file for this family member." })
+        .update({
+          state: "failed",
+          reason:
+            q.recipient === "coordinator"
+              ? "No phone number on file for this coordinator."
+              : q.recipient === "senior"
+                ? "No phone number on this senior's record."
+                : "No phone number on file for this family member.",
+        })
         .eq("id", q.id);
       continue;
     }

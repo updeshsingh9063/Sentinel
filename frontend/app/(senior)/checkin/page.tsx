@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { CallSim } from "@/components/app/CallSim";
+import { SosButton } from "@/components/app/SosButton";
 import { LangSwitch } from "@/components/landing/LangSwitch";
 import { getAppCopy } from "@/lib/i18n-server";
 import { SLOTS, hasImage, slotSrc } from "@/lib/images";
@@ -60,6 +61,11 @@ export default async function CheckinPage() {
         <LangSwitch lang={lang} label={t.bar.language} />
       </div>
       <CallSim t={t.checkin} lang={lang} />
+
+      {/* UNDER the check-in, not above it. Somebody in trouble will find the
+          largest red button on the page without help; somebody who is fine
+          should meet the conversation first. */}
+      <SosButton t={t.checkin} />
       <style>{`
         /* Fixed, so the room stays still while the questions scroll over it —
            a background that slides around is movement nobody asked for, and

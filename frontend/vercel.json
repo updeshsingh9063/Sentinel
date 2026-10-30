@@ -3,6 +3,18 @@
     {
       "path": "/api/call/run",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/sms/reminders?slot=morning",
+      "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/sms/reminders?slot=afternoon",
+      "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/sms/reminders?slot=evening",
+      "schedule": "30 12 * * *"
     }
   ]
 }

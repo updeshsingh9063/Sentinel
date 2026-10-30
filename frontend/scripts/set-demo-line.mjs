@@ -91,9 +91,16 @@ try {
     "select display_name from seniors where phone = $1 and demo_line is not true",
     [phone],
   );
+  // A SHARED HANDSET IS LEGITIMATE since migration 0022 — a household has one
+  // telephone — so this warns rather than refuses. It still warns, because an
+  // INBOUND call is resolved by number alone and with several seniors behind
+  // one handset that resolution is a guess at the oldest record.
   if (clash.rowCount > 0) {
-    console.error(`${phone} already belongs to ${clash.rows[0].display_name}; refusing.`);
-    process.exit(1);
+    console.log(
+      `note: ${phone} is also on ${clash.rowCount} other record(s), e.g. ${clash.rows[0].display_name}.`,
+    );
+    console.log("      outbound calls carry the senior id, so they still land correctly.");
+    console.log("      an INBOUND call on this number resolves to the oldest record.");
   }
 
   // A cohort reload truncates `seniors`, which takes the demo_line flag with
@@ -126,6 +133,29 @@ try {
     }
     console.log(`demo line assigned to ${pick.rows[0].display_name}`);
   }
+
+  // A FAMILY MEMBER, AND THEIR CONSENT. notify_family walks family_links and
+  // checks the consent scope, so a senior with neither gets no message and
+  // the system is right to send none. On the demo line that reads as a
+  // broken escalation rather than an empty address book — the emergency
+  // reaches the coordinator and silently reaches nobody at home.
+  const fam = await client.query(
+    `insert into family_links (family_user_id, senior_id, relationship, is_primary)
+     select u.id, s.id, 'family member', true
+       from app_users u, seniors s
+      where u.role = 'family' and s.demo_line is true
+      limit 1
+     on conflict do nothing
+     returning family_user_id`,
+  );
+  await client.query(
+    `insert into consents (senior_id, scope, granted, granted_at, granted_by)
+     select s.id, v.scope, true, now(), 'demo_line'
+       from seniors s, (values ('urgent_call'), ('visit_notice'), ('family_summary')) as v(scope)
+      where s.demo_line is true
+     on conflict (senior_id, scope) do update set granted = true, granted_at = now()`,
+  );
+  if (fam.rowCount > 0) console.log("linked a family member and granted the alert consents");
 
   const res = await client.query(
     "update seniors set phone = $1 where demo_line is true returning display_name, phone, language",

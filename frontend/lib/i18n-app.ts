@@ -305,6 +305,14 @@ export interface AppCopy {
     };
   };
   checkin: {
+    /** The emergency button a senior can press, and what it says afterwards. */
+    sosLabel: string;
+    sosHold: string;
+    sosSending: string;
+    sosDone: string;
+    sosAgain: string;
+    sosFailed: string;
+    sosNote: string;
     chrome: string;
     speaking: string;
     speak: string;
@@ -789,6 +797,13 @@ const en: AppCopy = {
     },
   },
   checkin: {
+    sosLabel: "Emergency — I need help now",
+    sosHold: "Press again to confirm",
+    sosSending: "Alerting…",
+    sosDone: "Your care coordinator has been told and is calling you now. Your family has been told too.",
+    sosAgain: "Told again. Nobody has reached you yet — stay on this page.",
+    sosFailed: "That did not go through. Please telephone your coordinator.",
+    sosNote: "This does not call an ambulance. It puts you at the top of a person's list.",
     chrome: "Phone check-in simulator · what the senior hears, not an app they install",
     speaking: "Speaking…",
     speak: "Answer by voice",
@@ -1303,6 +1318,13 @@ const hi: AppCopy = {
     },
   },
   checkin: {
+    sosLabel: "आपात — मुझे अभी मदद चाहिए",
+    sosHold: "पक्का करने के लिए फिर दबाएँ",
+    sosSending: "खबर भेज रहे हैं…",
+    sosDone: "आपके केयर कोऑर्डिनेटर को बता दिया है, वह अभी फ़ोन कर रहे हैं। घर वालों को भी खबर दी गई है।",
+    sosAgain: "फिर से बता दिया। अभी तक कोई नहीं पहुँचा — यहीं रहिए।",
+    sosFailed: "खबर नहीं पहुँची। कृपया अपने कोऑर्डिनेटर को फ़ोन कीजिए।",
+    sosNote: "यह एम्बुलेंस नहीं बुलाता। यह आपको किसी इंसान की सूची में सबसे ऊपर रखता है।",
     chrome: "फ़ोन चेक-इन सिम्युलेटर · जो बुज़ुर्ग सुनती हैं, कोई ऐप नहीं जो उन्हें लगाना पड़े",
     speaking: "बोल रहा है…",
     speak: "बोलकर जवाब दीजिए",
