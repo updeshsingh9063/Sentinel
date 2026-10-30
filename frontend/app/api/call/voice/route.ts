@@ -99,6 +99,11 @@ export async function POST(req: Request) {
   // is right for somebody ringing the line and wrong the moment two seniors
   // share a handset — see migration 0021.
   const forSenior = url.searchParams.get("senior");
+  // THIS CALL IS AN ANSWER TO AN ALARM, not the morning round. Somebody rang
+  // a help line and hung up; opening with "how is your day going" would be
+  // the wrong voice entirely, and would also waste the first seconds of a
+  // call that may be the only chance to find out what is wrong.
+  const isSos = url.searchParams.get("sos") === "1";
 
   const form = Object.fromEntries((await req.formData()).entries()) as Record<string, string>;
   const callSid = form.CallSid ?? "";
@@ -124,7 +129,8 @@ export async function POST(req: Request) {
     // Carried on every turn, not just the first: Twilio keeps no state, so a
     // URL that loses the id sends the rest of the conversation back to
     // resolving by number.
-    (forSenior ? `&senior=${encodeURIComponent(forSenior)}` : "");
+    (forSenior ? `&senior=${encodeURIComponent(forSenior)}` : "") +
+    (isSos ? "&sos=1" : "");
 
   if (!heard) {
     const begun = await rpc("telephony_begin", {
@@ -188,6 +194,25 @@ export async function POST(req: Request) {
         p_say: nudge,
       });
       return xml(listen(nudge, lang, action));
+    }
+
+    if (isSos) {
+      // Fixed words, not a model's. Reassurance is the one thing that must
+      // not vary, must not be slow, and must not depend on a provider that
+      // may be rate-limiting us at exactly the wrong moment. It says what is
+      // already true — the coordinator HAS been told — and promises nothing
+      // more, because nothing here calls an ambulance.
+      const opening =
+        lang === "hi"
+          ? "नमस्ते, मैं समर्थ से बोल रहा हूँ। आपका फ़ोन आया था। आपके केयर कोऑर्डिनेटर को बता दिया गया है। बताइए, क्या हुआ है?"
+          : "Hello, this is Samarth. We saw your call. Your care coordinator has been told. Please tell me what has happened.";
+      await rpc("telephony_turn", {
+        p_secret: secret,
+        p_call_sid: callSid,
+        p_said: null,
+        p_say: opening,
+      });
+      return xml(listen(opening, lang, action));
     }
 
     const opening = await compose(secret, callSid, "", begun, lang);
