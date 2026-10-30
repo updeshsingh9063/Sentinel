@@ -47,6 +47,15 @@ export interface DetailContact {
   channel: string;
   outcome: "answered" | "no answer" | "keypad";
   detail: string;
+  /**
+   * What was actually said, turn by turn, when the call was a conversation.
+   *
+   * The summary above it is a model's paraphrase. This is not: it is the
+   * senior's own words, and a coordinator deciding whether to go round should
+   * be able to read them rather than trust a one-line precis of them. Empty
+   * for a keypad check-in or a missed call, which have no words to show.
+   */
+  transcript: string;
 }
 
 export interface RiskDay {
@@ -231,7 +240,7 @@ export async function loadSeniorRecord(
       .order("observed_on", { ascending: false }),
     supabase
       .from("call_notes")
-      .select("called_on, reached, note_text, note_lang")
+      .select("called_on, reached, note_text, note_lang, transcript")
       .eq("senior_id", seniorId)
       .gte("called_on", windowStart)
       .order("called_on", { ascending: false }),
@@ -311,6 +320,7 @@ export async function loadSeniorRecord(
     channel: t.senior.channelCall,
     outcome: n.reached ? "answered" : "no answer",
     detail: n.reached ? (n.note_text ?? "") : t.senior.noAnswerDetail,
+    transcript: n.reached ? ((n.transcript as string | null) ?? "") : "",
   }));
   // Check-in days with no call note are still contact attempts, and a run of
   // unanswered ones is exactly the pattern worth seeing.
@@ -327,6 +337,8 @@ export async function loadSeniorRecord(
         channel: t.senior.channelMissedCall,
         outcome: "answered",
         detail: t.senior.missedCallDetail,
+        // No call note, so no words: a dialled-and-hung-up is not a conversation.
+        transcript: "",
       });
       continue;
     }
@@ -336,6 +348,8 @@ export async function loadSeniorRecord(
         channel: t.senior.channelCheckin,
         outcome: "no answer",
         detail: t.senior.noAnswerDetail,
+        // No call note, so no words: a dialled-and-hung-up is not a conversation.
+        transcript: "",
       });
     }
   }

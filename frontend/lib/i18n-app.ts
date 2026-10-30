@@ -182,6 +182,9 @@ export interface AppCopy {
     missed: string;
     contacts: string;
     contactsNote: string;
+    /** Disclosure for the verbatim conversation under a call's summary. */
+    transcriptOpen: string;
+    transcriptNote: string;
     seriesSystolic: string;
     channelCall: string;
     channelCheckin: string;
@@ -608,6 +611,8 @@ const en: AppCopy = {
     contacts: "Contact history",
     contactsNote:
       "Silence counts. An unanswered call costs nothing to compute and needs no sensor, which matters on a basic handset.",
+    transcriptOpen: "Read what was said",
+    transcriptNote: "Their own words, as the line heard them.",
     seriesSystolic: "Systolic",
     channelCall: "Call",
     channelCheckin: "Check-in",
@@ -1114,6 +1119,8 @@ const hi: AppCopy = {
     contacts: "संपर्क का इतिहास",
     contactsNote:
       "चुप्पी भी मायने रखती है। बिना उठी कॉल की गणना में कुछ ख़र्च नहीं होता और कोई सेंसर नहीं चाहिए — साधारण फ़ोन पर यही काम आता है।",
+    transcriptOpen: "बातचीत पढ़ें",
+    transcriptNote: "उनके अपने शब्द, जैसे लाइन ने सुने।",
     seriesSystolic: "\u0938\u093f\u0938\u094d\u091f\u094b\u0932\u093f\u0915",
     channelCall: "\u0915\u0949\u0932",
     channelCheckin: "\u091c\u093e\u0901\u091a",

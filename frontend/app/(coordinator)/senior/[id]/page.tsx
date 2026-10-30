@@ -262,6 +262,21 @@ export default async function SeniorDetailPage({
                       <span className="sd__channel">{c.channel}</span>
                       <span className="sd__outcome">{outcomeLabel(lang, c.outcome)}</span>
                       <small>{c.detail}</small>
+                      {/* THE SUMMARY ABOVE IS A PARAPHRASE. This is not.
+                          A coordinator deciding whether to go round should be
+                          able to read what the person actually said rather
+                          than trust one line about it — and the cues on this
+                          page are only checkable against the words that
+                          produced them. Closed by default: the summary is
+                          what you read at a glance, this is what you open
+                          when it matters. <details> needs no JavaScript. */}
+                      {c.transcript && (
+                        <details className="sd__script">
+                          <summary>{t.senior.transcriptOpen}</summary>
+                          <pre>{c.transcript}</pre>
+                          <p>{t.senior.transcriptNote}</p>
+                        </details>
+                      )}
                     </li>
                   ))}
                 </ol>
@@ -367,6 +382,28 @@ export default async function SeniorDetailPage({
         }
         .sd__contacts li:last-child { border-bottom: 0; padding-bottom: 0; }
         .sd__contacts small { grid-column: 2 / -1; color: var(--ink-3); font-size: var(--fs-xs); }
+        .sd__script { grid-column: 2 / -1; margin-top: var(--s-2); }
+        .sd__script summary {
+          font-size: var(--fs-xs); font-weight: 600; color: var(--forest);
+          cursor: pointer; list-style: none; display: inline-flex; gap: 4px;
+          padding-block: 2px;
+        }
+        .sd__script summary::-webkit-details-marker { display: none; }
+        .sd__script summary::before { content: "›"; transition: transform var(--dur) var(--ease); }
+        .sd__script[open] summary::before { transform: rotate(90deg); }
+        .sd__script summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+        .sd__script pre {
+          /* The transcript is already laid out one turn per line, so the
+             newlines are the content. Wrapping is still on: a long Hindi
+             sentence must not push the card sideways on a phone. */
+          white-space: pre-wrap; word-break: break-word;
+          font: inherit; font-size: var(--fs-xs); line-height: 1.75;
+          margin: var(--s-2) 0 0; padding: var(--s-3);
+          background: var(--sage); border-radius: var(--radius-sm);
+          color: var(--ink-2); max-height: 20rem; overflow-y: auto;
+        }
+        .sd__script p { font-size: var(--fs-xs); color: var(--ink-3); margin: var(--s-2) 0 0; }
+        @media (pointer: coarse) { .sd__script summary { padding-block: 8px; } }
         .sd__channel { color: var(--ink-2); }
         .sd__outcome { font-size: var(--fs-xs); color: var(--ink-3); }
         .sd__contacts li[data-outcome="no answer"] .sd__outcome { color: var(--risk-med); font-weight: 600; }
