@@ -156,7 +156,14 @@ async function run(req: Request) {
       Url: hook,
       StatusCallback: `${hook}&status=1`,
       StatusCallbackEvent: "completed",
-      Timeout: "25",
+      // RING TIMEOUT IS OMITTED BY DEFAULT, DELIBERATELY. A Twilio trial
+      // account rejects the whole call with "disallowed parameters" if
+      // Timeout is present — and the message names no parameter, so it reads
+      // as a credentials fault rather than a plan one. Set TWILIO_RING_TIMEOUT
+      // once the account is upgraded; without it Twilio rings for 60s.
+      ...(process.env.TWILIO_RING_TIMEOUT
+        ? { Timeout: process.env.TWILIO_RING_TIMEOUT }
+        : {}),
     });
 
     try {
