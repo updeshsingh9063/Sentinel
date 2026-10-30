@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { IconPhone } from "@/components/ui/Icons";
+import { IconBell, IconPhone } from "@/components/ui/Icons";
 import { fmt } from "@/lib/i18n";
 import type { AppCopy } from "@/lib/i18n-app";
 import { createClient } from "@/lib/supabase/client";
@@ -224,8 +224,61 @@ export function CallNow({
         <IconPhone size={14} />
         {phase === "dialling" ? t.dialling : phase === "failed" ? t.retry : t.label}
       </button>
+      {/* SENDING A TEXT IS NOT RINGING SOMEBODY, so it does not confirm. It
+          arrives silently, costs a fraction of a rupee, and an unwanted one
+          is read and ignored rather than answered at an awkward moment. The
+          server caps it at four a day, which is what a misread button press
+          actually needs protecting against. */}
+      <Remind seniorId={seniorId} t={t} />
       <Styles />
     </div>
+  );
+}
+
+/**
+ * Send a medicine reminder now.
+ *
+ * NO CONSENT SCOPE IS CONSULTED, deliberately. `auto_reminder` governs what
+ * the scheduler does unprompted at eight in the morning; this is a
+ * coordinator deciding to contact somebody on their own caseload, which is
+ * the work, and the database records who did it by name.
+ */
+function Remind({ seniorId, t }: { seniorId: string; t: AppCopy["callNow"] }) {
+  const [phase, setPhase] = useState<"idle" | "sending" | "done" | "failed">("idle");
+  const [why, setWhy] = useState("");
+
+  async function send() {
+    setPhase("sending");
+    const { data, error } = await createClient().rpc("send_reminder_now", {
+      p_senior_id: seniorId,
+    });
+    const out = data as { ok?: boolean; reason?: string } | null;
+    if (error || !out?.ok) {
+      setWhy(
+        out?.reason === "too_many_today"
+          ? t.remindTooMany
+          : out?.reason === "no_number"
+            ? t.noNumber
+            : out?.reason === "not_yours"
+              ? t.notYours
+              : t.remindFailed,
+      );
+      setPhase("failed");
+      return;
+    }
+    setPhase("done");
+  }
+
+  if (phase === "done") return <span className="cn__ok">{t.reminded}</span>;
+
+  return (
+    <>
+      <button type="button" onClick={() => void send()} disabled={phase === "sending"}>
+        <IconBell size={14} />
+        {phase === "sending" ? t.reminding : t.remind}
+      </button>
+      {phase === "failed" && <span className="cn__bad">{why}</span>}
+    </>
   );
 }
 
@@ -251,6 +304,7 @@ function Styles() {
       .cn button:hover:not(:disabled) { border-color: var(--forest); background: var(--sage); }
       .cn button:disabled { opacity: .55; cursor: default; }
       .cn__bad { color: var(--risk-high); }
+      .cn__ok { color: var(--risk-low); font-weight: 600; }
       .cn__ask { color: var(--ink); font-weight: 600; }
       .cn--form { row-gap: var(--s-2); }
       .cn--form input {

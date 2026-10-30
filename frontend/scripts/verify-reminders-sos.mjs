@@ -247,6 +247,81 @@ await db.query(
   [line.id],
 );
 await db.query("delete from alerts where senior_id = $1 and raised_on = current_date and score = 1", [line.id]);
+
+
+// ---- 5. consent decides what happens ON ITS OWN -----------------------------
+// Every senior keeps a number so a coordinator can ring or remind any of
+// them. What must NOT follow from that is a machine contacting all of them at
+// eight in the morning. The two are separated by consent, and this checks
+// that they stayed separated.
+console.log("\nconsent, not the number, decides what is automatic");
+
+const withNumbers = (await db.query(
+  "select count(*)::int as n from seniors where is_active and phone is not null"
+)).rows[0].n;
+const consented = (await db.query(
+  `select count(*)::int as n from consents c join seniors s on s.id = c.senior_id
+    where c.scope = 'auto_call' and c.granted and s.is_active and s.phone is not null`
+)).rows[0].n;
+
+check("several seniors are reachable by a coordinator", withNumbers > 1, String(withNumbers));
+check("but only one is enrolled in automatic calls", consented === 1, consented + " of " + withNumbers);
+
+const targets = (await db.query(
+  "select senior_id from autocall_targets($1, current_date)", [ENV.TELEPHONY_SECRET]
+)).rows;
+check("the morning round would dial at most that one", targets.length <= 1, targets.length + " targets");
+
+const guessed = (await db.query(
+  "select count(*)::int as n from autocall_targets($1, current_date)", ["not-the-secret"]
+)).rows[0].n;
+check("and a wrong secret gets no targets at all", guessed === 0, String(guessed));
+
+await db.query("delete from medicine_reminder_log where sent_on = current_date and slot = '08:00'");
+await db.query("delete from family_notifications where kind = 'reminder' and created_at >= current_date");
+const eight = await rpc("queue_medicine_reminders", { p_secret: ENV.TELEPHONY_SECRET, p_slot: "08:00" });
+check("the 08:00 round queues exactly one reminder", eight.body?.queued === 1, JSON.stringify(eight.body));
+
+// ---- 6. the coordinator's button is NOT bound by it -------------------------
+console.log("\nthe coordinator's own button");
+
+const notConsented = (await db.query(
+  `select s.id, s.display_name from seniors s
+     join care_assignments ca on ca.senior_id = s.id
+    where s.is_active and s.phone is not null
+      and not exists (select 1 from consents c
+                       where c.senior_id = s.id and c.scope = 'auto_reminder' and c.granted)
+    limit 1`
+)).rows[0];
+check("there is a senior the scheduler will never text", !!notConsented, "none found");
+
+if (notConsented) {
+  const tok = await fetch(URL_ + "/auth/v1/token?grant_type=password", {
+    method: "POST",
+    headers: { apikey: ANON, "Content-Type": "application/json" },
+    body: JSON.stringify({ email: ENV.OWNER_EMAIL, password: ENV.OWNER_PASSWORD }),
+  }).then((r) => r.json()).then((j) => j.access_token);
+
+  const byHand = await rpc("send_reminder_now", { p_senior_id: notConsented.id }, ANON, tok);
+  check("a coordinator can still remind them by hand", byHand.body?.ok === true, JSON.stringify(byHand.body));
+
+  const anonHand = await rpc("send_reminder_now", { p_senior_id: notConsented.id });
+  check("anon cannot", anonHand.status >= 400 || anonHand.body?.ok === false,
+    anonHand.status + " " + JSON.stringify(anonHand.body));
+
+  // Four a day: a human can mistake a button for an unresponsive one and
+  // press it six times, and six texts in a minute is not a reminder.
+  for (let i = 0; i < 4; i++) await rpc("send_reminder_now", { p_senior_id: notConsented.id }, ANON, tok);
+  const capped = await rpc("send_reminder_now", { p_senior_id: notConsented.id }, ANON, tok);
+  check("but not six times in a minute",
+    capped.body?.ok === false && capped.body?.reason === "too_many_today", JSON.stringify(capped.body));
+
+  await db.query("delete from family_notifications where senior_id = $1 and kind = 'reminder'", [notConsented.id]);
+}
+
+await db.query("delete from medicine_reminder_log where sent_on = current_date and slot = '08:00'");
+await db.query("delete from family_notifications where kind = 'reminder' and created_at >= current_date");
+
 await db.end();
 
 console.log(failures === 0 ? "\nreminders and the emergency button hold\n" : `\n${failures} check(s) failed\n`);

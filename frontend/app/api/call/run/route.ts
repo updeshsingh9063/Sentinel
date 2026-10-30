@@ -116,30 +116,30 @@ async function run(req: Request) {
     );
   }
 
-  // ---- 2. who is due, and not already rung today --------------------------
-  const today = new Date().toISOString().slice(0, 10);
-  const due = await fetch(
-    `${c.url}/rest/v1/call_plan?planned_on=eq.${today}&outcome=eq.planned&select=id,senior_id&order=due_at.asc&limit=${PER_RUN}`,
-    { headers: { apikey: c.anon!, Authorization: `Bearer ${token}` } },
-  )
+  // ---- 2. who is due, consented, and not already rung today ---------------
+  //
+  // PLANNING IS NOT DIALLING. plan_calls above works out who ought to be
+  // rung, for everybody, and the worklist shows it. Whether a machine acts on
+  // that at nine in the morning without anybody deciding to is a separate
+  // question, and the senior answers it: autocall_targets returns only those
+  // who granted `auto_call`. A coordinator pressing the button on the
+  // worklist is not bound by it — a person choosing to ring somebody on
+  // their own caseload is the care this product exists to support.
+  //
+  // The join also lives in the database rather than here, so the consent
+  // cannot be skipped by a caller that forgets to ask about it.
+  const due = await fetch(`${c.url}/rest/v1/rpc/autocall_targets`, {
+    method: "POST",
+    headers: { apikey: c.anon!, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_secret: c.telephony }),
+    cache: "no-store",
+  })
     .then((r) => r.json())
     .catch(() => []);
 
-  const rows = (Array.isArray(due) ? due : []) as { id: number; senior_id: string }[];
-  // One call per senior per run, however many reasons they have today. Three
-  // reasons to ring somebody is still one telephone call.
-  const seen = new Set<string>();
-  const targets = rows.filter((r) => !seen.has(r.senior_id) && seen.add(r.senior_id));
-
-  const numbers = await fetch(
-    `${c.url}/rest/v1/seniors?id=in.(${targets.map((t) => t.senior_id).join(",")})&select=id,phone`,
-    { headers: { apikey: c.anon!, Authorization: `Bearer ${token}` } },
-  )
-    .then((r) => r.json())
-    .catch(() => []);
-  const phoneById = new Map(
-    (Array.isArray(numbers) ? numbers : []).map((n: { id: string; phone: string }) => [n.id, n.phone]),
-  );
+  const rows = (Array.isArray(due) ? due : []) as { senior_id: string; phone: string }[];
+  const targets = rows.slice(0, PER_RUN).map((r) => ({ senior_id: r.senior_id }));
+  const phoneById = new Map(rows.map((r) => [r.senior_id, r.phone]));
 
   // ---- 3. dial ------------------------------------------------------------
   const hook = `${SITE()}/api/call/voice?key=${encodeURIComponent(c.telephony!)}`;

@@ -138,6 +138,12 @@ export interface AppCopy {
     inUse: string;
     notYours: string;
     saved: string;
+    /** The coordinator sending a medicine reminder by hand. */
+    remind: string;
+    reminding: string;
+    reminded: string;
+    remindTooMany: string;
+    remindFailed: string;
   };
   worklist: {
     levels: { high: string; med: string; low: string };
@@ -578,6 +584,11 @@ const en: AppCopy = {
     inUse: "Another senior already has that number.",
     notYours: "This senior is not on your caseload.",
     saved: "Number saved.",
+    remind: "Send reminder",
+    reminding: "Sending…",
+    reminded: "Reminder sent.",
+    remindTooMany: "Already reminded four times today.",
+    remindFailed: "The reminder did not send.",
   },
   worklist: {
     date: "Monday 12 April 2025",
@@ -1101,6 +1112,11 @@ const hi: AppCopy = {
     inUse: "यह नंबर किसी और बुज़ुर्ग का है।",
     notYours: "यह बुज़ुर्ग आपकी सूची में नहीं हैं।",
     saved: "नंबर सहेज दिया गया।",
+    remind: "याद दिलाएँ",
+    reminding: "भेज रहे हैं…",
+    reminded: "याद दिला दिया।",
+    remindTooMany: "आज चार बार याद दिला चुके हैं।",
+    remindFailed: "संदेश नहीं गया।",
   },
   worklist: {
     date: "सोमवार 12 अप्रैल 2025",
