@@ -94,6 +94,11 @@ export async function POST(req: Request) {
   const url = new URL(req.url);
   const secret = url.searchParams.get("key") ?? "";
   const isStatus = url.searchParams.get("status") === "1";
+  // WHO THIS CALL WAS PLACED FOR. An outbound dialler knows; an inbound
+  // caller cannot say. Absent, the senior is resolved from the number, which
+  // is right for somebody ringing the line and wrong the moment two seniors
+  // share a handset — see migration 0021.
+  const forSenior = url.searchParams.get("senior");
 
   const form = Object.fromEntries((await req.formData()).entries()) as Record<string, string>;
   const callSid = form.CallSid ?? "";
@@ -114,13 +119,19 @@ export async function POST(req: Request) {
   }
 
   // ---- they picked up -----------------------------------------------------
-  const action = `${SITE()}/api/call/voice?key=${encodeURIComponent(secret)}`;
+  const action =
+    `${SITE()}/api/call/voice?key=${encodeURIComponent(secret)}` +
+    // Carried on every turn, not just the first: Twilio keeps no state, so a
+    // URL that loses the id sends the rest of the conversation back to
+    // resolving by number.
+    (forSenior ? `&senior=${encodeURIComponent(forSenior)}` : "");
 
   if (!heard) {
     const begun = await rpc("telephony_begin", {
       p_secret: secret,
       p_call_sid: callSid,
       p_phone: to,
+      p_senior_id: forSenior,
     });
 
     if (!begun || begun.ok !== true) {
@@ -188,6 +199,7 @@ export async function POST(req: Request) {
     p_secret: secret,
     p_call_sid: callSid,
     p_phone: to,
+    p_senior_id: forSenior,
   });
   const lang = session?.language === "en" ? "en" : "hi";
   const next = await compose(secret, callSid, heard, session ?? {}, lang);

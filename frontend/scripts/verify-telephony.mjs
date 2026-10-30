@@ -200,6 +200,78 @@ const noAns = await fetch(`${SITE}/api/call/voice?key=${key}&status=1`, {
 });
 check("the unanswered callback is accepted", noAns.status === 200, `status=${noAns.status}`);
 
+// ---- 6b. a shared handset ---------------------------------------------------
+// A household may have one telephone (migration 0022), so the number alone no
+// longer identifies anybody. An outbound call carries the senior it was placed
+// for, and that has to win -- otherwise the call sounds correct and the
+// check-in lands on the wrong person, which is the worst kind of wrong
+// because nothing errors.
+console.log("
+two seniors, one handset");
+const sharers = await read(
+  `seniors?phone=eq.${encodeURIComponent(line.phone)}&select=id,display_name&order=created_at`,
+);
+if (sharers.length < 2) {
+  console.log("  ..    only one senior on this number; routing check skipped");
+} else {
+  const oldest = sharers[0];
+  // Somebody who is NOT the one a number-only lookup would return.
+  const other = sharers[sharers.length - 1];
+  check("the test has two different seniors to tell apart", oldest.id !== other.id, "same senior");
+
+  const ROUTED = `CAroute${Date.now()}`;
+  await fetch(
+    `${SITE}/api/call/voice?key=${key}&senior=${encodeURIComponent(other.id)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ CallSid: ROUTED, To: line.phone, CallStatus: "in-progress" }).toString(),
+    },
+  );
+  const routed = (await read(`call_sessions?call_sid=eq.${ROUTED}&select=senior_id`))[0];
+  check(
+    "the call files against the senior it was placed for",
+    routed?.senior_id === other.id,
+    `wanted ${other.display_name}, got ${sharers.find((x) => x.id === routed?.senior_id)?.display_name ?? routed?.senior_id}`,
+  );
+  check(
+    "not merely the first row on that number",
+    routed?.senior_id !== oldest.id || other.id === oldest.id,
+    `fell back to ${oldest.display_name}`,
+  );
+
+  // An inbound caller cannot say who they are, so the number is all there is.
+  const INBOUND = `CAinbound${Date.now()}`;
+  await fetch(`${SITE}/api/call/voice?key=${key}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ CallSid: INBOUND, To: line.phone, CallStatus: "in-progress" }).toString(),
+  });
+  const inbound = (await read(`call_sessions?call_sid=eq.${INBOUND}&select=senior_id`))[0];
+  check(
+    "an inbound call still resolves, deterministically, to the oldest record",
+    inbound?.senior_id === oldest.id,
+    `wanted ${oldest.display_name}, got ${inbound?.senior_id}`,
+  );
+
+  // A stale or invented id must not strand somebody who has answered.
+  const BOGUS = `CAbogus${Date.now()}`;
+  await fetch(
+    `${SITE}/api/call/voice?key=${key}&senior=00000000-0000-4000-8000-000000000009`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ CallSid: BOGUS, To: line.phone, CallStatus: "in-progress" }).toString(),
+    },
+  );
+  const bogus = (await read(`call_sessions?call_sid=eq.${BOGUS}&select=senior_id`))[0];
+  check(
+    "an unknown senior id falls back to the number rather than failing the call",
+    bogus?.senior_id === oldest.id,
+    `got ${bogus?.senior_id ?? "no session at all"}`,
+  );
+}
+
 // ---- 7. containment --------------------------------------------------------
 console.log("\ncontainment");
 const anonH = { apikey: ANON, "Content-Type": "application/json" };

@@ -143,6 +143,10 @@ async function run(req: Request) {
 
   // ---- 3. dial ------------------------------------------------------------
   const hook = `${SITE()}/api/call/voice?key=${encodeURIComponent(c.telephony!)}`;
+  // Per senior, not per run: the webhook must file this call against the
+  // person it was placed for, and two seniors may share a telephone — see
+  // migration 0021. The status callback needs no id; it is keyed by call sid.
+  const hookFor = (id: string) => `${hook}&senior=${encodeURIComponent(id)}`;
   let dialled = 0;
   const failures: string[] = [];
 
@@ -153,7 +157,7 @@ async function run(req: Request) {
     const form = new URLSearchParams({
       To: to,
       From: c.from!,
-      Url: hook,
+      Url: hookFor(t.senior_id),
       StatusCallback: `${hook}&status=1`,
       StatusCallbackEvent: "completed",
       // RING TIMEOUT IS OMITTED BY DEFAULT, DELIBERATELY. A Twilio trial

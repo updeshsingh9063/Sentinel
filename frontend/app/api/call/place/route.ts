@@ -76,7 +76,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, reason: "not_yours_or_no_number" }, { status: 404 });
   }
 
-  const hook = `${cfg.base}/api/call/voice?key=${encodeURIComponent(cfg.secret!)}`;
+  // The senior this call is FOR, already checked against the caseload above.
+  // Without it the webhook resolves by number, which is wrong as soon as two
+  // seniors share a handset — and on a trial account they must.
+  const hook =
+    `${cfg.base}/api/call/voice?key=${encodeURIComponent(cfg.secret!)}` +
+    `&senior=${encodeURIComponent(senior.id as string)}`;
   const form = new URLSearchParams({
     To: senior.phone as string,
     From: cfg.from!,
