@@ -142,6 +142,12 @@ export interface AppCopy {
     remind: string;
     reminding: string;
     reminded: string;
+    /** What became of a call: the outcome a coordinator must act on. */
+    talking: string;
+    ended: string;
+    noAnswer: string;
+    noAnswerNote: string;
+    callFailed: string;
     remindQueued: string;
     remindTooMany: string;
     remindFailed: string;
@@ -588,6 +594,11 @@ const en: AppCopy = {
     remind: "Send reminder",
     reminding: "Sending…",
     reminded: "Reminder sent.",
+    talking: "Talking to {name}…",
+    ended: "Call finished. The check-in appears on their record.",
+    noAnswer: "{name} did not answer.",
+    noAnswerNote: "Recorded as an attempt. Two unanswered calls become a visit on the help queue.",
+    callFailed: "The call could not be connected.",
     remindQueued: "Written down, but not sent — no SMS provider is configured.",
     remindTooMany: "Already reminded four times today.",
     remindFailed: "The reminder did not send.",
@@ -1117,6 +1128,11 @@ const hi: AppCopy = {
     remind: "याद दिलाएँ",
     reminding: "भेज रहे हैं…",
     reminded: "याद दिला दिया।",
+    talking: "{name} से बात हो रही है…",
+    ended: "बात पूरी हुई। जानकारी उनके रिकॉर्ड पर दिख रही है।",
+    noAnswer: "{name} ने फ़ोन नहीं उठाया।",
+    noAnswerNote: "कोशिश दर्ज कर ली गई। दो बार फ़ोन न उठने पर घर जाने का काम सूची में आ जाता है।",
+    callFailed: "फ़ोन जुड़ नहीं पाया।",
     remindQueued: "दर्ज हो गया, पर भेजा नहीं गया — SMS सेवा चालू नहीं है।",
     remindTooMany: "आज चार बार याद दिला चुके हैं।",
     remindFailed: "संदेश नहीं गया।",

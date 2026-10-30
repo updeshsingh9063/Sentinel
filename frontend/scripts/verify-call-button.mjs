@@ -137,5 +137,35 @@ const noId = await fetch(`${SITE}/api/call/place`, {
 });
 check("a missing senior id is refused", noId.status === 400 || noId.status === 503, `status=${noId.status}`);
 
+
+// ---- 4. the status endpoint -------------------------------------------------
+// A provider's call ids run in sequence, so "read any call by id" would leak
+// who else is being rung and when. The id alone must buy nothing: the senior
+// is named too, read under RLS, and the call only answers if the number
+// dialled is that senior's.
+const REAL = "CA" + "0".repeat(32);
+
+const noSession = await fetch(`${SITE}/api/call/status?sid=${REAL}&senior=${target}`);
+check(
+  "an unauthenticated status request is refused",
+  noSession.status === 404 || noSession.status === 503,
+  `status=${noSession.status}`,
+);
+
+const malformed = await fetch(`${SITE}/api/call/status?sid=not-a-call-sid&senior=${target}`);
+check("a malformed call id is refused", malformed.status === 400, `status=${malformed.status}`);
+
+const noSenior = await fetch(`${SITE}/api/call/status?sid=${REAL}`);
+check("a missing senior is refused", noSenior.status === 400, `status=${noSenior.status}`);
+
+const strangerCall = await fetch(
+  `${SITE}/api/call/status?sid=${REAL}&senior=00000000-0000-4000-8000-000000000009`,
+);
+check(
+  "a senior off the caseload is refused",
+  strangerCall.status === 404 || strangerCall.status === 503,
+  `status=${strangerCall.status}`,
+);
+
 console.log(failures === 0 ? "\nthe call button holds\n" : `\n${failures} check(s) failed\n`);
 process.exit(failures === 0 ? 0 : 1);

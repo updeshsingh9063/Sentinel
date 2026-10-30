@@ -47,7 +47,16 @@ export function CallNow({
   t: AppCopy["callNow"];
 }) {
   const [phase, setPhase] = useState<
-    "idle" | "asking" | "number" | "saving" | "dialling" | "ringing" | "failed"
+    | "idle"
+    | "asking"
+    | "number"
+    | "saving"
+    | "dialling"
+    | "ringing"
+    | "talking"
+    | "noanswer"
+    | "ended"
+    | "failed"
   >("idle");
   const [why, setWhy] = useState<string>("");
   const [number, setNumber] = useState<string>("");
@@ -104,6 +113,8 @@ export function CallNow({
 
     if (res.ok) {
       setPhase("ringing");
+      const body = (await res.json().catch(() => null)) as { callSid?: string } | null;
+      if (body?.callSid) void watch(body.callSid);
       return;
     }
 
@@ -132,12 +143,71 @@ export function CallNow({
     setPhase("failed");
   }
 
-  if (phase === "ringing") {
+  /**
+   * Follow the call until it resolves.
+   *
+   * WHY POLL AT ALL. "Ringing" with no end state was the whole of the
+   * feedback, so a coordinator could not tell a conversation from a telephone
+   * nobody picked up — and the second is the outcome that most needs acting
+   * on, because an elderly person not answering is the signal this product
+   * exists to notice. A call that connected is good news; a call that did not
+   * is work.
+   *
+   * Every three seconds for three minutes, then it stops asking rather than
+   * polling a dead tab forever. Stopping is not an outcome, so the label
+   * stays as it was instead of inventing one.
+   */
+  async function watch(callSid: string) {
+    for (let i = 0; i < 60; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      let out: { ok?: boolean; outcome?: string } | null = null;
+      try {
+        out = await fetch(
+          `/api/call/status?sid=${encodeURIComponent(callSid)}&senior=${encodeURIComponent(seniorId)}`,
+        ).then((r) => r.json());
+      } catch {
+        continue; // a dropped request is not an answer about the call
+      }
+      if (!out?.ok) continue;
+      if (out.outcome === "talking") setPhase("talking");
+      if (out.outcome === "ended") return setPhase("ended");
+      if (out.outcome === "no_answer") return setPhase("noanswer");
+      if (out.outcome === "failed") {
+        setWhy(t.callFailed);
+        return setPhase("failed");
+      }
+    }
+  }
+
+  if (phase === "noanswer") {
+    return (
+      <div className="cn cn--out" role="status">
+        <strong className="cn__bad">{fmt(t.noAnswer, { name })}</strong>
+        <em>{t.noAnswerNote}</em>
+        <button type="button" className="cn__go" onClick={() => setPhase("asking")}>
+          <IconPhone size={14} /> {t.retry}
+        </button>
+        <Remind seniorId={seniorId} t={t} />
+        <Styles />
+      </div>
+    );
+  }
+
+  if (phase === "ended") {
+    return (
+      <p className="cn cn--out" role="status">
+        <strong className="cn__ok">{t.ended}</strong>
+        <Styles />
+      </p>
+    );
+  }
+
+  if (phase === "ringing" || phase === "talking") {
     return (
       <p className="cn cn--live">
         <span className="cn__pulse" aria-hidden="true" />
         <span>
-          <strong>{fmt(t.ringing, { name })}</strong>
+          <strong>{fmt(phase === "talking" ? t.talking : t.ringing, { name })}</strong>
           <em>{t.note}</em>
         </span>
         <style>{`
@@ -335,6 +405,8 @@ function Styles() {
       .cn button:disabled { opacity: .55; cursor: default; }
       .cn__bad { color: var(--risk-high); }
       .cn__ok { color: var(--risk-low); font-weight: 600; }
+      .cn--out { flex-direction: column; align-items: flex-start; gap: var(--s-2); }
+      .cn--out em { font-style: normal; color: var(--ink-3); }
       .cn__ask { color: var(--ink); font-weight: 600; }
       .cn--form { row-gap: var(--s-2); }
       .cn--form input {
