@@ -194,6 +194,10 @@ export interface AppCopy {
   };
   family: {
     title: string;
+    toldTitle: string;
+    toldNote: string;
+    notSentYet: string;
+    sendFailed: string;
     doing: string;
     notIncluded: string;
     notItems: string[];
@@ -622,6 +626,11 @@ const en: AppCopy = {
     timelineQuiet: "Nothing new appeared in this window — the score has been steady."
   },
   family: {
+    toldTitle: "What you have been told",
+    toldNote:
+      "Only what the consent switches above allow. Anything they do not allow is not shown here and was not sent — that is what turning one off does.",
+    notSentYet: "not sent yet",
+    sendFailed: "could not be sent",
     title: "How {name} is doing",
     doing: "What we are doing",
     notIncluded: "What this summary does not include",
@@ -1109,6 +1118,11 @@ const hi: AppCopy = {
     timelineQuiet: "इस अवधि में कुछ नया नहीं आया — स्कोर स्थिर रहा है।"
   },
   family: {
+    toldTitle: "आपको क्या बताया गया",
+    toldNote:
+      "केवल वही जो ऊपर के सहमति स्विच अनुमति देते हैं। जिसकी अनुमति नहीं, वह न यहाँ दिखता है और न भेजा गया — स्विच बंद करने का यही मतलब है।",
+    notSentYet: "अभी भेजा नहीं गया",
+    sendFailed: "भेजा नहीं जा सका",
     title: "{name} कैसी हैं",
     doing: "हम क्या कर रहे हैं",
     notIncluded: "इस सारांश में क्या नहीं है",

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { createClient } from "@/lib/supabase/client";
 import type { FamilyConsent } from "@/lib/family";
 
 /**
@@ -12,15 +13,49 @@ import type { FamilyConsent } from "@/lib/family";
  * screen they will never open. Turning one off has to be as easy as turning it
  * on; anything else is not consent.
  *
- * Local state for the demo. The real control is the database: a family member
- * holds no policy on vitals, notes, cues or risk scores, so revoking here
- * changes what is *sent*, while the schema is what makes the rest
- * unreachable.
+ * IT WRITES. Until 2026-10-30 this held its answer in React state and saved
+ * nothing — "local state for the demo", said the comment that used to be
+ * here. A privacy control that silently does not save is worse than no
+ * control at all: it tells somebody they have turned sharing off while the
+ * system carries on exactly as before. Now that family notifications are
+ * genuinely gated on these rows, the switch had to become the thing it
+ * already looked like.
+ *
+ * The schema is still the real guarantee. A family member holds no policy on
+ * vitals, notes, cues or risk scores, so revoking here changes what is
+ * *sent*, while the schema is what makes the rest unreachable at all.
+ *
+ * IT SHOWS THE OLD ANSWER UNTIL THE WRITE LANDS. Flipping optimistically and
+ * rolling back on failure would show somebody "Off" for a moment on the one
+ * control where a moment of the wrong answer is the entire problem.
  */
-export function Consent({ items }: { items: FamilyConsent[] }) {
+export function Consent({ items, seniorId }: { items: FamilyConsent[]; seniorId: string }) {
   const [granted, setGranted] = useState<Record<string, boolean>>(
     Object.fromEntries(items.map((c) => [c.scope, c.granted])),
   );
+  const [busy, setBusy] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+
+  async function flip(scope: string, to: boolean) {
+    setBusy(scope);
+    setFailed(null);
+    const { error } = await createClient().from("consents").upsert(
+      {
+        senior_id: seniorId,
+        scope,
+        granted: to,
+        granted_at: to ? new Date().toISOString() : null,
+        granted_by: "family",
+      },
+      { onConflict: "senior_id,scope" },
+    );
+    setBusy(null);
+    if (error) {
+      setFailed(scope);
+      return;
+    }
+    setGranted((g) => ({ ...g, [scope]: to }));
+  }
 
   return (
     <ul className="consent">
@@ -33,6 +68,7 @@ export function Consent({ items }: { items: FamilyConsent[] }) {
                 {c.label}
               </span>
               <small>{c.detail}</small>
+              {failed === c.scope && <small className="consent__failed">Could not save that. Try again.</small>}
             </span>
             <button
               type="button"
@@ -40,10 +76,11 @@ export function Consent({ items }: { items: FamilyConsent[] }) {
               aria-checked={on}
               aria-labelledby={`consent-${c.scope}`}
               className="consent__switch"
-              onClick={() => setGranted({ ...granted, [c.scope]: !on })}
+              onClick={() => void flip(c.scope, !on)}
+              disabled={busy === c.scope}
             >
               <i aria-hidden="true" />
-              <span>{on ? "On" : "Off"}</span>
+              <span>{busy === c.scope ? "…" : on ? "On" : "Off"}</span>
             </button>
           </li>
         );
@@ -58,6 +95,8 @@ export function Consent({ items }: { items: FamilyConsent[] }) {
         }
         .consent li:last-child { border-bottom: 0; padding-bottom: 0; }
         .consent__text { display: grid; gap: var(--s-1); }
+        .consent__failed { color: var(--risk-high); font-weight: 600; }
+        .consent__switch:disabled { opacity: .6; cursor: default; }
         .consent__label { font-size: var(--fs-sm); font-weight: 600; }
         .consent__text small { font-size: var(--fs-xs); color: var(--ink-3); line-height: 1.55; }
         .consent__switch {

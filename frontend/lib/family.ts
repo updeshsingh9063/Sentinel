@@ -43,6 +43,21 @@ export interface FamilyView {
   consents: FamilyConsent[];
   /** What this family member has told the coordinator. Their own notes only. */
   notes: FamilyNoteRow[];
+  /**
+   * What they have been told. Only messages that passed the consent gate —
+   * the policy on family_notifications does not return a withheld one, which
+   * is the point of withholding it.
+   */
+  alerts: FamilyAlert[];
+}
+
+export interface FamilyAlert {
+  id: number;
+  kind: string;
+  body: string;
+  /** `queued` is shown as queued. See app/api/notify/dispatch/route.ts. */
+  state: string;
+  at: string;
 }
 
 /** Scopes offered to a family member, in display order. */
@@ -86,6 +101,7 @@ export async function loadFamilyView(
     state,
     consents: [],
     notes: [],
+    alerts: [],
   });
 
   // Which senior is this account linked to? RLS limits family_links to the
@@ -117,6 +133,21 @@ export async function loadFamilyView(
     .from("consents")
     .select("scope, granted")
     .eq("senior_id", chosen);
+
+  const { data: alertRows } = await supabase
+    .from("family_notifications")
+    .select("id, kind, body, state, created_at")
+    .eq("senior_id", chosen)
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  const alerts: FamilyAlert[] = (alertRows ?? []).map((a) => ({
+    id: a.id as number,
+    kind: a.kind as string,
+    body: a.body as string,
+    state: a.state as string,
+    at: String(a.created_at).slice(0, 10),
+  }));
 
   const consents: FamilyConsent[] = OFFERED.filter((s) => consentCopy[s]).map((scope) => ({
     scope,
@@ -159,6 +190,7 @@ export async function loadFamilyView(
       seniorName: senior.display_name,
       consents,
       notes,
+      alerts,
     };
   }
 
@@ -172,5 +204,6 @@ export async function loadFamilyView(
     body,
     consents,
     notes,
+    alerts,
   };
 }

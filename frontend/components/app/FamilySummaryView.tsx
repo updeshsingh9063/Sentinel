@@ -79,6 +79,29 @@ export function FamilySummaryView({ view, t }: { view: FamilyView; t: AppCopy })
           Everywhere else this view is read-only, which is right for health
           data flowing outward. A family member noticing something knows what
           no sensor recorded. */}
+      {/* WHAT THEY HAVE BEEN TOLD, and nothing they have not. A message the
+          consent gate withheld is not in this list and cannot be — the policy
+          on family_notifications returns only what passed, which is the whole
+          point of withholding it. See migration 0018. */}
+      {view.alerts.length > 0 && (
+        <section className="card fs__card fs__alerts">
+          <h2 className="fs__h2">{t.family.toldTitle}</h2>
+          <ul>
+            {view.alerts.map((a) => (
+              <li key={a.id} className={a.kind === "emergency" ? "fs__alert fs__alert--sos" : "fs__alert"}>
+                <p>{a.body}</p>
+                <small>
+                  {a.at}
+                  {a.state === "queued" ? ` · ${t.family.notSentYet}` : ""}
+                  {a.state === "failed" ? ` · ${t.family.sendFailed}` : ""}
+                </small>
+              </li>
+            ))}
+          </ul>
+          <p className="fs__alertnote">{t.family.toldNote}</p>
+        </section>
+      )}
+
       {view.seniorId && (
         <section className="card fs__card">
           <FamilyNote seniorId={view.seniorId} t={t.family} />
@@ -113,7 +136,7 @@ export function FamilySummaryView({ view, t }: { view: FamilyView; t: AppCopy })
 
       <section className="card fs__card">
         <h2 className="fs__h2">{t.family.receive}</h2>
-        <Consent items={view.consents} />
+        <Consent items={view.consents} seniorId={view.seniorId ?? ""} />
         <p className="fs__note">{t.family.receiveNote}</p>
       </section>
 
