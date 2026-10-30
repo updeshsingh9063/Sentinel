@@ -89,6 +89,12 @@ const line = (await read("seniors?demo_line=is.true&select=id,display_name,phone
 check("there is a number to dial", !!line?.phone, JSON.stringify(line));
 const SID = `CAverify${Date.now()}`;
 const key = encodeURIComponent(SECRET);
+// A HANDSET MAY NOW BE SHARED (migration 0022), so the number alone no longer
+// names anybody. An outbound call says who it was placed for, and this test
+// drives the webhook exactly as /api/call/place does -- without the id these
+// assertions would read the oldest senior on that number while claiming to
+// test the demo line, which is how they failed when the handset was shared.
+const forLine = `key=${key}&senior=${encodeURIComponent(line.id)}`;
 
 // ---- 1. a wrong secret ----------------------------------------------------
 console.log("a caller with the wrong secret");
@@ -103,7 +109,7 @@ check(
 
 // ---- 2. the call opens ----------------------------------------------------
 console.log("\nthe call is answered");
-const open = await post(`key=${key}`, { CallSid: SID, To: line.phone, CallStatus: "in-progress" });
+const open = await post(forLine, { CallSid: SID, To: line.phone, CallStatus: "in-progress" });
 check("TwiML comes back", open.status === 200 && open.text.includes("<Response>"), `status=${open.status}`);
 check("it listens for speech, not keypresses", /<Gather[^>]*input="speech"/.test(open.text), open.text.slice(0, 160));
 check("in Hindi, with a Hindi voice", /language="hi-IN"/.test(open.text) && /Polly\.Aditi/.test(open.text), open.text.slice(0, 200));
@@ -126,7 +132,7 @@ const SAID = [
 
 let last = open.text;
 for (const words of SAID) {
-  const turn = await post(`key=${key}`, {
+  const turn = await post(forLine, {
     CallSid: SID,
     To: line.phone,
     SpeechResult: words,
@@ -158,7 +164,7 @@ check(
 // ---- 4. the call ends and is written down ---------------------------------
 console.log("\nthe call ends");
 const today = new Date().toISOString().slice(0, 10);
-const ended = await fetch(`${SITE}/api/call/voice?key=${key}&status=1`, {
+const ended = await fetch(`${SITE}/api/call/voice?${forLine}&status=1`, {
   method: "POST",
   headers: { "Content-Type": "application/x-www-form-urlencoded" },
   body: new URLSearchParams({ CallSid: SID, To: line.phone, CallStatus: "completed" }).toString(),
@@ -183,7 +189,7 @@ check("the errand reached the coordinator's queue", req.length > 0, JSON.stringi
 
 // ---- 5. a provider retry must not write it twice --------------------------
 const before = (await read(`call_notes?senior_id=eq.${line.id}&called_on=eq.${today}&channel=eq.ai_call&select=id`)).length;
-await fetch(`${SITE}/api/call/voice?key=${key}&status=1`, {
+await fetch(`${SITE}/api/call/voice?${forLine}&status=1`, {
   method: "POST",
   headers: { "Content-Type": "application/x-www-form-urlencoded" },
   body: new URLSearchParams({ CallSid: SID, To: line.phone, CallStatus: "completed" }).toString(),
@@ -193,7 +199,7 @@ check("a retried end-of-call does not write it twice", before === after, `${befo
 
 // ---- 6. nobody answered ---------------------------------------------------
 console.log("\nnobody answered");
-const noAns = await fetch(`${SITE}/api/call/voice?key=${key}&status=1`, {
+const noAns = await fetch(`${SITE}/api/call/voice?${forLine}&status=1`, {
   method: "POST",
   headers: { "Content-Type": "application/x-www-form-urlencoded" },
   body: new URLSearchParams({ CallSid: `${SID}x`, To: line.phone, CallStatus: "no-answer" }).toString(),
@@ -206,8 +212,7 @@ check("the unanswered callback is accepted", noAns.status === 200, `status=${noA
 // for, and that has to win -- otherwise the call sounds correct and the
 // check-in lands on the wrong person, which is the worst kind of wrong
 // because nothing errors.
-console.log("
-two seniors, one handset");
+console.log("\ntwo seniors, one handset");
 const sharers = await read(
   `seniors?phone=eq.${encodeURIComponent(line.phone)}&select=id,display_name&order=created_at`,
 );
