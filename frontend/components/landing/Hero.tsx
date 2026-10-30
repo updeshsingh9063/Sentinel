@@ -52,7 +52,13 @@ export async function Hero() {
             alt={meta.alt}
             fill
             priority
-            sizes="100vw"
+            /* NOT 100vw. The media box is taller than it is wide on a phone,
+               and the photograph is 1800x1068, so cover() scales it by HEIGHT
+               -- it was painting a 1344px-wide image from the 390w candidate
+               the browser had been told to fetch, a 3.4x upscale, which is
+               why the hero read as mush on a phone. These tell it how wide
+               the picture is really drawn. */
+            sizes="(max-width: 48rem) 150vw, (max-width: 68rem) 190vw, 100vw"
             style={{ objectFit: "cover", objectPosition: meta.objectPosition }}
           />
         )}
@@ -125,11 +131,20 @@ export async function Hero() {
           background: var(--forest);
           overflow: hidden;
         }
+        /* The drift scales the PICTURE inside this box, not the box. Scaling
+           the box made it 7.5% larger than itself, which on a full-bleed
+           backdrop only spilled 13px past each edge of the page -- but the
+           moment this became a band with a gradient cut to its height, the
+           overshoot showed as a strip of un-scrimmed photograph below the
+           scrim. overflow keeps the movement inside the frame. */
         .hero__media {
           position: absolute; inset: 0; z-index: -2;
+          overflow: hidden;
+        }
+        .hero__media img {
+          width: 100%; height: 100%;
           animation: slowDrift 28s var(--ease) infinite alternate;
         }
-        .hero__media img { width: 100%; height: 100%; }
 
         /* Staged entrance. Each child of the copy column rises in turn, in the
            order you would read them. Pure CSS, so it runs without script and
@@ -238,19 +253,54 @@ export async function Hero() {
               rgba(10, 26, 21, 0.28) 100%);
           }
         }
+        /* Phone. No room to put copy beside the photograph, so it goes above
+           it: a band across the top, then the type on the section's own
+           forest underneath.
+
+           This used to be the full backdrop with a vertical gradient, on the
+           reasoning that the room would stay visible at the top. It did not.
+           Measured at 390x844: the hero is 796 tall, so cover() scaled the
+           1800x1068 file by height to 1344 wide and threw away 925px of it
+           -- 69% of the picture, the care worker among it. The one face left
+           landed at y=342, where that gradient was already at 0.88. What was
+           visible at the top was the top of the photograph: a shelf of
+           pothos.
+
+           A band is the shape the crop was made for. At 419x344 only ~120px
+           of width is lost, both faces are in frame, and they sit clear of
+           both the nav above and the eyebrow below. */
         @media (max-width: 48rem) {
-          /* No room to put copy beside the photograph at all, so the gradient
-             turns vertical: the room stays visible at the top and the type
-             sits on near-solid forest underneath it. */
+          .hero {
+            --hero-band: 15.5rem;
+            min-height: 0;
+            padding-block: calc(var(--nav-h) + var(--hero-band) + var(--s-6)) var(--s-12);
+          }
+          .hero__media,
+          .hero__scrim {
+            inset: 0 0 auto;
+            height: calc(var(--nav-h) + var(--hero-band));
+          }
+          /* Dark enough under the nav for a cream wordmark, barely there
+             across the faces, then closing to solid forest exactly where the
+             band ends so there is no seam against the section behind it. */
           .hero__scrim {
             background:
               linear-gradient(180deg,
-                rgba(10, 26, 21, 0.40) 0%,
-                rgba(10, 26, 21, 0.62) 22%,
-                rgba(10, 26, 21, 0.90) 46%,
-                rgba(10, 26, 21, 0.96) 100%);
+                rgba(10, 26, 21, 0.66) 0%,
+                rgba(10, 26, 21, 0.22) 28%,
+                rgba(10, 26, 21, 0.20) 58%,
+                rgba(10, 26, 21, 0.74) 86%,
+                var(--forest) 100%);
           }
-          .hero { min-height: 0; padding-block: calc(var(--nav-h) + var(--s-8)) var(--s-12); }
+          /* The veil's top darkening belongs to the scrim now. All it keeps
+             is the hand-over to cream at the foot of the section. */
+          .hero__veil {
+            background: linear-gradient(180deg,
+              rgba(10, 26, 21, 0) 0%,
+              rgba(10, 26, 21, 0) 88%,
+              rgba(251, 247, 238, 0.28) 96.5%,
+              var(--cream) 100%);
+          }
           .hero__promises li { min-width: 50%; padding-inline: 0; border-left: 0; margin-bottom: var(--s-5); }
         }
       `}</style>

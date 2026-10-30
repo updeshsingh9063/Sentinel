@@ -156,12 +156,17 @@ export async function Impact() {
            and its citation. So the floor is 0.82 now: a photograph here is
            atmosphere at the outer edge, never a picture competing for the
            same space as type. Judge it with the stats on, not on its own. */
+        /* Drift the picture inside the box, not the box. Scaling the box put
+           it 13px past the right edge of the page at every width, and its
+           mask is cut to the box, so the overshoot escaped the fade as well
+           as the frame. See the same change in Hero.tsx. */
         .impact__media {
           position: absolute; inset: 0 0 0 auto; width: 55%; z-index: -2;
-          animation: slowDrift 34s var(--ease) infinite alternate;
+          overflow: hidden;
           -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
           mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
         }
+        .impact__media img { animation: slowDrift 34s var(--ease) infinite alternate; }
         .impact__scrim {
           position: absolute; inset: 0; z-index: -1;
           background: linear-gradient(90deg,
