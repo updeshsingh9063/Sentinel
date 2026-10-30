@@ -218,18 +218,23 @@ export async function loadWorklist(t: AppCopy, lang: string): Promise<Worklist> 
       .order("called_on", { ascending: false }),
   ]);
 
-  // Calls that ran the CURRENT six-question script. `fall_code` is only
-  // written by a call that asked all six, so its presence distinguishes a
-  // real call today from the cohort's historical rows, which carry the three
-  // the table used to have room for. A missed call has none of them, which is
-  // right: it carries no answers to report.
+  // Calls where somebody actually spoke today, picked out by `source`.
+  //
+  // This used to test `fall_code is not null`, on the reasoning that only the
+  // six-question script ever wrote that column, so its presence meant a real
+  // call rather than one of the cohort's historical rows. That stopped being
+  // true the moment the call became a conversation: somebody can talk for two
+  // minutes without falls ever coming up, and the band would have silently
+  // dropped the call — which is exactly the bug that once made a filed
+  // check-in look like one that never arrived. The channel a row came in on
+  // is a fact about the row; which answers it happens to carry is not.
   const todayCalls = await supabase
     .from("checkins")
     .select("senior_id, feeling_code, pain_code, meds_taken, sleep_code, appetite_code, fall_code")
     .in("senior_id", ids)
     .eq("checked_on", day)
     .eq("answered", true)
-    .not("fall_code", "is", null);
+    .in("source", ["ivr", "conversation"]);
 
   const seniorById = new Map((seniors.data ?? []).map((s) => [s.id, s]));
   const scoreById = new Map((scores.data ?? []).map((s) => [s.senior_id, s]));

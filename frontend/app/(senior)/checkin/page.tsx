@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { CheckinSim } from "@/components/app/CheckinSim";
+import { CallSim } from "@/components/app/CallSim";
 import { LangSwitch } from "@/components/landing/LangSwitch";
 import { getAppCopy } from "@/lib/i18n-server";
 import { SLOTS, hasImage, slotSrc } from "@/lib/images";
@@ -59,7 +59,7 @@ export default async function CheckinPage() {
       <div className="ivr__lang">
         <LangSwitch lang={lang} label={t.bar.language} />
       </div>
-      <CheckinSim t={t.checkin} lang={lang} />
+      <CallSim t={t.checkin} lang={lang} />
       <style>{`
         /* Fixed, so the room stays still while the questions scroll over it —
            a background that slides around is movement nobody asked for, and

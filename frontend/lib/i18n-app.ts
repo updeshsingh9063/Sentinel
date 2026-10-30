@@ -217,25 +217,26 @@ export interface AppCopy {
   };
   checkin: {
     chrome: string;
-    step: string;
-    noKey: string;
-    noKeyPressed: string;
-    recapNote: string;
-    again: string;
-    silent: string;
-    hear: string;
     speaking: string;
     speak: string;
     listening: string;
     stop: string;
     transcribing: string;
-    heard: string;
     unclear: string;
     silence: string;
     micDenied: string;
     micUnsupported: string;
-    voiceNote: string;
-    orPress: string;
+    ringing: string;
+    ringingTo: string;
+    answer: string;
+    hangUp: string;
+    typeInstead: string;
+    send: string;
+    busy: string;
+    callFailed: string;
+    nothingSaid: string;
+    urgentNow: string;
+    urgentFiled: string;
     lineOf: string;
     filing: string;
     filedTo: string;
@@ -608,27 +609,26 @@ const en: AppCopy = {
   },
   checkin: {
     chrome: "Phone check-in simulator · what the senior hears, not an app they install",
-    step: "Question {n} of {total}",
-    noKey: "No key pressed",
-    noKeyPressed: "No key pressed",
-    recapNote:
-      "A question left unanswered is recorded as unanswered. Silence is evidence, not a gap to fill in.",
-    again: "Run it again",
-    silent: "Press nothing (the call times out)",
-    hear: "Hear the question",
     speaking: "Speaking…",
-    speak: "Hold to answer by voice",
+    speak: "Answer by voice",
     listening: "Listening… release when done",
     stop: "Stop",
     transcribing: "Writing down what you said…",
-    heard: "We heard",
     unclear: "We could not make that out. Say it again, or press a button below.",
     silence: "We did not hear anything. Say it again, or press a button below.",
     micDenied: "The microphone is blocked in this browser, so use the buttons below.",
     micUnsupported: "This browser cannot record audio, so use the buttons below.",
-    voiceNote:
-      "On a real call this is spoken down the line and the senior just answers. Here it uses the browser’s voice and microphone. The buttons always work without either.",
-    orPress: "or press a number",
+    ringing: "Samarth Sentinel is calling",
+    ringingTo: "On the line for {name}",
+    answer: "Answer the call",
+    hangUp: "End call",
+    typeInstead: "No microphone? Type what you would say.",
+    send: "Say it",
+    busy: "The line is busy for a moment — try again in a few seconds.",
+    callFailed: "The call could not go through. Try again.",
+    nothingSaid: "Nothing was said, so nothing was written to the record.",
+    urgentNow: "This sounds urgent. Your care coordinator is being told right now.",
+    urgentFiled: "Flagged as urgent. It is at the top of the coordinator's list.",
     lineOf: "This is {name}'s line \u2014 answers here go onto their record.",
     filing: "Sending it through\u2026",
     filedTo: "Filed to {name}'s record just now.",
@@ -1031,27 +1031,26 @@ const hi: AppCopy = {
   },
   checkin: {
     chrome: "फ़ोन चेक-इन सिम्युलेटर · जो बुज़ुर्ग सुनती हैं, कोई ऐप नहीं जो उन्हें लगाना पड़े",
-    step: "प्रश्न {n} / {total}",
-    noKey: "कोई बटन नहीं दबाया",
-    noKeyPressed: "कोई बटन नहीं दबाया",
-    recapNote:
-      "जिस प्रश्न का उत्तर नहीं मिला, उसे अनुत्तरित ही दर्ज किया जाता है। चुप्पी एक प्रमाण है, भरने लायक़ ख़ाली जगह नहीं।",
-    again: "फिर से चलाएँ",
-    silent: "कुछ न दबाएँ (कॉल अपने आप कट जाती है)",
-    hear: "प्रश्न सुनें",
     speaking: "बोल रहा है…",
-    speak: "दबाकर बोलें",
+    speak: "बोलकर जवाब दीजिए",
     listening: "सुन रहे हैं… कहकर छोड़ दें",
     stop: "रोकें",
     transcribing: "आपकी बात लिखी जा रही है…",
-    heard: "हमने सुना",
     unclear: "हम समझ नहीं पाए। दोबारा कहें, या नीचे कोई बटन दबाएँ।",
     silence: "हमें कुछ सुनाई नहीं दिया। दोबारा कहें, या नीचे कोई बटन दबाएँ।",
     micDenied: "इस ब्राउज़र में माइक बंद है, इसलिए नीचे के बटन इस्तेमाल करें।",
     micUnsupported: "यह ब्राउज़र आवाज़ रिकॉर्ड नहीं कर सकता, नीचे के बटन इस्तेमाल करें।",
-    voiceNote:
-      "असली कॉल पर यह फ़ोन पर बोला जाता है और बुज़ुर्ग बस जवाब देती हैं। यहाँ ब्राउज़र की आवाज़ और माइक इस्तेमाल होता है। बटन हमेशा दोनों के बिना भी चलते हैं।",
-    orPress: "या कोई नंबर दबाएँ",
+    ringing: "समर्थ सेंटिनल से फ़ोन आ रहा है",
+    ringingTo: "{name} की लाइन पर",
+    answer: "फ़ोन उठाइए",
+    hangUp: "फ़ोन रखें",
+    typeInstead: "माइक नहीं है? जो कहना है वह लिखिए।",
+    send: "भेजें",
+    busy: "लाइन अभी व्यस्त है — कुछ सेकंड बाद फिर कोशिश कीजिए।",
+    callFailed: "फ़ोन नहीं लग पाया। फिर कोशिश कीजिए।",
+    nothingSaid: "कुछ कहा नहीं गया, इसलिए रिकॉर्ड में कुछ दर्ज नहीं हुआ।",
+    urgentNow: "यह ज़रूरी लग रहा है। आपके केयर कोऑर्डिनेटर को अभी बताया जा रहा है।",
+    urgentFiled: "ज़रूरी के रूप में दर्ज। यह कोऑर्डिनेटर की सूची में सबसे ऊपर है।",
     lineOf: "यह {name} की लाइन है। जो जवाब यहाँ दिए जाएँगे वे उन्हीं के रिकॉर्ड में दर्ज होंगे।",
     filing: "भेजा जा रहा है…",
     filedTo: "अभी {name} के रिकॉर्ड में दर्ज कर दिया गया है।",
