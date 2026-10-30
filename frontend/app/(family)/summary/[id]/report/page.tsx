@@ -151,6 +151,13 @@ export default async function FamilyReportPage({
         .rep__tilevalue { font-family: var(--display); font-size: 2.1rem; line-height: 1; display: block; margin-top: var(--s-1); }
         .rep__tilevalue small { font-size: 0.95rem; color: var(--ink-3); }
         .rep__tilenote { font-size: 0.6875rem; line-height: 1.5; color: var(--ink-3); margin-top: var(--s-2); }
+        /* 11px is fine print on paper and this sheet is built to be printed,
+           but the page right below says its reader may be the senior's
+           spouse. Asking them to read 11px on a phone contradicts that.
+           Scoped to screen, so the printed sheet is unchanged. */
+        @media screen and (max-width: 40rem) {
+          .rep__tilenote { font-size: var(--fs-xs); }
+        }
 
         /* Bigger than the product's body text. The reader is as likely to be
            a senior's spouse as their adult child. */

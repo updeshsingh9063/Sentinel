@@ -370,6 +370,15 @@ export default async function SignInPage({
           border: 1px solid var(--line); border-radius: var(--radius);
           background: var(--white); color: var(--ink); width: 100%;
         }
+        /* iOS Safari zooms the whole page in when a field whose text is under
+           16px takes focus, and does not zoom back out. On a sign-in page that
+           means the first tap leaves the form half off-screen. 16px exactly
+           on narrow screens; the designed 14px everywhere a pointer exists. */
+        @media (max-width: 40rem) {
+          .si__field input[type="email"],
+          .si__field input[type="text"],
+          .si__field input[type="password"] { font-size: 1rem; }
+        }
         .si__field input:focus-visible { outline: 2px solid var(--forest); outline-offset: -1px; }
         .si__field small { font-size: var(--fs-xs); color: var(--ink-3); }
         .si__roles-pick { display: flex; flex-wrap: wrap; gap: var(--s-3); }

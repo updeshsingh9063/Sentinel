@@ -283,6 +283,12 @@ export default async function WorklistPage() {
           letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3);
           white-space: nowrap;
         }
+        /* The budget line is the sentence that explains why the list stops.
+           nowrap clipped its last word on a 360px screen, which is the worst
+           place to lose a word. Let it take two lines there instead. */
+        @media (max-width: 26rem) {
+          .wl__cap span { white-space: normal; text-align: center; }
+        }
         .wl--held { opacity: 0.62; }
         .wl__row--held { padding: var(--s-4) var(--s-5); }
         .wl__foot {

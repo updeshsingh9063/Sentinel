@@ -137,10 +137,23 @@ export default async function OpsDashboardPage() {
           </ul>
           <p className="ops__note">{t.ops.outcomesNote}</p>
         </section>
+      </div>
 
+      {/* FULL WIDTH, BELOW THE GRID. This sat inside .ops__grid, which is two
+          columns from 60rem up, so a fourteen-row six-column table was being
+          squeezed into 55% of the page with every header wrapped to three
+          lines -- and on a phone its min-content width dragged the whole
+          document out to 534px, shrinking the entire dashboard to fit and
+          clipping the volume chart. It also wore a class, ops__panel, that
+          nothing defined, so it rendered with no card around it at all. */}
       {ops.cities.length > 0 && (
-        <section className="ops__panel">
+        <section className="card ops__card ops__cityblock">
           <h2 className="ops__h2">{t.ops.byCity}</h2>
+          {/* The table is allowed to scroll inside this box rather than widen
+              the page. Six columns of numbers do not fold into 390px without
+              becoming unreadable, and a reader who cannot see the whole table
+              is better served than one whose whole dashboard is zoomed out. */}
+          <div className="ops__scroll">
           <table className="ops__cities">
             <thead>
               <tr>
@@ -165,11 +178,10 @@ export default async function OpsDashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
           <p className="ops__note">{t.ops.byCityNote}</p>
         </section>
       )}
-
-      </div>
 
       <section className="card ops__privacy">
         <h2 className="ops__h2">
@@ -227,7 +239,24 @@ export default async function OpsDashboardPage() {
         .ops__privacy { padding: var(--s-5); background: var(--cream-2); }
         .ops__privacy p { font-size: var(--fs-sm); line-height: 1.7; color: var(--ink-2); max-width: 70ch; }
         .ops__privacy code { font-size: 0.85em; background: var(--white); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); }
-        .ops__cities { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+        .ops__cityblock { margin-bottom: var(--s-5); }
+        /* Contains the table's width instead of letting it set the page's.
+           -webkit-overflow-scrolling for momentum on iOS; overscroll-behavior
+           so swiping past the last column does not drag the page sideways. */
+        .ops__scroll {
+          overflow-x: auto; -webkit-overflow-scrolling: touch;
+          overscroll-behavior-x: contain;
+        }
+        /* Run the scroller to the card's edges on a phone. Cut inside the
+           padding, the last column looks like a layout mistake; cut at the
+           edge, it reads as a table that carries on. */
+        @media (max-width: 40rem) {
+          .ops__scroll {
+            margin-inline: calc(-1 * var(--s-5));
+            padding-inline: var(--s-5);
+          }
+        }
+        .ops__cities { width: 100%; min-width: 30rem; border-collapse: collapse; font-size: var(--fs-sm); }
         .ops__cities th, .ops__cities td {
           text-align: right; padding: var(--s-2) var(--s-3);
           border-bottom: 1px solid var(--line);

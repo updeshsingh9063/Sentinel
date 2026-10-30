@@ -400,3 +400,74 @@ section[id], footer[id] { scroll-margin-top: calc(var(--nav-h) + var(--s-4)); }
   .btn:hover,
   .card:hover { transform: none; }
 }
+
+/* ---- touch targets ------------------------------------------------------
+   A control that reads well with a mouse can be unusable with a thumb. The
+   language switch was 27x27 CSS pixels on every signed-in page -- Apple and
+   Google both ask for 44, and WCAG 2.5.8 sets the floor at 24. The brief
+   scores accessibility, and this product is meant to be used in the field on
+   a phone, so the switch between Hindi and English cannot be the hardest
+   thing on the page to hit.
+
+   Two rules, applied only where the pointer is coarse, so the designed
+   desktop spacing is untouched:
+
+   · Controls that sit in a centred flex row grow by padding. Nothing moves,
+     because the row centres whatever height it is given.
+   · Controls aligned on a text baseline, or sitting inside running text,
+     cannot take padding without shifting against the words beside them, so
+     they get an invisible ::after that extends the hit area over the
+     surrounding leading instead. Layout is identical; only the target grows.
+
+   The selectors name their element (button.signout, not .signout) on purpose.
+   Every one of these controls carries its padding in a component <style> tag,
+   which the document serves AFTER this sheet, so a bare class would tie on
+   specificity and lose on order.
+
+   Deliberately NOT listed: the long reason and note links inside report
+   bodies. They run most of the width of the card and padding them would
+   double-space the prose they sit in. */
+@media (pointer: coarse) {
+  button.nav__langbtn,
+  a.appbar__brand,
+  button.signout,
+  button.consent__switch,
+  div.verdict button {
+    padding-block: max(var(--s-3), 9px);
+  }
+  button.nav__langbtn { padding-inline: var(--s-3); }
+  /* Padding, not an overlay. "Forgot your password?" sits on the baseline of
+     the Password label with the field 8px below it, and a 44px overlay
+     centred on a 21px link reaches about 3px into the top of that field --
+     so tapping the top edge of the password box would have opened the reset
+     flow instead. Baseline alignment pins the text, so the box grows around
+     it without the words moving, and 3px of growth stays inside the 8px. */
+  button.si__link { padding-block: 3px; }
+  /* Under 34rem the wordmark is hidden and the brand is a 20px leaf, which
+     is under the 24px floor sideways however tall the row makes it. The
+     negative margin cancels the padding, so the leaf does not move off the
+     gutter it is aligned to -- only the area around it becomes tappable. */
+  a.appbar__brand {
+    padding-inline: var(--s-3);
+    margin-inline: calc(-1 * var(--s-3));
+  }
+
+  .rep__back,
+  .foot__links a,
+  .sd__crumb a,
+  .wl__name,
+  .feat__link {
+    position: relative;
+  }
+  .rep__back::after,
+  .foot__links a::after,
+  .sd__crumb a::after,
+  .wl__name::after,
+  .feat__link::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 44px;
+    transform: translateY(-50%);
+  }
+}

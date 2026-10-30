@@ -348,6 +348,13 @@ export function ReportView({
         .rep__panel h3 { font-size: var(--fs-h3); margin-bottom: var(--s-1); }
         .rep__panelnote { font-size: 0.6875rem; line-height: 1.55; color: var(--ink-3); margin-bottom: var(--s-4); max-width: 60ch; }
         .rep__empty { font-size: var(--fs-sm); color: var(--ink-3); }
+        /* The notes are 11px because this report is built to be printed, and
+           11px is ordinary fine print on paper. Read on a phone it is not,
+           and a coordinator reads it on a phone far more often than they
+           print it. Scoped to screen so the printed sheet is unchanged. */
+        @media screen and (max-width: 40rem) {
+          .rep__tilenote, .rep__panelnote { font-size: var(--fs-xs); }
+        }
 
         .rep__chart svg { width: 100%; height: auto; }
         .rep__legend { display: flex; flex-wrap: wrap; gap: var(--s-4); margin-top: var(--s-2); font-size: var(--fs-xs); color: var(--ink-2); }
@@ -357,6 +364,13 @@ export function ReportView({
         .rep__latest { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); margin-top: var(--s-4); padding-top: var(--s-4); border-top: 1px solid var(--line); }
         .rep__latest dt { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); }
         .rep__latest dd { margin: 2px 0 0; font-size: 1rem; font-weight: 600; }
+        /* Four columns across a 360px phone leaves ~70px each, and "165/67"
+           at 16px bold does not fit in it -- the blood pressure was being
+           clipped by a few pixels, which is the one number on this page that
+           must never be read wrong. Two by two instead. */
+        @media (max-width: 30rem) {
+          .rep__latest { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-4) var(--s-3); }
+        }
 
         .rep__drugs { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
         .rep__drug { display: grid; grid-template-columns: 1fr auto; gap: 4px var(--s-3); align-items: center; }
