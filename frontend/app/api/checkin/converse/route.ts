@@ -208,7 +208,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  let body: { turns?: Turn[]; lang?: string; known?: Record<string, unknown> | null };
+  let body: {
+    turns?: Turn[];
+    lang?: string;
+    known?: Record<string, unknown> | null;
+    /**
+     * Who the call is with, supplied by the telephony webhook, which knows
+     * because it dialled them. Accepted ONLY with the telephony secret: the
+     * browser must never be able to name the person a conversation is about,
+     * or anyone could put an arbitrary name into the companion's mouth.
+     * Without it the demo line is resolved from the database as before.
+     */
+    profile?: Record<string, unknown>;
+    secret?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -220,7 +233,15 @@ export async function POST(req: Request) {
     .filter((x) => x && (x.who === "ai" || x.who === "senior") && typeof x.text === "string")
     .map((x) => ({ who: x.who, text: x.text.slice(0, MAX_TURN_CHARS) }));
 
-  const profile = await demoProfile();
+  const fromPhone =
+    body.profile &&
+    typeof body.secret === "string" &&
+    body.secret.length >= 16 &&
+    body.secret === process.env.TELEPHONY_SECRET
+      ? (body.profile as unknown as Briefing)
+      : null;
+
+  const profile = fromPhone ?? (await demoProfile());
   const spoken = all.filter((x) => x.who === "senior").length;
 
   /**

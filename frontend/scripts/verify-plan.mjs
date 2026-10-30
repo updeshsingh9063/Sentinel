@@ -149,7 +149,18 @@ if (!welfare.length) {
     body: JSON.stringify({ outcome: "no_answer", attempts: 2 }),
   });
   const esc = await rpc("escalate_unanswered", {});
-  check("two unanswered calls raise an errand", (esc.body?.raised ?? 0) >= 1, JSON.stringify(esc.body));
+  // Assert the OUTCOME, not the counter. If an earlier run today already
+  // raised this senior's errand, the dedupe correctly returns 0 and the
+  // errand is still there -- which is the thing that matters. Checking the
+  // counter made this fail on a second run of the same day's tests.
+  const already = await read(
+    `assistance_requests?senior_id=eq.${target}&raised_on=eq.${day}&kind=eq.other&state=in.(open,arranged)&select=id`,
+  );
+  check(
+    "two unanswered calls mean an errand exists",
+    (esc.body?.raised ?? 0) >= 1 || already.length > 0,
+    `raised=${esc.body?.raised} existing=${already.length}`,
+  );
 
   const twice = await rpc("escalate_unanswered", {});
   check("escalating again does not raise a second", twice.body?.raised === 0, JSON.stringify(twice.body));

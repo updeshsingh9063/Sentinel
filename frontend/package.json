@@ -16,6 +16,7 @@
     "verify:access": "node scripts/verify-access.mjs",
     "verify:missed-call": "node scripts/verify-missed-call.mjs",
     "verify:reset": "node scripts/verify-reset.mjs",
+    "verify:telephony": "node scripts/verify-telephony.mjs",
     "verify:notify": "node scripts/verify-notify.mjs",
     "verify:plan": "node scripts/verify-plan.mjs",
     "verify:assistance": "node scripts/verify-assistance.mjs",
