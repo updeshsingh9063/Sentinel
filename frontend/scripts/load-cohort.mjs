@@ -26,6 +26,29 @@ import pg from "pg";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
 
+// Same loader every other script here uses, and it was the one thing missing:
+// this script alone expected the database password to be exported by hand,
+// which means typing it on a command line, where it lands in shell history and
+// in the process list. A real environment variable still wins, so CI can
+// override the file without editing it.
+const ENV_FILE = path.join(HERE, "..", ".env.local");
+if (fs.existsSync(ENV_FILE)) {
+  for (const line of fs.readFileSync(ENV_FILE, "utf8").split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t || t.startsWith("#") || !t.includes("=")) continue;
+    const i = t.indexOf("=");
+    const k = t.slice(0, i).trim();
+    if (!(k in process.env)) process.env[k] = t.slice(i + 1).trim().replace(/^["']|["']$/g, "");
+  }
+}
+
+// The app calls it NEXT_PUBLIC_SUPABASE_URL because the browser needs it; this
+// script asks for SUPABASE_URL. Same value, two names, and the mismatch reads
+// as a missing variable rather than a naming one.
+if (!process.env.SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+}
+
 const need = (n) => {
   const v = process.env[n];
   if (!v) {

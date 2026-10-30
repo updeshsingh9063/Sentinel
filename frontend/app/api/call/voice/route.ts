@@ -58,8 +58,14 @@ function listen(text: string, lang: "hi" | "en", action: string) {
   const locale = lang === "hi" ? "hi-IN" : "en-IN";
   // speechTimeout="auto" lets an older person pause mid-sentence without the
   // line cutting them off, which a fixed timeout does constantly.
+  //
+  // timeout is a DIFFERENT clock: how long to wait for speech to BEGIN once
+  // the prompt has finished. Twilio's default is 5 seconds, which is brisk for
+  // anyone and far too short for somebody who has just picked up a telephone,
+  // registered that it is not a person, and is deciding whether to answer it.
+  // Every call that fell straight through to the goodbye failed on this.
   return (
-    `<Gather input="speech" language="${locale}" speechTimeout="auto" ` +
+    `<Gather input="speech" language="${locale}" speechTimeout="auto" timeout="10" ` +
     `action="${esc(action)}" method="POST">${say(text, lang)}</Gather>` +
     // Reached only when they said nothing at all.
     `${say(lang === "hi" ? "कोई बात नहीं। मैं बाद में फिर कोशिश करूँगा। अपना ध्यान रखिए।" : "No matter. I will try again later. Take care.", lang)}<Hangup/>`
@@ -127,6 +133,52 @@ export async function POST(req: Request) {
     }
 
     const lang = begun.language === "en" ? "en" : "hi";
+
+    // AN EMPTY SpeechResult IS NOT ALWAYS THE START OF A CALL. When a Gather
+    // hears nothing, Twilio posts back here with no SpeechResult at all —
+    // identical in shape to the opening request. Treating the two the same
+    // meant somebody who paused got greeted a second time, from the top, and
+    // the transcript recorded the greeting twice. The session knows which it
+    // is: a call that has already said something is not a call that has just
+    // begun.
+    const prior = await rpc("telephony_turn", {
+      p_secret: secret,
+      p_call_sid: callSid,
+      p_said: null,
+      p_say: null,
+    });
+    const said = (prior?.turns as { who: string; text: string }[]) ?? [];
+
+    if (said.length > 0) {
+      // Silence, not a beginning. Ask once more, in fewer words, then let
+      // them go — a machine that keeps talking at somebody who is not
+      // answering is worse than one that rings off politely. Two unanswered
+      // prompts is a no-answer, and telephony_finish records it as one.
+      const nudges = said.filter((t) => t.who === "ai" && t.text.length < 90).length;
+      if (nudges >= 2) {
+        await rpc("telephony_finish", { p_secret: secret, p_call_sid: callSid });
+        return xml(
+          `${say(
+            lang === "hi"
+              ? "कोई बात नहीं। मैं बाद में फिर फ़ोन करूँगा। अपना ध्यान रखिए।"
+              : "No matter. I will ring again later. Take care.",
+            lang,
+          )}<Hangup/>`,
+        );
+      }
+      const nudge =
+        lang === "hi"
+          ? "माफ़ कीजिए, मैं सुन नहीं पाया। आप कैसे हैं?"
+          : "Sorry, I did not catch that. How are you?";
+      await rpc("telephony_turn", {
+        p_secret: secret,
+        p_call_sid: callSid,
+        p_said: null,
+        p_say: nudge,
+      });
+      return xml(listen(nudge, lang, action));
+    }
+
     const opening = await compose(secret, callSid, "", begun, lang);
     return xml(listen(opening.say, lang, action));
   }
