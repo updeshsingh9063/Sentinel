@@ -5,6 +5,7 @@ import { useState } from "react";
 import { IconPhone } from "@/components/ui/Icons";
 import { fmt } from "@/lib/i18n";
 import type { AppCopy } from "@/lib/i18n-app";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * Ring a senior now, from the coordinator's own list.
@@ -45,8 +46,46 @@ export function CallNow({
   /** Labels are passed in: a client component cannot read the language cookie. */
   t: AppCopy["callNow"];
 }) {
-  const [phase, setPhase] = useState<"idle" | "asking" | "dialling" | "ringing" | "failed">("idle");
+  const [phase, setPhase] = useState<
+    "idle" | "asking" | "number" | "saving" | "dialling" | "ringing" | "failed"
+  >("idle");
   const [why, setWhy] = useState<string>("");
+  const [number, setNumber] = useState<string>("");
+
+  /**
+   * Put a number on the record, then ring it.
+   *
+   * NOT "dial whatever is typed". That was the shortcut and it is the wrong
+   * feature: a box that dials arbitrary numbers is a nuisance-call machine
+   * with a login page, and every call it placed would be unattributable
+   * afterwards. The number goes ON THE SENIOR, through a function that checks
+   * the caseload and writes an audit row — so the next coordinator, the
+   * morning round and the log all see the same number, and the rule that you
+   * may only ring somebody you carry still holds.
+   */
+  async function saveNumber() {
+    setPhase("saving");
+    const { data, error } = await createClient().rpc("set_senior_phone", {
+      p_senior_id: seniorId,
+      p_phone: number,
+    });
+
+    const out = data as { ok?: boolean; reason?: string } | null;
+    if (error || !out?.ok) {
+      setWhy(
+        out?.reason === "not_e164"
+          ? t.badFormat
+          : out?.reason === "number_in_use"
+            ? t.inUse
+            : out?.reason === "not_yours"
+              ? t.notYours
+              : t.failed,
+      );
+      setPhase("number");
+      return;
+    }
+    await place();
+  }
 
   async function place() {
     setPhase("dialling");
@@ -73,14 +112,22 @@ export function CallNow({
     // deployment cannot call anyone" from "this senior has no number", which
     // are a deployment problem and a record problem respectively.
     const body = (await res.json().catch(() => null)) as { reason?: string } | null;
+
+    // A missing number is not a failure to report and walk away from — it is
+    // the one thing the person reading this can actually fix. Offer the fix
+    // rather than a dead end.
+    if (res.status === 404) {
+      setWhy(t.noNumber);
+      setPhase("number");
+      return;
+    }
+
     setWhy(
       res.status === 503
         ? t.notConfigured
-        : res.status === 404
-          ? t.noNumber
-          : body?.reason
-            ? `${t.failed} ${body.reason}`
-            : t.failed,
+        : body?.reason
+          ? `${t.failed} ${body.reason}`
+          : t.failed,
     );
     setPhase("failed");
   }
@@ -112,6 +159,41 @@ export function CallNow({
           }
         `}</style>
       </p>
+    );
+  }
+
+  if (phase === "number" || phase === "saving") {
+    return (
+      <form
+        className="cn cn--form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void saveNumber();
+        }}
+      >
+        <span className="cn__bad">{why}</span>
+        <input
+          type="tel"
+          inputMode="tel"
+          // autoComplete off: this is somebody else's number on a work
+          // record, not the operator's own, and offering their saved
+          // contacts here is how a wrong number reaches a record.
+          autoComplete="off"
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          placeholder="+919876543210"
+          aria-label={t.addNumber}
+          disabled={phase === "saving"}
+        />
+        <button type="submit" className="cn__go" disabled={phase === "saving" || number.trim().length < 8}>
+          <IconPhone size={14} /> {phase === "saving" ? t.saving : t.save}
+        </button>
+        <button type="button" onClick={() => setPhase("idle")} disabled={phase === "saving"}>
+          {t.cancel}
+        </button>
+        <small className="cn__hint">{t.numberHint}</small>
+        <Styles />
+      </form>
     );
   }
 
@@ -170,6 +252,17 @@ function Styles() {
       .cn button:disabled { opacity: .55; cursor: default; }
       .cn__bad { color: var(--risk-high); }
       .cn__ask { color: var(--ink); font-weight: 600; }
+      .cn--form { row-gap: var(--s-2); }
+      .cn--form input {
+        font: inherit; font-size: var(--fs-sm);
+        color: var(--ink); background: var(--white);
+        border: 1px solid var(--line-2); border-radius: var(--radius-sm);
+        padding: 6px var(--s-3); min-width: 11rem; flex: 1 1 11rem;
+      }
+      .cn--form input:focus-visible { outline: 2px solid var(--forest); outline-offset: 1px; }
+      .cn--form input:disabled { opacity: .55; }
+      .cn__hint { flex-basis: 100%; color: var(--ink-3); font-size: var(--fs-xs); }
+      @media (pointer: coarse) { .cn--form input { padding-block: 9px; } }
       /* Touch targets: this one spends money, so it is not a 21px tap area. */
       @media (pointer: coarse) {
         .cn button { padding-block: max(var(--s-2), 9px); }

@@ -129,6 +129,15 @@ export interface AppCopy {
     notConfigured: string;
     failed: string;
     retry: string;
+    /** Adding a missing number to the record, which is what makes the call possible. */
+    addNumber: string;
+    numberHint: string;
+    save: string;
+    saving: string;
+    badFormat: string;
+    inUse: string;
+    notYours: string;
+    saved: string;
   };
   worklist: {
     levels: { high: string; med: string; low: string };
@@ -553,6 +562,14 @@ const en: AppCopy = {
     notConfigured: "Calling is not set up on this deployment.",
     failed: "The call did not go through.",
     retry: "Try again",
+    addNumber: "Add a number",
+    numberHint: "With country code, e.g. +919876543210",
+    save: "Save and call",
+    saving: "Saving…",
+    badFormat: "Needs the country code, starting with +.",
+    inUse: "Another senior already has that number.",
+    notYours: "This senior is not on your caseload.",
+    saved: "Number saved.",
   },
   worklist: {
     date: "Monday 12 April 2025",
@@ -1061,6 +1078,14 @@ const hi: AppCopy = {
     notConfigured: "इस परिनियोजन पर फ़ोन सुविधा चालू नहीं है।",
     failed: "फ़ोन नहीं लग पाया।",
     retry: "फिर कोशिश करें",
+    addNumber: "नंबर जोड़ें",
+    numberHint: "देश कोड के साथ, जैसे +919876543210",
+    save: "सहेजकर फ़ोन करें",
+    saving: "सहेज रहे हैं…",
+    badFormat: "देश कोड ज़रूरी है, + से शुरू।",
+    inUse: "यह नंबर किसी और बुज़ुर्ग का है।",
+    notYours: "यह बुज़ुर्ग आपकी सूची में नहीं हैं।",
+    saved: "नंबर सहेज दिया गया।",
   },
   worklist: {
     date: "सोमवार 12 अप्रैल 2025",
