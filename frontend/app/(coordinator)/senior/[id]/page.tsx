@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { BaselineChart } from "@/components/app/BaselineChart";
 import { RiskTimeline } from "@/components/app/RiskTimeline";
+import { CallNow } from "@/components/app/CallNow";
 import { Verdict } from "@/components/app/Verdict";
 import { outcomeLabel } from "@/lib/demo-i18n";
 import { fmt } from "@/lib/i18n";
@@ -197,6 +198,11 @@ export default async function SeniorDetailPage({
             <h2 className="sd__h2">{t.senior.nextStep}</h2>
             <p className="sd__step">{senior.nextStep}</p>
             <p className="sd__note">{t.senior.nextStepNote}</p>
+            {/* Beside the next step, because on this page the next step is
+                almost always "speak to them". */}
+            <div className="sd__verdict">
+              <CallNow seniorId={senior.id} name={senior.name} t={t.callNow} />
+            </div>
             <div className="sd__verdict">
               <Verdict alertId={senior.alertId} t={t.verdict} />
             </div>

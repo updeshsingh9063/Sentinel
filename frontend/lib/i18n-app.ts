@@ -116,6 +116,20 @@ export interface AppCopy {
     doneFalse: string;
     undo: string;
   };
+  /** The coordinator dialling a senior on the spot, rather than waiting for the morning round. */
+  callNow: {
+    label: string;
+    confirm: string;
+    cancel: string;
+    dialling: string;
+    /** Templates, not functions: copy crosses to client components. */
+    ringing: string;
+    note: string;
+    noNumber: string;
+    notConfigured: string;
+    failed: string;
+    retry: string;
+  };
   worklist: {
     levels: { high: string; med: string; low: string };
     dateOn: string;
@@ -524,6 +538,18 @@ const en: AppCopy = {
     doneTrue: "Recorded as a true concern",
     doneFalse: "Recorded as a false alarm",
     undo: "Undo",
+  },
+  callNow: {
+    label: "Call now",
+    confirm: "Ring {name}?",
+    cancel: "Cancel",
+    dialling: "Dialling…",
+    ringing: "Ringing {name}",
+    note: "The check-in will appear here when the call ends.",
+    noNumber: "No number on this record.",
+    notConfigured: "Calling is not set up on this deployment.",
+    failed: "The call did not go through.",
+    retry: "Try again",
   },
   worklist: {
     date: "Monday 12 April 2025",
@@ -1018,6 +1044,18 @@ const hi: AppCopy = {
     doneTrue: "सही चिंता के रूप में दर्ज",
     doneFalse: "ग़लत अलर्ट के रूप में दर्ज",
     undo: "पूर्ववत करें",
+  },
+  callNow: {
+    label: "अभी फ़ोन करें",
+    confirm: "{name} को फ़ोन करें?",
+    cancel: "रहने दें",
+    dialling: "मिला रहे हैं…",
+    ringing: "{name} को घंटी जा रही है",
+    note: "बात पूरी होते ही जानकारी यहीं दिख जाएगी।",
+    noNumber: "इस रिकॉर्ड पर कोई नंबर नहीं है।",
+    notConfigured: "इस परिनियोजन पर फ़ोन सुविधा चालू नहीं है।",
+    failed: "फ़ोन नहीं लग पाया।",
+    retry: "फिर कोशिश करें",
   },
   worklist: {
     date: "सोमवार 12 अप्रैल 2025",

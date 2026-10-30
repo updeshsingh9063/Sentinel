@@ -40,6 +40,12 @@ export const IconMic = (p: IconProps) => (
   </Svg>
 );
 
+export const IconPhone = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M7.2 3.5h-2A2.2 2.2 0 0 0 3 5.9c.5 5 2.6 8.8 5.5 11.6 2.8 2.9 6.6 5 11.6 5.5a2.2 2.2 0 0 0 2.4-2.2v-2a1.6 1.6 0 0 0-1.3-1.6l-2.8-.6a1.6 1.6 0 0 0-1.6.6l-1 1.3a13.4 13.4 0 0 1-5.9-5.9l1.3-1a1.6 1.6 0 0 0 .6-1.6l-.6-2.8a1.6 1.6 0 0 0-1.6-1.3Z" />
+  </Svg>
+);
+
 export const IconShield = (p: IconProps) => (
   <Svg {...p}>
     <path d="M12 2.8 19.5 6v5.6c0 4.3-3 7.7-7.5 9.6-4.5-1.9-7.5-5.3-7.5-9.6V6Z" />

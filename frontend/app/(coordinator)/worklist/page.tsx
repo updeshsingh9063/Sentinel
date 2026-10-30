@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CallNow } from "@/components/app/CallNow";
 import { RequestQueue } from "@/components/app/RequestQueue";
 import { Verdict } from "@/components/app/Verdict";
 import { IconArrow } from "@/components/ui/Icons";
@@ -144,6 +145,11 @@ export default async function WorklistPage() {
                   </Link>
                   <span className="wl__due">{t.worklist.due} {s.dueAt}</span>
                 </div>
+                {/* The next step is usually "ring them". This is that, from
+                    here — otherwise the only route from a ranked row to a
+                    conversation is a human picking up their own telephone,
+                    which is the work this product claims to remove. */}
+                <CallNow seniorId={s.id} name={s.name} t={t.callNow} />
                 <Verdict alertId={s.alertId} t={t.verdict} />
               </div>
             </div>
