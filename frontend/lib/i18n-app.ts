@@ -95,6 +95,7 @@ export interface AppCopy {
   };
   nav: {
     today: string;
+    calls: string;
     seniors: string;
     operations: string;
     thisWeek: string;
@@ -215,6 +216,37 @@ export interface AppCopy {
     noteError: string;
     noteYours: string;
     noteNone: string;
+  };
+  calls: {
+    title: string;
+    sub: string;
+    nonePlanned: string;
+    planIt: string;
+    planning: string;
+    failed: string;
+    notableTitle: string;
+    notableNote: string;
+    nothingNotable: string;
+    moreNotable: string;
+    markReached: string;
+    markNoAnswer: string;
+    reached: string;
+    noAnswerN: string;
+    escalated: string;
+    evidenceTitle: string;
+    evidenceNote: string;
+    pctOfUsual: string;
+    stepsLine: string;
+    missedLine: string;
+    medsNot: string;
+    foot: string;
+    kinds: {
+      daily: string;
+      medicine: string;
+      welfare: string;
+      follow_up: string;
+      company: string;
+    };
   };
   requests: {
     title: string;
@@ -466,6 +498,7 @@ const en: AppCopy = {
   },
   nav: {
     today: "Today",
+    calls: "Calls",
     seniors: "Seniors",
     operations: "Operations",
     reports: "Reports",
@@ -634,6 +667,42 @@ const en: AppCopy = {
     noteError: "Could not send. Please try again.",
     noteYours: "What you have told us",
     noteNone: "You have not sent anything yet.",
+  },
+  calls: {
+    title: "The line today",
+    sub: "Who the system decided to ring, and why it decided to. Nobody asked it to make this list.",
+    nonePlanned:
+      "No calls planned for today yet. Planning reads each senior against their own recent normal — how much they usually move, when they last picked up, whether the medicines were confirmed — and rings the ones who have drifted.",
+    planIt: "Plan today's calls",
+    planning: "Planning…",
+    failed: "That did not save. Try again.",
+    notableTitle: "Calls with a reason beyond the timetable",
+    notableNote:
+      "The ordinary daily calls are counted above and not listed — these are the ones the system added by itself.",
+    nothingNotable: "Nothing beyond the ordinary rounds today.",
+    moreNotable:
+      "{n} more are being placed and are not listed. The system makes them; they come back to this page only if nobody answers.",
+    markReached: "Reached them",
+    markNoAnswer: "No answer",
+    reached: "Reached",
+    noAnswerN: "No answer ×{n}",
+    escalated: "Two unanswered. Raised on the help queue — somebody should go round.",
+    evidenceTitle: "How far from their own normal",
+    evidenceNote:
+      "The numbers the sentences above were built from. Compared with each senior's own fortnight, never with a population threshold — eight hundred steps is a collapse for one person and a good day for another.",
+    pctOfUsual: "{pct}%",
+    stepsLine: "{today} steps against their usual {usual}",
+    missedLine: "{n} calls unanswered this week",
+    medsNot: "medicines not confirmed",
+    foot:
+      "A planned call is not a placed call. The telephony that would dial these is not wired up — marking an outcome here records what a coordinator did on their own phone.",
+    kinds: {
+      daily: "Daily call",
+      medicine: "About the medicines",
+      welfare: "Checking they are alright",
+      follow_up: "To tell them it is arranged",
+      company: "For the company",
+    },
   },
   requests: {
     title: "Asked for help",
@@ -918,6 +987,7 @@ const hi: AppCopy = {
   },
   nav: {
     today: "आज",
+    calls: "कॉल",
     seniors: "बुज़ुर्ग",
     operations: "संचालन",
     reports: "\u0930\u093f\u092a\u094b\u0930\u094d\u091f",
@@ -1084,6 +1154,42 @@ const hi: AppCopy = {
     noteError: "\u092d\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u091c\u093e \u0938\u0915\u093e\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964",
     noteYours: "\u0906\u092a\u0928\u0947 \u091c\u094b \u092c\u0924\u093e\u092f\u093e",
     noteNone: "\u0906\u092a\u0928\u0947 \u0905\u092d\u0940 \u0915\u0941\u091b \u0928\u0939\u0940\u0902 \u092d\u0947\u091c\u093e \u0939\u0948\u0964",
+  },
+  calls: {
+    title: "आज की कॉल",
+    sub: "सिस्टम ने किसे फ़ोन करने का तय किया, और क्यों तय किया। यह सूची किसी ने बनाने को नहीं कहा।",
+    nonePlanned:
+      "आज के लिए अभी कोई कॉल तय नहीं है। योजना हर बुज़ुर्ग को उनकी अपनी हाल की सामान्य स्थिति से तौलती है — वे आमतौर पर कितना चलते हैं, आख़िरी बार कब फ़ोन उठाया, दवा की पुष्टि हुई या नहीं — और जो हट गए हैं उन्हें फ़ोन करती है।",
+    planIt: "आज की कॉल तय करें",
+    planning: "तय किया जा रहा है…",
+    failed: "सहेजा नहीं जा सका। फिर कोशिश कीजिए।",
+    notableTitle: "वे कॉल जिनकी वजह रोज़ की समय-सारणी से अलग है",
+    notableNote:
+      "रोज़ की सामान्य कॉल ऊपर गिनी गई हैं, सूची में नहीं — ये वे हैं जो सिस्टम ने ख़ुद जोड़ीं।",
+    nothingNotable: "आज सामान्य चक्र के अलावा कुछ नहीं।",
+    moreNotable:
+      "{n} और कॉल की जा रही हैं, जो यहाँ सूची में नहीं हैं। सिस्टम उन्हें करता है; जवाब न मिलने पर ही वे इस पन्ने पर लौटती हैं।",
+    markReached: "बात हो गई",
+    markNoAnswer: "कोई जवाब नहीं",
+    reached: "बात हुई",
+    noAnswerN: "कोई जवाब नहीं ×{n}",
+    escalated: "दो बार जवाब नहीं मिला। मदद की सूची में दर्ज — किसी को जाकर देखना चाहिए।",
+    evidenceTitle: "अपनी सामान्य स्थिति से कितनी दूर",
+    evidenceNote:
+      "ऊपर लिखे वाक्य जिन आँकड़ों पर बने हैं। हर बुज़ुर्ग की तुलना उनके अपने पिछले पखवाड़े से की जाती है, किसी आम सीमा से नहीं — आठ सौ क़दम किसी के लिए गिरावट हैं और किसी के लिए अच्छा दिन।",
+    pctOfUsual: "{pct}%",
+    stepsLine: "{today} क़दम, आम तौर पर {usual}",
+    missedLine: "इस हफ़्ते {n} कॉल का जवाब नहीं",
+    medsNot: "दवा की पुष्टि नहीं",
+    foot:
+      "तय की गई कॉल का मतलब की गई कॉल नहीं है। इन्हें मिलाने वाली टेलीफ़ोनी अभी जुड़ी नहीं है — यहाँ नतीजा दर्ज करना यह लिखता है कि समन्वयक ने अपने फ़ोन से क्या किया।",
+    kinds: {
+      daily: "रोज़ की कॉल",
+      medicine: "दवा के बारे में",
+      welfare: "हाल-चाल देखने के लिए",
+      follow_up: "यह बताने के लिए कि इंतज़ाम हो गया",
+      company: "साथ के लिए",
+    },
   },
   requests: {
     title: "मदद माँगी गई",

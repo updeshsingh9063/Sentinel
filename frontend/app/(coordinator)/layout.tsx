@@ -14,6 +14,7 @@ export default async function CoordinatorLayout({
         role="coordinator"
         links={[
           { href: "/worklist", label: t.nav.today },
+          { href: "/calls", label: t.nav.calls },
           // Not a hard-coded senior. It used to point at /senior/savitri-devi,
           // a fixture slug that stopped existing the moment this app started
           // reading the real cohort — so "Seniors" led to "not on your list".

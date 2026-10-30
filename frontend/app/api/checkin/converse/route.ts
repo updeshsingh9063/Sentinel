@@ -74,20 +74,31 @@ interface Turn {
  * own, and letting it name the person the call is about would let anyone
  * decide whose record a conversation lands on.
  */
-async function demoProfile(): Promise<{ name: string; language: string }> {
+interface Briefing {
+  name: string;
+  language: string;
+  about?: string | null;
+  /** Why the planner decided to ring today, if it did. */
+  reason?: string | null;
+  why?: string | null;
+  /** Errands already arranged that this person has not been told about. */
+  arranged?: string | null;
+}
+
+async function demoProfile(): Promise<Briefing> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return { name: "", language: "hi" };
   try {
-    const res = await fetch(`${url}/rest/v1/rpc/demo_line_profile`, {
+    const res = await fetch(`${url}/rest/v1/rpc/demo_line_briefing`, {
       method: "POST",
       headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: "{}",
       cache: "no-store",
     });
     if (!res.ok) return { name: "", language: "hi" };
-    const data = (await res.json()) as { name?: string; language?: string } | null;
-    return { name: data?.name ?? "", language: data?.language ?? "hi" };
+    const data = (await res.json()) as Briefing | null;
+    return { ...(data ?? {}), name: data?.name ?? "", language: data?.language ?? "hi" };
   } catch {
     return { name: "", language: "hi" };
   }
@@ -102,16 +113,52 @@ async function demoProfile(): Promise<{ name: string; language: string }> {
  *
  * Everything cut was elaboration. Every safety rule is still here.
  */
-function systemPrompt(name: string, lang: "hi" | "en", turnCount: number): string {
+function systemPrompt(p: Briefing, lang: "hi" | "en", turnCount: number): string {
+  const name = p.name;
   const speak =
     lang === "hi"
       ? "Speak ordinary spoken Hindi in Devanagari, the way a younger relative speaks to an elder."
       : "Speak ordinary English, the way a younger relative speaks to an elder.";
   const who = name ? `You are calling ${name}; use their name in the greeting and sparingly after.` : "You do not know their name; do not invent one.";
 
+  /**
+   * WHY THIS CALL IS HAPPENING, in the companion's own words rather than the
+   * planner's. The reason is never read out as a reason — "you have been
+   * moving less than usual" is a sentence that frightens somebody and is one
+   * step from a diagnosis. It steers what gets asked, and nothing more.
+   */
+  const because =
+    p.reason === "welfare"
+      ? `
+THIS CALL WAS ADDED because something looked different and nobody has checked. Do not say that, do not quote any number at them, and do not tell them they are being watched. Just make sure they are alright, and find out early whether anything is wrong.`
+      : p.reason === "medicine"
+        ? `
+THIS CALL WAS ADDED because the medicines were not confirmed last time. Ask about them early and kindly. Never give a dose, a name or advice — only ask, and pass on what they say.`
+        : p.reason === "company"
+          ? `
+THIS CALL WAS ADDED because they sounded alone recently. There is nothing to extract here. Let them talk, be unhurried, and ask about them rather than about their body. If they would like someone in their family rung, that is a contact_family request.`
+          : "";
+
+  /**
+   * Buried further down the prompt, this was simply ignored: the call opened,
+   * asked after them, and never mentioned the thing they had asked for. So it
+   * goes first, ahead of everything else the call is for. Telling somebody
+   * their errand is done is the only part of this call that gives them
+   * something back, and a call that forgets it leaves them still worrying
+   * about the thing they rang about.
+   */
+  const owed = p.arranged
+    ? `
+
+BEFORE ANYTHING ELSE, in your FIRST or SECOND sentence: tell them that what they asked for HAS ALREADY BEEN ARRANGED by their care coordinator — ${p.arranged}. Past tense, somebody else's doing, already done. Not "I am arranging it", not "I will see to it" — you arranged nothing and saying you did is the same false promise as offering to book an appointment. Then carry on with the call. No day, no time.`
+    : "";
+
+  const about = p.about ? `
+A little about them, to talk like somebody who knows them: ${p.about}` : "";
+
   return `You are Samarth Sentinel's daily companion call: a friendly voice phoning an older person at home. Not a doctor, not an app.
 ${speak} If they answer in a different language, follow them into it.
-${who}
+${who}${owed}${about}${because}
 
 TALK: one or two short sentences a turn. Ask ONE thing, and let it arise from what they just said. Never read a list. Never say "press", "option", or "on a scale" — there is no keypad.
 
@@ -201,7 +248,7 @@ export async function POST(req: Request) {
   const known = body.known && typeof body.known === "object" ? body.known : null;
 
   const messages: { role: string; content: string }[] = [
-    { role: "system", content: systemPrompt(profile.name, lang, spoken + 1) },
+    { role: "system", content: systemPrompt(profile, lang, spoken + 1) },
   ];
 
   if (known) {
