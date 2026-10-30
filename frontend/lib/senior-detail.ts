@@ -94,6 +94,8 @@ export interface SeniorRecord {
   daysSinceContact: number;
   reasons: WorklistReason[];
   nextStep: string;
+  /** The alert being judged, or null when nothing was raised. */
+  alertId: number | null;
   /**
    * How the risk built up, day by day.
    *
@@ -162,6 +164,7 @@ export async function loadSeniorRecord(
 
   const blank: SeniorRecord = {
     state: "not-found",
+    alertId: null,
     id: seniorId,
     name: "",
     age: 0,
@@ -240,7 +243,7 @@ export async function loadSeniorRecord(
       .order("checked_on", { ascending: false }),
     supabase
       .from("alerts")
-      .select("reason_text, next_step, next_step_hi, raised_on")
+      .select("id, reason_text, next_step, next_step_hi, raised_on")
       .eq("senior_id", seniorId)
       .order("raised_on", { ascending: false })
       .limit(1)
@@ -407,6 +410,9 @@ export async function loadSeniorRecord(
     reasons: parseReasons(lastScore?.reasons, lang),
     nextStep:
       (lang === "hi" && alert.data?.next_step_hi) || alert.data?.next_step || "",
+    // The verdict control needs the row it is judging. Null when nothing was
+    // ever raised for this senior, and then there is nothing to judge.
+    alertId: (alert.data?.id as number | undefined) ?? null,
     timeline,
     series: {
       label: t.senior.seriesSystolic,

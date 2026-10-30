@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { RequestQueue } from "@/components/app/RequestQueue";
 import { Verdict } from "@/components/app/Verdict";
 import { IconArrow } from "@/components/ui/Icons";
 import { fmt } from "@/lib/i18n";
 import { getAppCopy } from "@/lib/i18n-server";
+import { loadOpenRequests } from "@/lib/requests";
 import { loadWorklist } from "@/lib/worklist";
 
 /**
@@ -34,7 +36,7 @@ export async function generateMetadata() {
 
 export default async function WorklistPage() {
   const { lang, t } = await getAppCopy();
-  const list = await loadWorklist(t, lang);
+  const [list, requests] = await Promise.all([loadWorklist(t, lang), loadOpenRequests()]);
 
   if (list.state === "empty") {
     return (
@@ -55,6 +57,13 @@ export default async function WorklistPage() {
         <h1 className="display page__title">{t.worklist.title}</h1>
         <p className="page__sub">{fmt(t.worklist.sub, { cap })}</p>
       </header>
+
+      {/* ABOVE EVERYTHING, INCLUDING THE RANKED LIST. The ranking is advice
+          about who to worry about; somebody asking for their medicines is an
+          instruction, and an instruction does not belong underneath advice.
+          It is also the only part of this page where the product does
+          something for a senior rather than about them. */}
+      <RequestQueue requests={requests} t={t.requests} />
 
       {/* ABOVE THE RANKED LIST, AND NOT PART OF IT. These are seniors who
           picked up the phone after today's ranking was computed, so the model
@@ -135,7 +144,7 @@ export default async function WorklistPage() {
                   </Link>
                   <span className="wl__due">{t.worklist.due} {s.dueAt}</span>
                 </div>
-                <Verdict seniorId={s.id} t={t.verdict} />
+                <Verdict alertId={s.alertId} t={t.verdict} />
               </div>
             </div>
           </li>

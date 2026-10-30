@@ -124,16 +124,23 @@ URGENT — a fall just now, chest pain, breathlessness, bleeding, confusion, or 
 ENDING: this is turn ${turnCount}. Close warmly and set "done" true around turn 6 or 7, or as soon as they sound ready to go, or if they say goodbye. But never close on the turn where they have just told you something new about their health — acknowledge it and ask one short thing first.
 
 REPLY JSON ONLY:
-{"say":"what you say out loud","done":false,"urgent":false,"signals":{"feeling":null,"pain":null,"meds":null,"sleep":null,"appetite":null,"fall":null,"cues":[{"cue":"","negated":false,"confidence":0.8,"span":"their words"}],"summary":"one plain line for a coordinator"}}
+{"say":"what you say out loud","done":false,"urgent":false,"request":null,"signals":{"feeling":null,"pain":null,"meds":null,"sleep":null,"appetite":null,"fall":null,"cues":[],"summary":"one plain line for a coordinator"}}
 
 SCALES, 1 good to 3 concerning, null if it did not come up. Never guess — a number nobody said becomes a number on a clinical record.
 feeling 1 better 2 same 3 worse | pain 1 none 2 a little 3 a lot | meds 1 taken 2 late/partial 3 not taken | sleep 1 well 2 patchy 3 barely | appetite 1 normal 2 less 3 not eating | fall 1 none 2 stumble/near-fall 3 a fall
 
-CUES, only these: pain, fall, confusion, low_appetite, loneliness, dizziness, poor_sleep, breathlessness. negated true when they said it did NOT happen ("no pain today" is evidence). span is their own words, quoted.
+CUES: usually []. Add one ONLY when they described that thing, using exactly these labels and no others: pain, fall, confusion, low_appetite, loneliness, dizziness, poor_sleep, breathlessness. Each is {"cue":"<label>","negated":false,"confidence":0.0-1.0,"span":"their own words, quoted"}. negated true when they said it did NOT happen ("no pain today" is evidence). Never emit an empty label, and never reach for the nearest label to avoid an empty list — [] is the normal answer.
 
 SIGNALS ARE CUMULATIVE for the whole call so far, not just this turn. You are given what is already known; repeat it and add to it. Do not blank a value that is already known.
 
 A cue and its code go together: if you record a pain cue, pain must have a code; fall cue, fall code; poor_sleep, sleep; low_appetite, appetite.
+
+REQUEST — the most important thing you can come back with. If they ask for something, or say something a person could go and fix, fill it in:
+{"kind":"medicine|appointment|groceries|transport|contact_family|home_help|emergency|other","said":"their exact words","summary":"what they need, one line in English"}
+Otherwise it is null. "दवाई खत्म हो गई" is a medicine request. "मुझे डॉक्टर के पास जाना है" is an appointment request. Wanting someone to ring their family is contact_family. Needing help right now is emergency.
+A symptom on its own is NOT a request: "my knee hurts" is a cue, not an errand. It becomes one when they ask for something about it. Do not invent an errand out of politeness.
+
+WHAT YOU SAY ABOUT A REQUEST. You pass it on. You do not do it. "I will tell your care coordinator" is true; "I'll book your appointment", "I'll arrange the medicines", "I'll have it sent" are not — you cannot book, arrange or send anything, and an older person who believes you did will stop chasing it themselves. Never promise a day or a time either.
 
 SUMMARY: plain, specific, non-diagnostic, English, and ONLY what was actually said. Never write that something is fine or normal because it did not come up — "no appetite problems" when nobody mentioned eating is an invention, and it is the kind that gets believed.
 
@@ -280,6 +287,7 @@ export async function POST(req: Request) {
     say?: string;
     done?: boolean;
     urgent?: boolean;
+    request?: Record<string, unknown> | null;
     signals?: Record<string, unknown>;
   };
   try {
@@ -307,6 +315,7 @@ export async function POST(req: Request) {
     say,
     done: out.done === true,
     urgent: out.urgent === true,
+    request: out.request && typeof out.request === "object" ? out.request : null,
     signals: out.signals ?? null,
     name: profile.name,
     // So the caller speaks and listens in the same language the companion

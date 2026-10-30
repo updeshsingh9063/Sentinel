@@ -48,6 +48,13 @@ interface Turn {
   text: string;
 }
 
+/** Something the senior asked for that a person has to go and do. */
+interface Request {
+  kind: string;
+  said: string;
+  summary: string;
+}
+
 export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
   const [phase, setPhase] = useState<Phase>("ringing");
   /**
@@ -66,6 +73,13 @@ export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [known, setKnown] = useState<CallSignals>(EMPTY_SIGNALS);
   const [urgent, setUrgent] = useState(false);
+  /**
+   * Errands, kept one per kind. Saying "my medicines have run out" twice in
+   * one call is one errand, and a queue that lists it twice wastes the time
+   * of whoever works it. The database enforces this too, because the UI is
+   * not where a rule like that can be relied on.
+   */
+  const [requests, setRequests] = useState<Request[]>([]);
   const [note, setNote] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
   const [lineName, setLineName] = useState("");
@@ -169,6 +183,7 @@ export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
         signals?: unknown;
         error?: string;
         lang?: string;
+        request?: { kind?: string; said?: string; summary?: string } | null;
       };
       try {
         const res = await fetch("/api/checkin/converse", {
@@ -197,19 +212,32 @@ export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
       setKnown(merged);
       if (data.urgent) setUrgent(true);
 
+      let asked = requests;
+      const r = data.request;
+      if (r && typeof r.kind === "string" && typeof r.summary === "string" && r.summary.trim()) {
+        const one: Request = {
+          kind: r.kind,
+          said: typeof r.said === "string" ? r.said : "",
+          summary: r.summary,
+        };
+        const at = asked.findIndex((x) => x.kind === one.kind);
+        asked = at === -1 ? [...asked, one] : asked.map((x, i) => (i === at ? one : x));
+        setRequests(asked);
+      }
+
       const withReply: Turn[] = [...next, { who: "ai", text: data.say }];
       setTurns(withReply);
       await speak(data.say);
 
       if (data.done) {
-        await file(withReply, merged);
+        await file(withReply, merged, asked);
       } else {
         setMic("idle");
       }
     },
     // `file` is declared below and is stable for the life of the component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [lang, speak, t],
+    [lang, speak, t, requests],
   );
 
   /**
@@ -219,8 +247,11 @@ export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
    * is chosen inside the database by a flag on exactly one senior, so a page
    * served to anybody on the internet cannot name whose record it writes.
    */
-  async function file(all: Turn[], signals: CallSignals) {
-    if (!hasAnything(signals)) {
+  async function file(all: Turn[], signals: CallSignals, asked: Request[] = requests) {
+    // An errand on its own is worth filing even when nothing was established
+    // about their health: "my medicines have run out" is the whole point of
+    // the call having happened.
+    if (!hasAnything(signals) && !asked.length) {
       // Nothing was established, so there is nothing to put on a record. An
       // empty check-in filed as "answered" would tell a coordinator the call
       // went fine, which is a worse outcome than no row at all.
@@ -243,6 +274,17 @@ export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
       setNote(t.fileFailed);
       return;
     }
+    // Errands go in one at a time, after the call itself, so a failure to
+    // record one does not take the check-in down with it.
+    for (const r of asked) {
+      await createClient().rpc("record_demo_request", {
+        p_kind: r.kind,
+        p_urgent: urgent || r.kind === "emergency",
+        p_said: r.said,
+        p_summary: r.summary,
+      });
+    }
+
     setFiledName(out.senior_name ?? "");
     setPhase("filed");
   }
@@ -261,7 +303,7 @@ export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
     stopRecording();
     // Hanging up early still files what was said. A call that ended because
     // somebody had to go is not a call that did not happen.
-    void file(turns, known);
+    void file(turns, known, requests);
   }
 
   async function startRecording() {
@@ -384,6 +426,13 @@ export function CallSim({ t, lang }: { t: AppCopy["checkin"]; lang: string }) {
             </p>
             <p className="call__state">{fmt(t.filedTo, { name: filedName })}</p>
             <p className="call__where">{t.filedWhere}</p>
+            {requests.length > 0 && (
+              <ul className="call__asked">
+                {requests.map((r) => (
+                  <li key={r.kind}>{r.summary}</li>
+                ))}
+              </ul>
+            )}
             {urgent && <p className="call__urgent">{t.urgentFiled}</p>}
           </>
         )}
@@ -565,6 +614,15 @@ function Styles() {
         display: grid; place-items: center; font-size: 1.75rem; margin: 0;
       }
       .call__state { font-family: var(--display); font-size: 1.35rem; margin: 0; }
+      .call__asked {
+        list-style: none; margin: var(--s-2) 0 0; padding: 0;
+        display: grid; gap: var(--s-2); justify-items: center;
+      }
+      .call__asked li {
+        font-size: var(--fs-sm); color: var(--forest); font-weight: 600;
+        background: var(--sage); border-radius: var(--radius-pill);
+        padding: var(--s-2) var(--s-4);
+      }
       .call__state--bad { color: var(--risk-high); font-size: 1.0625rem; font-family: var(--sans); }
       .call__where { font-size: var(--fs-sm); color: var(--ink-2); margin: 0; max-width: 46ch; line-height: 1.6; }
 

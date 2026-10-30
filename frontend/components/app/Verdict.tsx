@@ -3,39 +3,93 @@
 import { useState } from "react";
 
 import { IconCheck } from "@/components/ui/Icons";
+import { createClient } from "@/lib/supabase/client";
 import type { AppCopy } from "@/lib/i18n-app";
 
 /**
  * The coordinator's verdict on an alert: true concern, or false alarm.
  *
  * This is the smallest control on the page and the most important one in the
- * whole system. Precision is only measurable because a human says afterwards
- * whether the alert was worth raising, and the brief asks for exactly this
- * feedback loop. Without it, precision@K is a number nobody can check.
+ * system. Precision is only measurable because a human says afterwards
+ * whether the alert was worth raising, and without that, precision@K is a
+ * number nobody can check.
  *
- * It holds state locally for the demo and does not post anywhere yet — the
- * endpoint is noted below. It is deliberately not a dismiss or snooze button:
- * an alert that is cleared without a verdict teaches the model nothing.
+ * IT NOW WRITES. Until 2026-10-30 this held the verdict in React state and
+ * posted nowhere — there was a `TODO: POST /api/alerts/{id}/verdict` where
+ * the write should have been. So the one control the whole feedback claim
+ * rests on produced a tick, a sentence saying the verdict was recorded, and
+ * no record. A judge clicking it was being told something untrue, and the
+ * dashboard's precision figure came entirely from generated history. The row
+ * goes into `alert_feedback` now, which is the table the ops metrics already
+ * read, so clicking this moves the number on the operations page.
+ *
+ * NO ELEVATED FUNCTION AND NO SENIOR ID TRUSTED FROM THE PAGE. It writes as
+ * the signed-in coordinator; the RLS policy on alert_feedback decides whether
+ * this alert belongs to their caseload, and one outside it writes nothing.
+ *
+ * Deliberately not a dismiss or a snooze: an alert cleared without a verdict
+ * teaches the model nothing, and leaves the precision denominator wrong.
  */
 export function Verdict({
-  seniorId,
+  alertId,
   t,
 }: {
-  seniorId: string;
+  /** Null for a held row — nothing was raised, so there is nothing to judge. */
+  alertId: number | null;
   /** Labels are passed in: a client component cannot read the language cookie. */
   t: AppCopy["verdict"];
 }) {
   const [verdict, setVerdict] = useState<"true" | "false" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  // TODO: POST /api/alerts/{seniorId}/verdict
-  void seniorId;
+  if (alertId === null) return null;
+
+  async function record(which: "true" | "false") {
+    setBusy(true);
+    setFailed(false);
+    const supabase = createClient();
+    const { data: me } = await supabase.auth.getUser();
+
+    const { error } = await supabase.from("alert_feedback").upsert(
+      {
+        alert_id: alertId,
+        reviewer_id: me.user?.id ?? null,
+        result: which === "true" ? "true_concern" : "false_alarm",
+        acted_at: new Date().toISOString(),
+      },
+      { onConflict: "alert_id" },
+    );
+
+    if (error) {
+      // No tick unless there is a row. A control that claims to have recorded
+      // something it did not is worse than one that visibly failed.
+      setBusy(false);
+      setFailed(true);
+      return;
+    }
+
+    // The alert itself is now worked. Failing this is not worth undoing the
+    // verdict over — the verdict is the part the metrics read.
+    await supabase.from("alerts").update({ status: "actioned" }).eq("id", alertId);
+
+    setBusy(false);
+    setVerdict(which);
+  }
+
+  async function undo() {
+    setBusy(true);
+    const { error } = await createClient().from("alert_feedback").delete().eq("alert_id", alertId);
+    setBusy(false);
+    if (!error) setVerdict(null);
+  }
 
   if (verdict) {
     return (
       <p className="verdict verdict--done">
         <IconCheck size={15} />
         {verdict === "true" ? t.doneTrue : t.doneFalse}
-        <button type="button" onClick={() => setVerdict(null)}>
+        <button type="button" onClick={() => void undo()} disabled={busy}>
           {t.undo}
         </button>
         <style>{`
@@ -49,6 +103,7 @@ export function Verdict({
             text-underline-offset: 3px; cursor: pointer; margin-left: var(--s-2);
           }
           .verdict--done button:hover { color: var(--ink); }
+          .verdict--done button:disabled { opacity: .55; cursor: default; }
         `}</style>
       </p>
     );
@@ -56,11 +111,11 @@ export function Verdict({
 
   return (
     <div className="verdict">
-      <span>{t.ask}</span>
-      <button type="button" onClick={() => setVerdict("true")}>
+      <span>{failed ? t.failed : t.ask}</span>
+      <button type="button" onClick={() => void record("true")} disabled={busy}>
         {t.yes}
       </button>
-      <button type="button" onClick={() => setVerdict("false")}>
+      <button type="button" onClick={() => void record("false")} disabled={busy}>
         {t.no}
       </button>
 
@@ -79,7 +134,8 @@ export function Verdict({
           cursor: pointer;
           transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
         }
-        .verdict button:hover { border-color: var(--forest); background: var(--sage); }
+        .verdict button:hover:not(:disabled) { border-color: var(--forest); background: var(--sage); }
+        .verdict button:disabled { opacity: .55; cursor: default; }
       `}</style>
     </div>
   );

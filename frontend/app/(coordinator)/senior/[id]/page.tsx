@@ -198,7 +198,7 @@ export default async function SeniorDetailPage({
             <p className="sd__step">{senior.nextStep}</p>
             <p className="sd__note">{t.senior.nextStepNote}</p>
             <div className="sd__verdict">
-              <Verdict seniorId={senior.id} t={t.verdict} />
+              <Verdict alertId={senior.alertId} t={t.verdict} />
             </div>
           </section>
 

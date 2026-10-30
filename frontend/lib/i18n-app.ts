@@ -108,6 +108,7 @@ export interface AppCopy {
   };
   verdict: {
     ask: string;
+    failed: string;
     yes: string;
     no: string;
     doneTrue: string;
@@ -214,6 +215,32 @@ export interface AppCopy {
     noteError: string;
     noteYours: string;
     noteNone: string;
+  };
+  requests: {
+    title: string;
+    now: string;
+    urgent: string;
+    viaCall: string;
+    viaButton: string;
+    arrange: string;
+    confirm: string;
+    notNeeded: string;
+    arrangedLabel: string;
+    notePrompt: string;
+    notePlaceholder: string;
+    save: string;
+    failed: string;
+    foot: string;
+    kinds: {
+      medicine: string;
+      appointment: string;
+      groceries: string;
+      transport: string;
+      contact_family: string;
+      home_help: string;
+      emergency: string;
+      other: string;
+    };
   };
   checkin: {
     chrome: string;
@@ -454,6 +481,7 @@ const en: AppCopy = {
   },
   verdict: {
     ask: "Was this worth raising?",
+    failed: "That did not save — try again.",
     yes: "True concern",
     no: "False alarm",
     doneTrue: "Recorded as a true concern",
@@ -606,6 +634,33 @@ const en: AppCopy = {
     noteError: "Could not send. Please try again.",
     noteYours: "What you have told us",
     noteNone: "You have not sent anything yet.",
+  },
+  requests: {
+    title: "Asked for help",
+    now: "NOW",
+    urgent: "Urgent",
+    viaCall: "said on the daily call",
+    viaButton: "emergency button",
+    arrange: "Arrange it",
+    confirm: "Confirm it is done",
+    notNeeded: "Not needed",
+    arrangedLabel: "Arranged",
+    notePrompt: "What did you arrange?",
+    notePlaceholder: "Rang the chemist, delivery tomorrow morning",
+    save: "Save",
+    failed: "That did not save. Try again.",
+    foot:
+      "Arranging and confirming are separate on purpose. “I rang the chemist” and “the medicines are in the house” are not the same fact, and only the second one is worth telling a family.",
+    kinds: {
+      medicine: "Medicines have run out",
+      appointment: "Wants a doctor's appointment",
+      groceries: "Needs groceries or essentials",
+      transport: "Needs taking somewhere",
+      contact_family: "Wants their family called",
+      home_help: "Needs help in the house",
+      emergency: "Emergency",
+      other: "Asked for something",
+    },
   },
   checkin: {
     chrome: "Phone check-in simulator · what the senior hears, not an app they install",
@@ -878,6 +933,7 @@ const hi: AppCopy = {
   },
   verdict: {
     ask: "क्या यह उठाने लायक़ था?",
+    failed: "सहेजा नहीं जा सका — फिर कोशिश कीजिए।",
     yes: "सही चिंता",
     no: "ग़लत अलर्ट",
     doneTrue: "सही चिंता के रूप में दर्ज",
@@ -1028,6 +1084,33 @@ const hi: AppCopy = {
     noteError: "\u092d\u0947\u091c\u093e \u0928\u0939\u0940\u0902 \u091c\u093e \u0938\u0915\u093e\u0964 \u092b\u093f\u0930 \u0915\u094b\u0936\u093f\u0936 \u0915\u0930\u0947\u0902\u0964",
     noteYours: "\u0906\u092a\u0928\u0947 \u091c\u094b \u092c\u0924\u093e\u092f\u093e",
     noteNone: "\u0906\u092a\u0928\u0947 \u0905\u092d\u0940 \u0915\u0941\u091b \u0928\u0939\u0940\u0902 \u092d\u0947\u091c\u093e \u0939\u0948\u0964",
+  },
+  requests: {
+    title: "मदद माँगी गई",
+    now: "अभी",
+    urgent: "ज़रूरी",
+    viaCall: "रोज़ की कॉल पर कहा",
+    viaButton: "आपात बटन",
+    arrange: "इसका इंतज़ाम करें",
+    confirm: "हो गया, पुष्टि करें",
+    notNeeded: "ज़रूरत नहीं",
+    arrangedLabel: "इंतज़ाम हो गया",
+    notePrompt: "आपने क्या इंतज़ाम किया?",
+    notePlaceholder: "केमिस्ट को फ़ोन किया, कल सुबह डिलीवरी",
+    save: "सहेजें",
+    failed: "सहेजा नहीं जा सका। फिर कोशिश कीजिए।",
+    foot:
+      "इंतज़ाम और पुष्टि अलग-अलग हैं, जानबूझकर। “केमिस्ट को फ़ोन किया” और “दवा घर पहुँच गई” एक बात नहीं हैं, और परिवार को बताने लायक़ सिर्फ़ दूसरी है।",
+    kinds: {
+      medicine: "दवाई ख़त्म हो गई",
+      appointment: "डॉक्टर का अपॉइंटमेंट चाहिए",
+      groceries: "राशन या ज़रूरी सामान चाहिए",
+      transport: "कहीं ले जाना है",
+      contact_family: "परिवार से बात करवानी है",
+      home_help: "घर में मदद चाहिए",
+      emergency: "आपातकाल",
+      other: "कुछ माँगा है",
+    },
   },
   checkin: {
     chrome: "फ़ोन चेक-इन सिम्युलेटर · जो बुज़ुर्ग सुनती हैं, कोई ऐप नहीं जो उन्हें लगाना पड़े",
